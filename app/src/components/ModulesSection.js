@@ -1,7 +1,8 @@
-'use client'
+'use client';
 
 import React from 'react';
 import Image from 'next/image';
+import { useModuleRequest } from '@/hooks/useModuleRequest';
 
 const modules = [
   { id: 1, name: 'Tráfico', icon: '/trafico.png' },
@@ -13,10 +14,12 @@ const modules = [
   { id: 7, name: 'Admón. del sistema', icon: '/admin.png' },
 ];
 
-const ModuleCard = ({ name, icon, onClick }) => (
+const ModuleCard = ({ name, icon, onClick, disabled }) => (
   <button 
-    className="bg-white px-6 py-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col items-center gap-2 w-full"
+    className={`bg-white px-6 py-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 
+      flex flex-col items-center gap-2 w-full ${disabled ? 'opacity-70 cursor-not-allowed' : ''}`}
     onClick={onClick}
+    disabled={disabled}
   >
     <div className="relative w-16 h-16">
       <Image
@@ -31,26 +34,7 @@ const ModuleCard = ({ name, icon, onClick }) => (
 );
 
 const ModulesGrid = () => {
-  const handleModuleClick = async (moduleId) => {
-    try {
-      const response = await fetch('http://localhost:3002/notepad/open', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('Respuesta del servidor:', data);
-      
-    } catch (error) {
-      console.error('Error al hacer la petición:', error);
-    }
-  };
+  const { handleModuleClick, loading, error } = useModuleRequest();
 
   return (
     <div className="max-w-7xl mx-auto px-8 py-12">
@@ -74,9 +58,16 @@ const ModulesGrid = () => {
             name={module.name}
             icon={module.icon}
             onClick={() => handleModuleClick(module.id)}
+            disabled={loading}
           />
         ))}
       </div>
+
+      {error && (
+        <p className="mt-4 text-red-500 text-sm">
+          Error: {error}
+        </p>
+      )}
     </div>
   );
 };
