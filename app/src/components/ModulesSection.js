@@ -3,6 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { useModuleRequest } from '@/hooks/useModuleRequest';
+import Toast from '@/components/Toast';
 
 const modules = [
   { id: 1, name: 'Tráfico', icon: '/trafico.png' },
@@ -34,7 +35,7 @@ const ModuleCard = ({ name, icon, onClick, disabled }) => (
 );
 
 const ModulesGrid = () => {
-  const { handleModuleClick, loading, error } = useModuleRequest();
+  const { handleModuleClick, loading, toast, closeToast } = useModuleRequest();
 
   return (
     <div className="max-w-7xl mx-auto px-8 py-12">
@@ -57,16 +58,18 @@ const ModulesGrid = () => {
             key={module.id}
             name={module.name}
             icon={module.icon}
-            onClick={() => handleModuleClick(module.id)}
+            onClick={() => handleModuleClick(module.id, module.name)}
             disabled={loading}
           />
         ))}
       </div>
 
-      {error && (
-        <p className="mt-4 text-red-500 text-sm">
-          Error: {error}
-        </p>
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={closeToast}
+        />
       )}
     </div>
   );
