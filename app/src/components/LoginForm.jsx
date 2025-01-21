@@ -1,7 +1,18 @@
+'use client';
+
 import Image from 'next/image';
 import { User, Lock, Server, Database, Globe, Linkedin, Youtube, Facebook } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const LoginForm = () => {
+  const router = useRouter();
+  
+  const conectar = (e) => {
+    e.preventDefault();
+    console.log('Conectando al dashboard...');
+    router.push('/home');
+  };
+  
   return (
     <div className="w-full lg:w-1/2 min-h-screen flex flex-col bg-white">
       <div className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-6 flex flex-col flex-grow">
@@ -74,6 +85,7 @@ const LoginForm = () => {
                   ¿Olvidaste tu contraseña?
                 </a>
                 <button
+                  onClick={conectar}
                   type="submit"
                   className="w-full md:w-48 lg:w-56 px-8 md:px-10 py-3 md:py-4 bg-[#00B1EA] text-white rounded-full hover:bg-[#0099D1] transition-colors flex items-center justify-center gap-2 text-base md:text-lg font-medium order-1 md:order-2"
                 >
