@@ -44,7 +44,7 @@ const ModulesCatalog = () => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="max-w-7xl mx-auto px-8 pb-12">
+    <div className="max-w-7xl mx-auto px-8 pb-2">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200 

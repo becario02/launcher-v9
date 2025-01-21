@@ -2,6 +2,7 @@ import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import ModulesSection from '@/components/ModulesSection';
 import ModulesCatalog from '@/components/ModulesCatalog';
+import NewsSection from '@/components/NewsSection';
 
 export default function Home() {
   return (
@@ -13,6 +14,7 @@ export default function Home() {
           <div className="space-y-8">
             <ModulesSection />
             <ModulesCatalog />
+            <NewsSection />
           </div>
         </main>
       </div>
