@@ -1,3 +1,4 @@
+
 import LoginForm from "@/components/LoginForm";
 import LoginCarousel from "@/components/LoginCarousel";
 
@@ -7,5 +8,6 @@ export default function Home() {
       <LoginCarousel />
       <LoginForm />
     </main>
+
   );
 }
