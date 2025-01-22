@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "js-cookie": "^3.0.5",
     "lucide-react": "^0.471.2",
     "next": "15.1.4",
     "react": "^19.0.0",
