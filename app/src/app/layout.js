@@ -1,6 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navigation from '@/components/Navigation';
+import { AuthProvider } from '@/context/AuthContext';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,17 +13,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Launcher V9",
-  description: "Launcher V9",
+  title: "ADVAN ERP",
+  description: "Sistema de gestión empresarial",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Navigation>
+        <AuthProvider>
           {children}
-        </Navigation>
+        </AuthProvider>
       </body>
     </html>
   );
