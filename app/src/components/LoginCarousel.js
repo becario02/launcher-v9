@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
+
 const LoginCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const images = [
