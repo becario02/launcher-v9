@@ -1,29 +1,32 @@
 import TarjetaRobot from './TarjetaRobot';
+import { useRouter } from 'next/navigation';
 
 const perfiles = [
   {
     titulo: 'Operativo',
     descripcion: 'Administra y supervisa actividades diarias de transporte y logística.',
-    imagen: '/operativo.png'
+    imagen: '/perfilOperativo.svg'
   },
   {
     titulo: 'Financiero',
     descripcion: 'Gestiona las operaciones financieras y contables.',
-    imagen: '/financiero.png'
+    imagen: '/perfilFinanciero.svg'
   },
   {
     titulo: 'Auxiliar',
     descripcion: 'Encargado de tareas de soporte y mantenimiento.',
-    imagen: '/auxiliar.png'
+    imagen: '/perfilAuxiliar.svg'
   }
 ];
 
 const SeleccionPerfil = () => {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-blue-50 p-4">
       <div className="max-w-6xl mx-auto">
         <div className="mb-4">
-          <img src="/logo.png" alt="Logo Advan" className="h-8" />
+          <img src="/logoAdvan.svg" alt="Logo Advan" className="h-8" />
         </div>
         
         <div className="text-center mb-8">
@@ -43,7 +46,10 @@ const SeleccionPerfil = () => {
         </div>
 
         <div className="text-center mt-8">
-          <button className="bg-blue-500 text-white px-8 py-2 rounded-md hover:bg-blue-600 transition-colors">
+          <button
+            onClick={ () => router.push('/') }
+            className="bg-blue-500 text-white px-8 py-2 rounded-md hover:bg-blue-600 transition-colors"
+          >
             Continuar
           </button>
         </div>
