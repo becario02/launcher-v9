@@ -47,7 +47,7 @@ const Toast = ({ message, type = 'success', onClose }) => {
   return (
     <div 
       className={`fixed bottom-4 right-4 flex items-start gap-3 p-4 rounded-lg shadow-lg
-        transition-all duration-300 ease-in-out transform max-w-sm w-full
+        transition-all duration-300 ease-in-out transform max-w-sm w-full z-[70]
         ${currentStyle.container}
         ${isVisible 
           ? 'translate-x-0 opacity-100' 
