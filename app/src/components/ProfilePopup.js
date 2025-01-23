@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, LogOut, ChevronRight, ChevronUp } from 'lucide-react';
+import { useAuth } from '@/context/auth';
+import Cookies from 'js-cookie';
 
 const accounts = [
   { id: 'P2', name: 'PHES 2', email: 'roberto2@phes.mx', color: 'bg-teal-500' },
@@ -22,9 +24,15 @@ const AccountButton = ({ id, name, email, color }) => (
 );
 
 const ProfilePopup = ({ isOpen, onClose }) => {
+  const { logout } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [showAnimation, setShowAnimation] = useState(false);
   const [showAccounts, setShowAccounts] = useState(true); // Iniciamos con true para mostrar las cuentas
+
+  const handleLogout = () => {
+    Cookies.remove('auth');
+    logout();
+  };
 
   useEffect(() => {
     let timers = [];
@@ -91,7 +99,10 @@ const ProfilePopup = ({ isOpen, onClose }) => {
         </div>
 
         <div className="p-4 border-t border-gray-100 bg-gray-50">
-          <button className="w-full flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm font-medium px-2 py-1">
+          <button 
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm font-medium px-2 py-1"
+          >
             <LogOut className="w-4 h-4" />
             Cerrar sesión
           </button>
