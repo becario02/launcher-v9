@@ -1,10 +1,10 @@
 'use client';
 
-import Image from 'next/image';
 import { useState } from 'react';
+import Image from 'next/image';
 import { User, Lock, Server, Database, Globe, Linkedin, Youtube, Facebook } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
+import Cookies from 'js-cookie';
 import ErrorIniciarSesion from './ErrorIniciarSesion';
 import MensajeOlvidasteContraseña from './MensajeOlvidasteContraseña';
 import FormRecuperarContraseña from './FormRecuperarContraseña';
@@ -21,8 +21,8 @@ const InputField = ({ icon: Icon, placeholder, type = "text", value, onChange, n
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className="w-full pl-12 pr-4 py-3.5 bg-gray-50 rounded-lg border border-gray-200
-        focus:outline-none focus:ring-2 focus:ring-[#00B1EA] focus:border-transparent
+      className="w-full pl-12 pr-4 py-3.5 bg-gray-50 rounded-lg border border-gray-200 
+        focus:outline-none focus:ring-2 focus:ring-[#00B1EA] focus:border-transparent 
         text-gray-700 placeholder-gray-500 text-base"
     />
   </div>
@@ -31,8 +31,8 @@ const InputField = ({ icon: Icon, placeholder, type = "text", value, onChange, n
 const SocialButton = ({ icon: Icon, href = "#" }) => (
   <a
     href={href}
-    className="w-11 h-11 flex items-center justify-center rounded-full border-2
-      border-[#00B1EA] text-[#00B1EA] hover:bg-[#00B1EA] hover:text-white
+    className="w-11 h-11 flex items-center justify-center rounded-full border-2 
+      border-[#00B1EA] text-[#00B1EA] hover:bg-[#00B1EA] hover:text-white 
       transition-colors duration-200"
   >
     <Icon className="w-5 h-5" strokeWidth={2} />
@@ -40,8 +40,13 @@ const SocialButton = ({ icon: Icon, href = "#" }) => (
 );
 
 const LoginForm = () => {
-  const router = useRouter();
   const { login } = useAuth();
+  const [modalStates, setModalStates] = useState({
+    error: false,
+    contraseña: false,
+    recuperarForm: false,
+    exito: false
+  });
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
@@ -49,163 +54,152 @@ const LoginForm = () => {
     server: '',
     database: ''
   });
-  const [showError, setShowError] = useState(false);
-  const [showModalContraseña, setShowModalContraseña] = useState(false);
-  const [showRecuperarForm, setShowRecuperarForm] = useState(false);
-  const [showExito, setShowExito] = useState(false);
 
   const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      const user = await login(formData);
-      router.push('/');
+      Cookies.set('auth', 'dummy-token', { expires: 7 });
+      login({ username: 'demo_user' });
     } catch (error) {
-      console.error('Error:', error);
-      setShowError(true);
+      setModalStates(prev => ({ ...prev, error: true }));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleForgotPassword = () => {
-    setShowModalContraseña(true);
+  const handleModalClose = (modalName) => {
+    setModalStates(prev => ({ ...prev, [modalName]: false }));
   };
 
   const handleRecuperarSubmit = () => {
-    setShowRecuperarForm(false);
-    setShowExito(true);
+    handleModalClose('recuperarForm');
+    setModalStates(prev => ({ ...prev, exito: true }));
   };
 
-  return (
-    <div className="w-full lg:w-1/2 flex flex-col bg-white relative">
-      <div className={`${(showModalContraseña || showRecuperarForm || showExito || showError) ? 'opacity-50' : 'opacity-100'} transition-opacity duration-200`}>
-        <div className="w-full p-8 md:p-10">
-          <div className="flex justify-end">
-            <Image
-              src="/logoAdvan.svg"
-              alt="Advan Logo"
-              width={160}
-              height={50}
-              className="h-auto -m-2"
-              priority
-            />
-          </div>
-        </div>
-
-        <div className="flex-1 flex items-center justify-center px-8 md:px-16 lg:px-20">
-          <div className="w-full max-w-md space-y-12">
-            <h1 className="text-[#00B1EA] text-4xl font-bold text-center">
-              ¡Bienvenid@!
-            </h1>
-
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <div className="space-y-4">
-                <InputField 
-                  icon={User} 
-                  placeholder="Usuario" 
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                />
-                <InputField 
-                  icon={Lock} 
-                  placeholder="Contraseña" 
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                />
-                <InputField 
-                  icon={Server} 
-                  placeholder="Servidor"
-                  name="server"
-                  value={formData.server}
-                  onChange={handleChange}
-                />
-                <InputField 
-                  icon={Database} 
-                  placeholder="Base de datos"
-                  name="database"
-                  value={formData.database}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="flex flex-col-reverse md:flex-row items-center justify-between gap-6">
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  className="text-[#00B1EA] hover:text-[#0099D1] text-base"
-                >
-                  ¿Olvidaste tu contraseña?
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full md:w-auto px-10 py-3.5 bg-[#00B1EA] text-white rounded-full
-                    hover:bg-[#0099D1] transition-colors duration-200 flex items-center justify-center gap-2
-                    disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Conectando...' : 'Conectar'}
-                  {!loading && <span className="text-lg">→</span>}
-                </button>
-              </div>
-            </form>
-
-            <div className="flex items-center justify-center gap-6 pb-8">
-              <SocialButton icon={Globe} />
-              <SocialButton icon={Linkedin} />
-              <SocialButton icon={Youtube} />
-              <SocialButton icon={Facebook} />
-            </div>
-          </div>
+  const renderMainContent = () => (
+    <div className={`${Object.values(modalStates).some(Boolean) ? 'opacity-50' : 'opacity-100'} 
+      transition-opacity duration-200`}>
+      <div className="w-full p-8 md:p-10">
+        <div className="flex justify-end">
+          <Image
+            src="/logoAdvan.svg"
+            alt="Advan Logo"
+            width={160}
+            height={50}
+            className="h-auto -m-2"
+            priority
+          />
         </div>
       </div>
 
-      {showError && (
+      <div className="flex-1 flex items-center justify-center px-8 md:px-16 lg:px-20">
+        <div className="w-full max-w-md space-y-12">
+          <h1 className="text-[#00B1EA] text-4xl font-bold text-center">
+            ¡Bienvenid@!
+          </h1>
+
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="space-y-4">
+              {['username', 'password', 'server', 'database'].map(field => (
+                <InputField
+                  key={field}
+                  icon={{
+                    username: User,
+                    password: Lock,
+                    server: Server,
+                    database: Database
+                  }[field]}
+                  type={field === 'password' ? 'password' : 'text'}
+                  placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                  name={field}
+                  value={formData[field]}
+                  onChange={handleChange}
+                />
+              ))}
+            </div>
+
+            <div className="flex flex-col-reverse md:flex-row items-center justify-between gap-6">
+              <button
+                type="button"
+                onClick={() => setModalStates(prev => ({ ...prev, contraseña: true }))}
+                className="text-[#00B1EA] hover:text-[#0099D1] text-base"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full md:w-auto px-10 py-3.5 bg-[#00B1EA] text-white rounded-full
+                  hover:bg-[#0099D1] transition-colors duration-200 flex items-center justify-center gap-2
+                  disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Conectando...' : 'Conectar'}
+                {!loading && <span className="text-lg">→</span>}
+              </button>
+            </div>
+          </form>
+
+          <div className="flex items-center justify-center gap-6 pb-8">
+            {[Globe, Linkedin, Youtube, Facebook].map((Icon, index) => (
+              <SocialButton key={index} icon={Icon} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderModals = () => (
+    <>
+      {modalStates.error && (
         <div className="fixed inset-0 bg-black bg-opacity-0 z-50 flex items-center justify-center">
-          <ErrorIniciarSesion onClose={() => setShowError(false)} />
+          <ErrorIniciarSesion onClose={() => handleModalClose('error')} />
         </div>
       )}
 
-      {showModalContraseña && (
+      {modalStates.contraseña && (
         <div className="fixed inset-0 bg-black bg-opacity-0 z-50 flex items-center justify-center">
-          <MensajeOlvidasteContraseña 
-            onClose={() => setShowModalContraseña(false)}
+          <MensajeOlvidasteContraseña
+            onClose={() => handleModalClose('contraseña')}
             onContinue={() => {
-              setShowModalContraseña(false);
-              setShowRecuperarForm(true);
+              handleModalClose('contraseña');
+              setModalStates(prev => ({ ...prev, recuperarForm: true }));
             }}
           />
         </div>
       )}
 
-      {showRecuperarForm && (
+      {modalStates.recuperarForm && (
         <div className="fixed inset-0 bg-black bg-opacity-0 z-50 flex items-center justify-center">
-          <FormRecuperarContraseña 
-            onClose={() => setShowRecuperarForm(false)}
+          <FormRecuperarContraseña
+            onClose={() => handleModalClose('recuperarForm')}
             onSubmit={handleRecuperarSubmit}
           />
         </div>
       )}
 
-      {showExito && (
+      {modalStates.exito && (
         <div className="fixed inset-0 bg-black bg-opacity-0 z-50 flex items-center justify-center">
           <MensajeExitoRecuperarContraseña
-            onClose={() => setShowExito(false)}
-            onContinue={() => setShowExito(false)}
+            onClose={() => handleModalClose('exito')}
+            onContinue={() => handleModalClose('exito')}
           />
         </div>
       )}
+    </>
+  );
+
+  return (
+    <div className="w-full lg:w-1/2 flex flex-col bg-white relative">
+      {renderMainContent()}
+      {renderModals()}
     </div>
   );
 };
