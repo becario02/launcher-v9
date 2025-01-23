@@ -62,7 +62,7 @@ const FormRecuperarContraseña = ({ onClose, onSubmit }) => {
               required
             />
           </div>
-
+          
           <div className="relative">
             <Database className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             <input
@@ -75,7 +75,7 @@ const FormRecuperarContraseña = ({ onClose, onSubmit }) => {
               required
             />
           </div>
-
+          
           <div className="flex justify-center mt-8">
             <button 
               type="submit"
