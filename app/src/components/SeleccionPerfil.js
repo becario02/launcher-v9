@@ -1,39 +1,40 @@
 import TarjetaRobot from './TarjetaRobot';
 import { useRouter } from 'next/navigation';
 
-const perfiles = [
-  {
-    titulo: 'Operativo',
-    descripcion: 'Administra y supervisa actividades diarias de transporte y logística.',
-    imagen: '/perfilOperativo.svg'
-  },
-  {
-    titulo: 'Financiero',
-    descripcion: 'Gestiona las operaciones financieras y contables.',
-    imagen: '/perfilFinanciero.svg'
-  },
-  {
-    titulo: 'Auxiliar',
-    descripcion: 'Encargado de tareas de soporte y mantenimiento.',
-    imagen: '/perfilAuxiliar.svg'
-  }
-];
-
 const SeleccionPerfil = () => {
   const router = useRouter();
 
+  const perfiles = [
+    {
+      titulo: 'Operativo',
+      descripcion: 'Administra y supervisa actividades diarias de transporte y logística.',
+      imagen: '/perfilOperativo.png'
+    },
+    {
+      titulo: 'Financiero',
+      descripcion: 'Gestiona las operaciones financieras y contables.',
+      imagen: '/perfilFinanciero.png'
+    },
+    {
+      titulo: 'Auxiliar',
+      descripcion: 'Encargado de tareas de soporte y mantenimiento.',
+      imagen: '/perfilAuxiliar.png'
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-blue-50 p-20 overflow-auto">
-  <div className="container mx-auto 2xl:max-w-7xl">
-    
-    <div className="text-center mb-6 sm:mb-7 md:mb-8">
-      <h1 className="text-2xl sm:text-2.5xl md:text-3xl 2xl:text-4xl font-bold mb-2 sm:mb-3 md:mb-4">Selecciona un perfil</h1>
-          <p className="text-gray-600 text-sm sm:text-base">
+    <div className="min-h-screen overflow-auto bg-gradient-to-br from-white via-white to-[#4096FB]/50">
+      <div className="container mx-auto px-20 py-16">
+        <div className="text-center mb-12">
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">
+            Selecciona un perfil
+          </h1>
+          <p className="text-gray-600">
             Por favor, elige el perfil que más se ajusta a las tareas o funciones que desempeñas en tu día a día.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {perfiles.map((perfil) => (
             <TarjetaRobot
               key={perfil.titulo}
@@ -42,10 +43,10 @@ const SeleccionPerfil = () => {
           ))}
         </div>
 
-        <div className="text-center mt-6 sm:mt-7 md:mt-8">
+        <div className="text-center mt-12">
           <button
             onClick={() => router.push('/')}
-            className="bg-blue-500 text-white px-6 sm:px-7 md:px-8 py-2 sm:py-2.5 rounded-md text-sm sm:text-base hover:bg-blue-600 transition-colors"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2.5 rounded-3xl text-base font-medium transition-colors"
           >
             Continuar
           </button>

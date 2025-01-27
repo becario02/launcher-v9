@@ -2,7 +2,7 @@
 
 const VistaBienvenida = ({ onSiguiente }) => {
   return (
-    <div className="flex-1 flex justify-center items-center p-4 bg-gradient-to-br from-white via-white to-[#4096FB]/30">
+    <div className="flex-1 flex justify-center items-center p-4 bg-gradient-to-br from-white via-white to-[#4096FB]/50">
       <div className="w-full max-w-lg 2xl:max-w-2xl flex flex-col items-center px-4">
         <img 
           src="/robot_hola.png" 
