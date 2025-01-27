@@ -3,6 +3,7 @@
 import { ChevronDown } from 'lucide-react';
 import { SideMenu } from '@/components/modules/SideMenu';
 import { RecentItems } from '@/components/modules/RecentItems';
+import ModuleHeader from '@/components/modules/ModuleHeader';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 
 const initialItems = [
@@ -46,33 +47,35 @@ export default function ModulePage() {
         onTouchStart={handleTouchStart}
       />
 
-      <div className="flex-1 p-8">
-        <h1 className="text-3xl font-bold mb-12">Tráfico</h1>
+      <div className="flex-1">
+        <ModuleHeader />
         
-        <section>
-          <h2 className="text-xl font-semibold mb-6">Utilizados recientemente</h2>
-          
-          <RecentItems
-            items={recentItems}
-            onDrop={(e) => handleDrop(e, 'recent')}
-            onDragOver={(e) => e.preventDefault()}
-            onDragStart={handleDragStart}
-            onDragEnter={setDragOverItemId}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            dragOverItemId={dragOverItemId}
-          />
+        <div className="p-8">
+          <section>
+            <h2 className="text-xl font-semibold mb-6">Utilizados recientemente</h2>
+            
+            <RecentItems
+              items={recentItems}
+              onDrop={(e) => handleDrop(e, 'recent')}
+              onDragOver={(e) => e.preventDefault()}
+              onDragStart={handleDragStart}
+              onDragEnter={setDragOverItemId}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              dragOverItemId={dragOverItemId}
+            />
 
-          <div className="mt-8 border-t border-gray-200 pt-8">
-            <button 
-              className="flex items-center text-blue-600 hover:text-blue-700 font-medium gap-2 group"
-              onClick={() => {/* Aquí puedes agregar la lógica para mostrar más información */}}
-            >
-              <ChevronDown className="w-5 h-5 transition-transform group-hover:translate-y-0.5" />
-              <span>¡Descubre todo lo que puedes hacer con ADVAN ERP Trucks!</span>
-            </button>
-          </div>
-        </section>
+            <div className="mt-8 border-t border-gray-200 pt-8">
+              <button 
+                className="flex items-center text-blue-600 hover:text-blue-700 font-medium gap-2 group"
+                onClick={() => {/* Aquí puedes agregar la lógica para mostrar más información */}}
+              >
+                <ChevronDown className="w-5 h-5 transition-transform group-hover:translate-y-0.5" />
+                <span>¡Descubre todo lo que puedes hacer con ADVAN ERP Trucks!</span>
+              </button>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );
