@@ -6,7 +6,7 @@ const VistaBienvenida = ({ onSiguiente }) => {
       <div className="w-full max-w-lg 2xl:max-w-2xl flex flex-col items-center px-4">
         <img 
           src="/robot_hola.png" 
-          alt="Robot" 
+          alt="Robot NOVA saludando" 
           className="w-24 h-24 xs:w-28 xs:h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 2xl:w-64 2xl:h-64 
                    mb-3 sm:mb-4 md:mb-6 lg:mb-8"
         />
