@@ -1,8 +1,8 @@
 'use client';
 
+import { IconUser, IconLock, IconServer, IconDatabase, IconWorld, IconBrandLinkedin, IconBrandYoutube, IconBrandFacebook } from "@tabler/icons-react";
 import { useState } from 'react';
 import Image from 'next/image';
-import { User, Lock, Server, Database, Globe, Linkedin, Youtube, Facebook } from 'lucide-react';
 import { useAuth } from '@/context/auth';
 import Cookies from 'js-cookie';
 import ErrorIniciarSesion from './ErrorIniciarSesion';
@@ -111,10 +111,10 @@ const LoginForm = () => {
                 <InputField
                   key={field}
                   icon={{
-                    username: User,
-                    password: Lock,
-                    server: Server,
-                    database: Database
+                    username: IconUser,
+                    password: IconLock,
+                    server: IconServer,
+                    database: IconDatabase
                   }[field]}
                   type={field === 'password' ? 'password' : 'text'}
                   placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
@@ -147,7 +147,7 @@ const LoginForm = () => {
           </form>
 
           <div className="flex items-center justify-center gap-6 pb-8">
-            {[Globe, Linkedin, Youtube, Facebook].map((Icon, index) => (
+            {[IconWorld, IconBrandLinkedin, IconBrandYoutube, IconBrandFacebook].map((Icon, index) => (
               <SocialButton key={index} icon={Icon} />
             ))}
           </div>

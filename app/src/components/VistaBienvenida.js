@@ -1,4 +1,5 @@
 'use client';
+import PropTypes from 'prop-types';
 
 const VistaBienvenida = ({ onSiguiente }) => {
   return (
@@ -37,6 +38,10 @@ const VistaBienvenida = ({ onSiguiente }) => {
       </div>
     </div>
   );
+};
+
+VistaBienvenida.propTypes = {
+  onSiguiente: PropTypes.func.isRequired,
 };
 
 export default VistaBienvenida;

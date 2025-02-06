@@ -1,5 +1,6 @@
 import React from 'react';
 import { AtSign, X } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 const MensajeExitoRecuperarContraseña = ({ onClose, onContinue }) => {
   return (
@@ -42,6 +43,11 @@ const MensajeExitoRecuperarContraseña = ({ onClose, onContinue }) => {
       </div>
     </div>
   );
+};
+
+MensajeExitoRecuperarContraseña.propTypes = {
+  onClose: PropTypes.func.isRequired,
+  onContinue: PropTypes.func.isRequired,
 };
 
 export default MensajeExitoRecuperarContraseña;
