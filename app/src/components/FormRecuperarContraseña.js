@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Database, Server } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 const FormRecuperarContraseña = ({ onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -88,6 +89,11 @@ const FormRecuperarContraseña = ({ onClose, onSubmit }) => {
       </div>
     </div>
   );
+};
+
+FormRecuperarContraseña.propTypes = {
+  onClose: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired
 };
 
 export default FormRecuperarContraseña;

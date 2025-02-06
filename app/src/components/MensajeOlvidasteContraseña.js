@@ -1,5 +1,6 @@
 import React from 'react';
 import { Key } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 const MensajeOlvidasteContraseña = ({ onClose, onContinue }) => {
   return (
@@ -42,6 +43,11 @@ const MensajeOlvidasteContraseña = ({ onClose, onContinue }) => {
       </div>
     </div>
   );
+};
+
+MensajeOlvidasteContraseña.propTypes = {
+  onClose: PropTypes.func.isRequired,
+  onContinue: PropTypes.func.isRequired,  
 };
 
 export default MensajeOlvidasteContraseña;

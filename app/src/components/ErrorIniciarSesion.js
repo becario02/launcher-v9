@@ -1,5 +1,6 @@
 import React from 'react';
 import { User2 } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 const ErrorIniciarSesion = ({ onClose }) => {
   return (
@@ -30,5 +31,9 @@ const ErrorIniciarSesion = ({ onClose }) => {
     </div>
   );
 };
+
+ErrorIniciarSesion.propTypes = {
+  onClose: PropTypes.func.isRequired
+}; 
 
 export default ErrorIniciarSesion;
