@@ -29,6 +29,15 @@ const InputField = ({ icon: Icon, placeholder, type = "text", value, onChange, n
   </div>
 );
 
+InputField.propTypes = {
+  icon: PropTypes.elementType.isRequired,
+  placeholder: PropTypes.string.isRequired,
+  type: PropTypes.string,
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  name: PropTypes.string.isRequired
+};
+
 const socialIcons = [
   { icon: IconWorld, id: 'world', href: '#' },
   { icon: IconBrandLinkedin, id: 'linkedin', href: '#' },
@@ -46,6 +55,11 @@ const SocialButton = ({ icon: Icon, href = "#" }) => (
     <Icon className="w-5 h-5" strokeWidth={2} />
   </a>
 );
+
+SocialButton.propTypes = {
+  icon: PropTypes.elementType.isRequired,
+  href: PropTypes.string
+};
 
 const LoginForm = () => {
   const { login } = useAuth();
@@ -210,15 +224,6 @@ const LoginForm = () => {
       {renderModals()}
     </div>
   );
-};
-
-LoginForm.propTypes = {
-  icon: PropTypes.elementType,
-  placeholder: PropTypes.string,
-  type: PropTypes.string,
-  value: PropTypes.string,
-  onChange: PropTypes.func,
-  name: PropTypes.string
 };
 
 export default LoginForm;
