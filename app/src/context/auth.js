@@ -30,7 +30,11 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     setUser(null);
-    router.push('/login');
+    // Limpiar cookies de auth y tabs
+    ['auth', 'tabs', 'activeTabId', 'tabCounter'].forEach(cookieName => {
+      Cookies.remove(cookieName, { path: '/' });
+    });
+    window.location.href = '/login';
   };
 
   return (

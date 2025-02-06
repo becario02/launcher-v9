@@ -1,7 +1,7 @@
 // src/components/modules/MenuItem.js
 
 import React from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { DraggableItem } from './DraggableItem';
 
 export const MenuItem = ({ 
@@ -9,8 +9,7 @@ export const MenuItem = ({
   expanded, 
   onToggle, 
   onDragStart, 
-  onTouchStart,
-  isCollapsed 
+  onTouchStart
 }) => (
   <div className="px-2">
     <button 
@@ -19,11 +18,10 @@ export const MenuItem = ({
         hover:bg-white/60 transition-colors duration-200
         ${expanded ? 'bg-white/80' : ''}`}
     >
-      <span className={`text-sm font-medium text-gray-700 transition-opacity duration-200
-        ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+      <span className="text-sm font-medium text-gray-700">
         {section.name}
       </span>
-      {section.items.length > 0 && !isCollapsed && (
+      {section.items.length > 0 && (
         <ChevronDown 
           className={`w-4 h-4 text-gray-500 transition-transform duration-200
             ${expanded ? 'rotate-180' : ''}`} 
@@ -32,14 +30,13 @@ export const MenuItem = ({
     </button>
 
     <div className={`overflow-hidden transition-all duration-200 ease-in-out
-      ${expanded && !isCollapsed ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+      ${expanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
       {section.items.map(item => (
         <DraggableItem
           key={item.id}
           item={item}
           onDragStart={onDragStart}
           onTouchStart={onTouchStart}
-          isCollapsed={isCollapsed}
         />
       ))}
     </div>

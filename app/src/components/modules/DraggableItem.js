@@ -3,7 +3,7 @@
 import React from 'react';
 import { getIconComponent } from './icons/IconMapper';
 
-export const DraggableItem = ({ item, onDragStart, onTouchStart, isCollapsed }) => {
+export const DraggableItem = ({ item, onDragStart, onTouchStart }) => {
   const handleTouchStart = (e) => {
     e.preventDefault();
     onTouchStart(e, item);
@@ -23,8 +23,7 @@ export const DraggableItem = ({ item, onDragStart, onTouchStart, isCollapsed }) 
       <div className="text-gray-500">
         {getIconComponent(item.iconName)}
       </div>
-      <span className={`text-sm text-gray-600 whitespace-nowrap transition-opacity duration-200
-        ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+      <span className="text-sm text-gray-600 whitespace-nowrap">
         {item.name}
       </span>
     </div>
