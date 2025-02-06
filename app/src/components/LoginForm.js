@@ -9,6 +9,7 @@ import ErrorIniciarSesion from './ErrorIniciarSesion';
 import MensajeOlvidasteContraseña from './MensajeOlvidasteContraseña';
 import FormRecuperarContraseña from './FormRecuperarContraseña';
 import MensajeExitoRecuperarContraseña from './MensajeExitoRecuperarContraseña';
+import PropTypes from 'prop-types';
 
 const InputField = ({ icon: Icon, placeholder, type = "text", value, onChange, name }) => (
   <div className="relative">
@@ -27,6 +28,13 @@ const InputField = ({ icon: Icon, placeholder, type = "text", value, onChange, n
     />
   </div>
 );
+
+const socialIcons = [
+  { icon: IconWorld, id: 'world', href: '#' },
+  { icon: IconBrandLinkedin, id: 'linkedin', href: '#' },
+  { icon: IconBrandYoutube, id: 'youtube', href: '#' },
+  { icon: IconBrandFacebook, id: 'facebook', href: '#' }
+];
 
 const SocialButton = ({ icon: Icon, href = "#" }) => (
   <a
@@ -147,8 +155,8 @@ const LoginForm = () => {
           </form>
 
           <div className="flex items-center justify-center gap-6 pb-8">
-            {[IconWorld, IconBrandLinkedin, IconBrandYoutube, IconBrandFacebook].map((Icon, index) => (
-              <SocialButton key={index} icon={Icon} />
+            {socialIcons.map(({ icon, id, href }) => (
+              <SocialButton key={id} icon={icon} href={href} />
             ))}
           </div>
         </div>
@@ -202,6 +210,15 @@ const LoginForm = () => {
       {renderModals()}
     </div>
   );
+};
+
+LoginForm.propTypes = {
+  icon: PropTypes.elementType,
+  placeholder: PropTypes.string,
+  type: PropTypes.string,
+  value: PropTypes.string,
+  onChange: PropTypes.func,
+  name: PropTypes.string
 };
 
 export default LoginForm;
