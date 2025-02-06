@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
 
   const login = (userData) => {
     setUser(userData);
-    router.push('/');
+    router.push('/select-profile');
   };
 
   const logout = () => {
