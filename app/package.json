@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@tabler/icons-react": "^3.29.0",
+    "axios": "^1.8.4",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.471.2",
     "next": "^15.2.4",
