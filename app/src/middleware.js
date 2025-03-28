@@ -1,16 +1,23 @@
 import { NextResponse } from 'next/server';
  
 export function middleware(request) {
+  const publicRoutes = ['/login', '/recuperarPassword'];
+  const isPublicRoute = publicRoutes.some(route => 
+    request.nextUrl.pathname === route || 
+    request.nextUrl.pathname.startsWith(`${route}/`)
+  );
+  
   const isAuthenticated = request.cookies.has('auth');
-  const isLoginPage = request.nextUrl.pathname === '/login';
 
-  if (!isAuthenticated && !isLoginPage) {
+  if (!isAuthenticated && !isPublicRoute) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  if (isAuthenticated && isLoginPage) {
+  if (isAuthenticated && request.nextUrl.pathname === '/login') {
     return NextResponse.redirect(new URL('/', request.url));
   }
+  
+  return NextResponse.next();
 }
  
 export const config = {

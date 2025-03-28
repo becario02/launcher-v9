@@ -57,15 +57,22 @@ export function TabsProvider({ children }) {
   }, [pathname]);
 
   useEffect(() => {
-    if (tabs.length === 0) {
-      router.push('/');
-    } else if (activeTabId) {
-      const activeTab = tabs.find(tab => tab.uniqueId === activeTabId);
-      if (activeTab) {
-        router.push(activeTab.path);
+    // Lista de rutas que no deben ser afectadas por la redirección de pestañas
+    const exemptRoutes = ['/login', '/recuperarPassword'];
+    const isExemptRoute = exemptRoutes.some(route => pathname === route || pathname.startsWith(route + '/'));
+    
+    // Solo aplicar lógica de redirección si no estamos en una ruta exenta
+    if (!isExemptRoute) {
+      if (tabs.length === 0) {
+        router.push('/');
+      } else if (activeTabId) {
+        const activeTab = tabs.find(tab => tab.uniqueId === activeTabId);
+        if (activeTab) {
+          router.push(activeTab.path);
+        }
       }
     }
-  }, [activeTabId, tabs, router]);
+  }, [activeTabId, tabs, router, pathname]);
 
   const addTab = (moduleId, moduleName) => {
     const urlPath = formatUrlName(moduleName);

@@ -13,8 +13,12 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const authCookie = Cookies.get('auth');
     const isLoginPage = pathname === '/login';
+    const isRecuperarContraseñaPage = pathname === '/recuperarPassword';
+    
+    // Permitir acceso a páginas públicas sin autenticación
+    const isPublicPage = isLoginPage || isRecuperarContraseñaPage;
 
-    if (!authCookie && !isLoginPage) {
+    if (!authCookie && !isPublicPage) {
       router.push('/login');
     }
 

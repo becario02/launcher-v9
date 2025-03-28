@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { Mail, Database, Server } from 'lucide-react';
+import { Mail, Loader2 } from 'lucide-react';
 import PropTypes from 'prop-types';
 
 const FormRecuperarContraseña = ({ onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
-    email: '',
-    server: '',
-    database: ''
+    email: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setFormData(prev => ({
@@ -16,9 +15,17 @@ const FormRecuperarContraseña = ({ onClose, onSubmit }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    
+    if (isSubmitting) return;
+    
+    try {
+      setIsSubmitting(true);
+      await onSubmit(formData);
+    } catch (error) {
+      console.error('Error en el formulario:', error);
+    }
   };
 
   return (
@@ -31,7 +38,8 @@ const FormRecuperarContraseña = ({ onClose, onSubmit }) => {
 
           <button 
             onClick={onClose}
-            className="absolute top-1 right-2 text-gray-400 hover:text-gray-600 font-bold text-xl"
+            disabled={isSubmitting}
+            className="absolute top-1 right-2 text-gray-400 hover:text-gray-600 font-bold text-xl disabled:text-gray-300 disabled:cursor-not-allowed"
           >
             ✕
           </button>
@@ -48,41 +56,24 @@ const FormRecuperarContraseña = ({ onClose, onSubmit }) => {
               placeholder="Correo electrónico"
               className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-2xl focus:outline-none text-gray-600"
               required
-            />
-          </div>
-
-          <div className="relative">
-            <Server className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              name="server"
-              value={formData.server}
-              onChange={handleChange}
-              placeholder="Servidor"
-              className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-2xl focus:outline-none text-gray-600"
-              required
-            />
-          </div>
-          
-          <div className="relative">
-            <Database className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              name="database"
-              value={formData.database}
-              onChange={handleChange}
-              placeholder="Base de datos"
-              className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-2xl focus:outline-none text-gray-600"
-              required
+              disabled={isSubmitting}
             />
           </div>
           
           <div className="flex justify-center mt-8">
             <button 
               type="submit"
-              className="bg-sky-600 text-white rounded-full py-2 px-12 hover:bg-sky-700 transition-colors text-base"
+              disabled={isSubmitting}
+              className="bg-sky-600 text-white rounded-full py-2 px-12 hover:bg-sky-700 transition-colors text-base disabled:bg-sky-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Aceptar
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Enviando...</span>
+                </>
+              ) : (
+                'Aceptar'
+              )}
             </button>
           </div>
         </form>

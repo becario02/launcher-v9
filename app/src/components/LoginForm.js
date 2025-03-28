@@ -5,13 +5,25 @@ import { useAuth } from '@/context/auth';
 import Cookies from 'js-cookie';
 import Link from 'next/link';
 import Image from 'next/image';
+import ErrorIniciarSesion from './ErrorIniciarSesion';
+import MensajeOlvidasteContraseña from './MensajeOlvidasteContraseña';
+import FormRecuperarContraseña from './FormRecuperarContraseña';
+import MensajeExitoRecuperarContraseña from './MensajeExitoRecuperarContraseña';
+import { recuperarContraseña } from '@/services/api/recuperarContraseña';
 
 const LoginForm = () => {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    email: '',
     username: '',
     password: '',
+  });
+  const [modalStates, setModalStates] = useState({
+    error: false,
+    contraseña: false,
+    recuperarForm: false,
+    exito: false
   });
 
   const handleChange = (e) => {
@@ -24,22 +36,76 @@ const LoginForm = () => {
     setLoading(true);
     
     try {
-      // Simulated authentication
       Cookies.set('auth', 'dummy-token', { expires: 7 });
       login({ 
         username: formData.username || 'demo_user',
       });
     } catch (error) {
       console.error('Error durante el inicio de sesión:', error);
+      setModalStates(prev => ({ ...prev, error: true }));
     } finally {
       setLoading(false);
     }
   };
 
+  const handleModalClose = (modalName) => {
+    setModalStates(prev => ({ ...prev, [modalName]: false }));
+  };
+
+  const handleRecuperarSubmit = async (formData) => {
+    try {
+      await recuperarContraseña.enviarCorreo(formData.email);
+      handleModalClose('recuperarForm');
+      setModalStates(prev => ({ ...prev, exito: true }));
+    } catch (error) {
+      setModalStates(prev => ({ ...prev, error: true }));
+    }
+    
+  };
+
+  const renderModals = () => (
+    <>
+      {modalStates.error && (
+        <div className="fixed inset-0 bg-black bg-opacity-0 z-50 flex items-center justify-center">
+          <ErrorIniciarSesion onClose={() => handleModalClose('error')} />
+        </div>
+      )}
+
+      {modalStates.contraseña && (
+        <div className="fixed inset-0 bg-black bg-opacity-0 z-50 flex items-center justify-center">
+          <MensajeOlvidasteContraseña
+            onClose={() => handleModalClose('contraseña')}
+            onContinue={() => {
+              handleModalClose('contraseña');
+              setModalStates(prev => ({ ...prev, recuperarForm: true }));
+            }}
+          />
+        </div>
+      )}
+
+      {modalStates.recuperarForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-0 z-50 flex items-center justify-center">
+          <FormRecuperarContraseña
+            onClose={() => handleModalClose('recuperarForm')}
+            onSubmit={handleRecuperarSubmit}
+          />
+        </div>
+      )}
+
+      {modalStates.exito && (
+        <div className="fixed inset-0 bg-black bg-opacity-0 z-50 flex items-center justify-center">
+          <MensajeExitoRecuperarContraseña
+            onClose={() => handleModalClose('exito')}
+            onContinue={() => handleModalClose('exito')}
+          />
+        </div>
+      )}
+    </>
+  );
+
   return (
-    <div className="w-full lg:w-1/2 flex flex-col items-center justify-center px-8 py-12 bg-white">
+    <div className="w-full lg:w-1/2 flex flex-col items-center justify-center px-8 py-12 bg-white relative">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="mb-12 flex justify-center">
           <Image
             src="/logoAdvan.svg"
@@ -51,7 +117,6 @@ const LoginForm = () => {
           />
         </div>
         
-        {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-medium text-gray-800 mb-2">
             Ingresa a tu cuenta
@@ -61,7 +126,6 @@ const LoginForm = () => {
           </p>
         </div>
         
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-4">
             <div>
@@ -75,7 +139,7 @@ const LoginForm = () => {
                 value={formData.username}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-                placeholder="luis.gonzalez@gmail.com"
+                placeholder="correo@dominio.com"
               />
             </div>
             
@@ -90,15 +154,19 @@ const LoginForm = () => {
                 value={formData.password}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-                placeholder="••••••••••"
+                placeholder="Contraseña"
               />
             </div>
           </div>
           
           <div className="flex justify-end">
-            <Link href="#" className="text-sm text-gray-600 hover:text-gray-800">
+            <button
+              type="button"
+              onClick={() => setModalStates(prev => ({ ...prev, contraseña: true }))}
+              className="text-sm text-gray-600 hover:text-gray-800"
+            >
               ¿Olvidaste tu contraseña?
-            </Link>
+            </button>
           </div>
           
           <button
@@ -118,6 +186,7 @@ const LoginForm = () => {
           </div>
         </form>
       </div>
+      {renderModals()}
     </div>
   );
 };

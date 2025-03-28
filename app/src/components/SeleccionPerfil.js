@@ -37,7 +37,7 @@ const SeleccionPerfil = () => {
       console.log('Perfil seleccionado:', 
         perfiles.find(p => p.id === perfilSeleccionado)
       );
-      router.push('/');
+      router.push('/recuperarPassword');
     }
   };
 
