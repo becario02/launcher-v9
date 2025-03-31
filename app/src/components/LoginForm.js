@@ -20,6 +20,9 @@ const LoginForm = () => {
     password: '',
   });
 
+  const rawLang = typeof navigator !== 'undefined' ? navigator.language || 'en-US' : 'en-US';
+  const language = rawLang.startsWith('es') ? 'es-MX' : 'en-US';
+
   useEffect(() => {
     fetch('https://api.ipify.org?format=json')
       .then(res => res.json())
@@ -47,7 +50,7 @@ const LoginForm = () => {
         },
         {
           headers: {
-            'Accept-Language': 'es-ES',
+            'Accept-Language': language,
             'Content-Type': 'application/json'
           },
           validateStatus: () => true,
@@ -56,15 +59,15 @@ const LoginForm = () => {
 
       const message = response.data.message || response.data.Message;
 
-      if (message.includes('Invalid username or password')) {
-        setError('Usuario o contraseña incorrectos');
-      } else if (message.includes('New device')) {
+      if (message === 'Usuario o contraseña incorrectos' || message === 'Invalid username or password') {
+        setError(message);
+      } else if (message.startsWith('Se ha detectado') || message.startsWith('New device detected')) {
         setStep('method');
-      } else if (message.includes('Success') || message.includes('Login successful')) {
+      } else if (message === 'Inicio de sesión exitoso' || message === 'Login successful') {
         Cookies.set('auth', 'dummy-token', { expires: 7 });
         login({ username: formData.username });
       } else {
-        setError(`Error: ${message}`);
+        setError(message);
       }
 
     } catch (error) {
@@ -92,7 +95,7 @@ const LoginForm = () => {
         },
         {
           headers: {
-            'Accept-Language': 'es-ES',
+            'Accept-Language': language,
             'Content-Type': 'application/json'
           },
           validateStatus: () => true,
@@ -101,13 +104,13 @@ const LoginForm = () => {
 
       const message = response.data.message || response.data.Message;
 
-      if (message.includes('Invalid verification token')) {
-        setError('El código ingresado es incorrecto');
-      } else if (message.includes('Success') || message.includes('Login successful')) {
+      if (message === 'El código ingresado es incorrecto' || message === 'The verification code is incorrect') {
+        setError(message);
+      } else if (message === 'Inicio de sesión exitoso' || message === 'Login successful') {
         Cookies.set('auth', 'dummy-token', { expires: 7 });
         login({ username: formData.username });
       } else {
-        setError(`Error: ${message}`);
+        setError(message);
       }
 
     } catch (error) {
@@ -129,7 +132,7 @@ const LoginForm = () => {
       />
     );
   }
-  
+
   if (step === 'token') {
     return (
       <TokenInput
@@ -143,7 +146,7 @@ const LoginForm = () => {
       />
     );
   }
-  
+
   return (
     <div className="w-full lg:w-1/2 flex flex-col items-center justify-center px-8 py-12 bg-white h-screen">
       <div className="w-full max-w-md">
