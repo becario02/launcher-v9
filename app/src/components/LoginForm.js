@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/auth';
 import Cookies from 'js-cookie';
 import Link from 'next/link';
@@ -10,10 +10,16 @@ import MensajeOlvidasteContraseña from './MensajeOlvidasteContraseña';
 import FormRecuperarContraseña from './FormRecuperarContraseña';
 import MensajeExitoRecuperarContraseña from './MensajeExitoRecuperarContraseña';
 import { recuperarContraseña } from '@/services/api/recuperarContraseña';
+import VerificationMethod from './VerificationMethod';
+import TokenInput from './TokenInput';
+import axios from 'axios';
 
 const LoginForm = () => {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState('login'); // login | method | token
+  const [error, setError] = useState('');
+  const [ip, setIp] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     username: '',
@@ -26,27 +32,132 @@ const LoginForm = () => {
     exito: false
   });
 
+  const rawLang = typeof navigator !== 'undefined' ? navigator.language || 'en-US' : 'en-US';
+  const language = rawLang.startsWith('es') ? 'es-MX' : 'en-US';
+
+  useEffect(() => {
+    fetch('https://api.ipify.org?format=json')
+      .then(res => res.json())
+      .then(data => setIp(data.ip));
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+    setError('');
+
     try {
-      Cookies.set('auth', 'dummy-token', { expires: 7 });
-      login({ 
-        username: formData.username || 'demo_user',
-      });
+      const response = await axios.post(
+        'http://localhost:5173/mslauncher/api/v1/login',
+        {
+          username: formData.username,
+          password: formData.password,
+          ipHostUser: ip,
+          digitToken: null
+        },
+        {
+          headers: {
+            'Accept-Language': language,
+            'Content-Type': 'application/json'
+          },
+          validateStatus: () => true,
+        }
+      );
+
+      const message = response.data.message || response.data.Message;
+
+      if (message === 'Usuario o contraseña incorrectos' || message === 'Invalid username or password') {
+        setError(message);
+      } else if (message.startsWith('Se ha detectado') || message.startsWith('New device detected')) {
+        setStep('method');
+      } else if (message === 'Inicio de sesión exitoso' || message === 'Login successful') {
+        Cookies.set('auth', 'dummy-token', { expires: 7 });
+        login({ username: formData.username });
+      } else {
+        setError(message);
+      }
+
     } catch (error) {
-      console.error('Error durante el inicio de sesión:', error);
-      setModalStates(prev => ({ ...prev, error: true }));
+      console.error('Error de conexión:', error);
+      setError('No se pudo conectar con el servidor');
     } finally {
       setLoading(false);
     }
   };
+
+  const handleMethodSelected = () => setStep('token');
+
+  const handleTokenSubmit = async (token) => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await axios.post(
+        'http://localhost:5173/mslauncher/api/v1/login',
+        {
+          username: formData.username,
+          password: formData.password,
+          ipHostUser: ip,
+          digitToken: token
+        },
+        {
+          headers: {
+            'Accept-Language': language,
+            'Content-Type': 'application/json'
+          },
+          validateStatus: () => true,
+        }
+      );
+
+      const message = response.data.message || response.data.Message;
+
+      if (message === 'El código ingresado es incorrecto' || message === 'The verification code is incorrect') {
+        setError(message);
+      } else if (message === 'Inicio de sesión exitoso' || message === 'Login successful') {
+        Cookies.set('auth', 'dummy-token', { expires: 7 });
+        login({ username: formData.username });
+      } else {
+        setError(message);
+      }
+
+    } catch (error) {
+      console.error('Error al verificar token:', error);
+      setError('No se pudo verificar el código');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === 'method') {
+    return (
+      <VerificationMethod
+        onMethodSelected={handleMethodSelected}
+        onBack={() => {
+          setError('');
+          setStep('login');
+        }}
+      />
+    );
+  }
+
+  if (step === 'token') {
+    return (
+      <TokenInput
+        onSubmitToken={handleTokenSubmit}
+        error={error}
+        loading={loading}
+        onBack={() => {
+          setError('');
+          setStep('method');
+        }}
+      />
+    );
+  }
 
   const handleModalClose = (modalName) => {
     setModalStates(prev => ({ ...prev, [modalName]: false }));
@@ -104,7 +215,7 @@ const LoginForm = () => {
   );
 
   return (
-    <div className="w-full lg:w-1/2 flex flex-col items-center justify-center px-8 py-12 bg-white relative">
+    <div className="w-full lg:w-1/2 flex flex-col items-center justify-center px-8 py-12 bg-white h-screen">
       <div className="w-full max-w-md">
         <div className="mb-12 flex justify-center">
           <Image
@@ -117,6 +228,8 @@ const LoginForm = () => {
           />
         </div>
         
+
+        {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-medium text-gray-800 mb-2">
             Ingresa a tu cuenta
@@ -142,7 +255,7 @@ const LoginForm = () => {
                 placeholder="correo@dominio.com"
               />
             </div>
-            
+
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Contraseña
@@ -158,7 +271,7 @@ const LoginForm = () => {
               />
             </div>
           </div>
-          
+
           <div className="flex justify-end">
             <button
               type="button"
@@ -168,7 +281,13 @@ const LoginForm = () => {
               ¿Olvidaste tu contraseña?
             </button>
           </div>
-          
+
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 my-2">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading}
@@ -177,9 +296,9 @@ const LoginForm = () => {
           >
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
-          
+
           <div className="text-center text-sm text-gray-600 mt-4">
-            ¿Tienes problemas para accesar? 
+            ¿Tienes problemas para accesar?
             <Link href="#" className="text-gray-800 hover:underline ml-1">
               Solicita acceso
             </Link>

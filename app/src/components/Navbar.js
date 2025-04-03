@@ -1,71 +1,97 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, User } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-import ProfilePopup from './ProfilePopup';
+import {
+  Bell,
+  User,
+  ChevronDown,
+  Zap,
+  Menu,
+} from 'lucide-react';
 import ModuleTabs from './ModuleTabs';
+import ProfilePopup from './ProfilePopup';
 import { useTabs } from '@/context/tabs';
+import CompanySelector from './CompanySelector'; // nuevo import
 
-const Navbar = () => {
+const Navbar = ({ onMenuClick }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { tabs } = useTabs();
   const showTabs = tabs.length > 0;
 
   return (
-    <nav className={`w-full bg-white shadow-sm relative ${showTabs ? 'pb-0' : 'py-2'}`}>
-      <div className="w-full h-full">
-        {/* Main navbar content */}
-        <div className="px-4">
-          <div className="max-w-7xl mx-auto flex items-center justify-between py-2">
-            {/* Left section - Logo */}
-            <div className="flex items-center gap-2">
-              <Link href="/" className="h-12 w-44 relative">
-                <Image
-                  src="/advan-logo.png"
-                  alt="ADVAN"
-                  fill
-                  className="object-contain"
-                  priority
-                />
-              </Link>
+    <nav className={`w-full bg-white relative z-20 ${showTabs ? 'pb-0' : 'py-0'}`}>
+      <div className="w-full flex h-24 border-b border-gray-200 items-center">
+        {/* Mobile menu */}
+        <div className="md:hidden px-4">
+          <button onClick={onMenuClick} className="text-gray-700 hover:text-black">
+            <Menu size={24} />
+          </button>
+        </div>
+
+        {/* Main navbar */}
+        <div className="flex-1 max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-16">
+          {/* Selector de empresa */}
+          <CompanySelector />
+
+          {/* Botones derechos */}
+          <div className="flex items-center gap-6 pr-4">
+            {/* Centro de ayuda */}
+            <div className="flex items-center gap-2 text-[13px] text-gray-600 font-normal">
+              <button className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50">
+                <Zap size={16} />
+              </button>
+              <span className="hidden sm:inline">Centro de ayuda</span>
             </div>
 
-            {/* Middle section - Search */}
-            <div className="flex-1 max-w-md mx-4">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Buscar módulos"
-                  className="w-full px-4 py-1.5 pl-10 bg-gray-50 border border-gray-200 rounded-lg 
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                />
-                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              </div>
+            {/* Notificaciones */}
+            <div className="relative">
+              <button className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50">
+                <Bell size={18} className="text-gray-700" />
+              </button>
+              <span className="absolute -top-1 -right-1 bg-black text-white text-[10px] px-1 py-0.5 rounded-full leading-none">
+                2
+              </span>
             </div>
 
-            {/* Right section - User Avatar */}
-            <div className="flex items-center">
-              <button 
-                className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center 
-                  cursor-pointer hover:bg-gray-200"
+            {/* Perfil */}
+            <div className="flex items-center gap-2 text-[13px] text-gray-600 font-normal">
+              <button
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50"
+              >
+                <User size={16} />
+              </button>
+              <span
+                className="flex items-center gap-1 cursor-pointer"
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
               >
-                <User className="w-5 h-5 text-gray-600" />
-              </button>
+                <span className="hidden sm:inline">Luis González</span>
+                <ChevronDown size={16} />
+              </span>
             </div>
           </div>
         </div>
-
-        {/* Tabs section */}
-        <ModuleTabs />
       </div>
 
-      {/* Profile Popup */}
-      <ProfilePopup 
-        isOpen={isProfileOpen} 
-        onClose={() => setIsProfileOpen(false)} 
+      <div className="bg-black text-white text-sm">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 flex justify-between items-center py-3">
+          <p className="text-[13px] leading-snug">
+            <strong>Nueva actualización del sistema 12 octubre 2024 14:00 hrs</strong>{' '}
+            <span className="text-gray-300">Toma las precauciones pertinentes</span>
+          </p>
+          <button className="bg-white text-black text-xs font-medium px-3 py-1.5 rounded hover:bg-gray-100">
+            Entendido
+          </button>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <ModuleTabs />
+
+      {/* Profile popup */}
+      <ProfilePopup
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
       />
     </nav>
   );

@@ -1,20 +1,52 @@
+'use client';
+
+import { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
-import ModulesSection from '@/components/ModulesSection';
-import ModulesCatalog from '@/components/ModulesCatalog';
-import NewsSection from '@/components/NewsSection';
+import WelcomeSection from '@/components/WelcomeSection';
+import DirectAccessSection from '@/components/DirectAccessSection';
+import ModuleGridSection from '@/components/ModuleGridSection';
+import NotificationsPanel from '@/components/NotificationsPanel';
 
 export default function Home() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="flex">
-      <Sidebar />
-      <div className="flex-1 ml-20">
-        <Navbar />
-        <main className="min-h-screen bg-gradient-to-br from-[#f0f9ff] via-[#f8fcff] to-[#edf8ff]">
-          <div className="space-y-8">
-            <ModulesSection />
-            <ModulesCatalog />
-            <NewsSection />
+      {/* Sidebar Desktop */}
+      <div className="hidden md:block">
+        <Sidebar />
+      </div>
+
+      {/* Sidebar Mobile Overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 flex md:hidden">
+          <div className="relative z-50 w-64 h-full bg-white shadow-lg">
+            <Sidebar onClose={() => setSidebarOpen(false)} />
+          </div>
+          <div
+            className="fixed inset-0 bg-black/30"
+            onClick={() => setSidebarOpen(false)}
+          />
+        </div>
+      )}
+
+      <div className="flex-1 md:ml-64">
+        <Navbar onMenuClick={() => setSidebarOpen(true)} />
+
+        <main className="min-h-screen bg-[#f7f7f7] pt-14">
+          <div className="max-w-5xl mx-auto px-6 space-y-6">
+            <WelcomeSection />
+            <DirectAccessSection />
+
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+              <div className="lg:col-span-3">
+                <ModuleGridSection />
+              </div>
+              <div className="lg:col-span-1">
+                <NotificationsPanel />
+              </div>
+            </div>
           </div>
         </main>
       </div>

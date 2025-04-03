@@ -9,7 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@headlessui/react": "^2.2.0",
     "@tabler/icons-react": "^3.29.0",
+    "axios": "^1.8.4",
+    "framer-motion": "^12.6.2",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.471.2",
     "next": "^15.2.4",

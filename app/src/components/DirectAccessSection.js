@@ -1,0 +1,143 @@
+'use client';
+
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+import {
+  Trash2,
+  GripVertical,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
+
+import { useState } from 'react';
+
+const initialAccesses = [
+  {
+    id: 1,
+    category: 'Nucleares',
+    name: 'Nombre de módulo',
+    isSubmodule: false,
+  },
+  {
+    id: 2,
+    category: 'Financieros',
+    name: 'Nombre de módulo',
+    isSubmodule: false,
+  },
+  {
+    id: 3,
+    category: 'Nucleares',
+    name: 'Nombre de sub módulo',
+    isSubmodule: true,
+  },
+  {
+    id: 4,
+    category: 'Nucleares',
+    name: 'Otro módulo',
+    isSubmodule: false,
+  },
+];
+
+const SortableItem = ({ item }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded border border-gray-100 hover:bg-gray-100"
+    >
+      <div className="flex items-center gap-3">
+        <GripVertical
+          className="w-4 h-4 text-gray-400 cursor-grab"
+          {...listeners}
+        />
+
+        <div className="flex items-center gap-1 text-sm text-gray-700">
+          <span className="font-medium">{item.category}</span>
+          {item.isSubmodule && (
+            <>
+              <span>{'>'}</span>
+              <span className="text-gray-400">...</span>
+            </>
+          )}
+          <span>{'>'}</span>
+          <span>{item.name}</span>
+        </div>
+      </div>
+
+      <button className="text-gray-400 hover:text-red-500">
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </div>
+  );
+};
+
+const DirectAccessSection = () => {
+  const [items, setItems] = useState(initialAccesses);
+  const [expanded, setExpanded] = useState(false);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (active.id !== over?.id) {
+      const oldIndex = items.findIndex((i) => i.id === active.id);
+      const newIndex = items.findIndex((i) => i.id === over?.id);
+      setItems(arrayMove(items, oldIndex, newIndex));
+    }
+  };
+
+  const visibleItems = expanded ? items : items.slice(0, 3);
+  const hasMore = items.length > 3;
+
+  return (
+    <section className="bg-white border border-gray-200 rounded-md px-4 py-4">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-semibold text-gray-700 uppercase">
+          Mis accesos directos
+        </h2>
+        {hasMore && (
+          <button
+            className="text-gray-500 hover:text-black"
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </button>
+        )}
+      </div>
+
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+          <div className="space-y-2">
+            {visibleItems.map((item) => (
+              <SortableItem key={item.id} item={item} />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
+    </section>
+  );
+};
+
+export default DirectAccessSection;
