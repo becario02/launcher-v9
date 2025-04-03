@@ -14,9 +14,10 @@ export function AuthProvider({ children }) {
     const authCookie = Cookies.get('auth');
     const isLoginPage = pathname === '/login';
     const isRecuperarContraseñaPage = pathname === '/recuperarPassword';
+    const adminNews = pathname === '/admin/news'; 
     
     // Permitir acceso a páginas públicas sin autenticación
-    const isPublicPage = isLoginPage || isRecuperarContraseñaPage;
+    const isPublicPage = isLoginPage || isRecuperarContraseñaPage || adminNews;
 
     if (!authCookie && !isPublicPage) {
       router.push('/login');
