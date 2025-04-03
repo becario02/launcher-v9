@@ -1,23 +1,19 @@
 'use client';
 
-import { Component } from 'react';
-import Image from 'next/image';
+import { ImageIcon } from 'lucide-react';
 
 const modules = [
   {
     name: 'Nucleares',
     description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-    icon: '/icons/module-placeholder.svg', // Usa un icono personalizado o un emoji
   },
   {
     name: 'Financieros',
     description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-    icon: '/icons/module-placeholder.svg',
   },
   {
     name: 'Auxiliares',
     description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-    icon: '/icons/module-placeholder.svg',
   },
 ];
 
@@ -27,19 +23,19 @@ const ModuleGridSection = () => {
       {modules.map((mod) => (
         <div
           key={mod.name}
-          className="bg-white border border-gray-200 rounded-md px-4 py-6 text-center hover:shadow-sm transition"
+          className="bg-white border border-gray-200 rounded-md p-6 hover:shadow-sm transition cursor-pointer h-[300px] flex"
         >
-          <div className="mx-auto mb-4 h-10 w-10">
-            <Image
-              src={mod.icon}
-              alt={mod.name}
-              width={40}
-              height={40}
-              className="mx-auto object-contain opacity-80"
-            />
+          <div className="flex flex-col items-start justify-center">
+            <div className="mb-3">
+              <div className="w-14 h-14 text-gray-600">
+                <ImageIcon className="w-full h-full" strokeWidth={1.5} />
+              </div>
+            </div>
+            <h3 className="text-lg font-normal text-gray-900 mb-2">{mod.name}</h3>
+            <p className="text-xs text-gray-500 leading-normal">
+              Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.
+            </p>
           </div>
-          <h3 className="text-base font-semibold text-gray-800">{mod.name}</h3>
-          <p className="text-sm text-gray-500 mt-1">{mod.description}</p>
         </div>
       ))}
     </section>

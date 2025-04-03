@@ -7,6 +7,7 @@ import WelcomeSection from '@/components/WelcomeSection';
 import DirectAccessSection from '@/components/DirectAccessSection';
 import ModuleGridSection from '@/components/ModuleGridSection';
 import NotificationsPanel from '@/components/NotificationsPanel';
+import NewsCarousel from '@/components/NewsCarousel';
 
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -34,7 +35,7 @@ export default function Home() {
       <div className="flex-1 md:ml-64">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
-        <main className="min-h-screen bg-[#f7f7f7] pt-14">
+        <main className="min-h-screen bg-[#f7f7f7] pt-14 pb-14">
           <div className="max-w-5xl mx-auto px-6 space-y-6">
             <WelcomeSection />
             <DirectAccessSection />
@@ -45,6 +46,28 @@ export default function Home() {
               </div>
               <div className="lg:col-span-1">
                 <NotificationsPanel />
+              </div>
+            </div>
+
+            {/* Nueva fila de contenedores - con la misma estructura que la fila superior */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+              <div className="lg:col-span-3">
+                {/* Contenedores a la izquierda (3 columnas) */}
+                {/* Reemplazamos el primer contenedor con el carrusel de noticias */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                  <div className="lg:col-span-2">
+                    <NewsCarousel />
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-md p-4 h-full min-h-[200px] shadow-sm flex items-center justify-center">
+                    <span className="text-gray-400 text-sm">Centro de ayuda (Próximamente)</span>
+                  </div>
+                </div>
+              </div>
+              <div className="lg:col-span-1">
+                {/* Contenedor de Promoción (derecha) */}
+                <div className="bg-white border border-gray-200 rounded-md p-4 h-full min-h-[200px] shadow-sm flex items-center justify-center">
+                  <span className="text-gray-400 text-sm">Promoción (Próximamente)</span>
+                </div>
               </div>
             </div>
           </div>
