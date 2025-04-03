@@ -86,14 +86,14 @@ const Sidebar = () => {
     <div className="w-64 h-screen flex flex-col border-r border-gray-200 bg-white fixed top-0 left-0 z-10">
       {/* Header */}
       <div
-        className="h-16 w-64 flex items-center justify-center"
+        className="h-24 w-64 flex items-center justify-center"
         style={{ backgroundColor: '#757575' }}
       >
         <Image
           src="/logoAdvan-white.svg"
           alt="Advan Logo"
-          width={160}
-          height={50}
+          width={200}
+          height={70}
           className="h-auto"
           priority
         />

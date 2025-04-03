@@ -6,12 +6,12 @@ import {
   User,
   ChevronDown,
   Zap,
-  Building2,
   Menu,
 } from 'lucide-react';
 import ModuleTabs from './ModuleTabs';
 import ProfilePopup from './ProfilePopup';
 import { useTabs } from '@/context/tabs';
+import CompanySelector from './CompanySelector'; // nuevo import
 
 const Navbar = ({ onMenuClick }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -20,29 +20,23 @@ const Navbar = ({ onMenuClick }) => {
 
   return (
     <nav className={`w-full bg-white relative z-20 ${showTabs ? 'pb-0' : 'py-0'}`}>
-      <div className="w-full flex h-16 border-b border-gray-200 items-center">
-        {/* Mobile menu button */}
+      <div className="w-full flex h-24 border-b border-gray-200 items-center">
+        {/* Mobile menu */}
         <div className="md:hidden px-4">
           <button onClick={onMenuClick} className="text-gray-700 hover:text-black">
             <Menu size={24} />
           </button>
         </div>
 
-        {/* Main navbar content */}
-        <div className="flex-1 max-w-7xl mx-auto flex items-center justify-between px-6">
+        {/* Main navbar */}
+        <div className="flex-1 max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-16">
           {/* Selector de empresa */}
-          <div className="flex items-center gap-2 text-sm">
-            <button className="flex items-center gap-2 border border-gray-300 px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50">
-              <Building2 size={16} className="text-gray-500" />
-              EMPRESA 1
-              <ChevronDown size={16} className="text-gray-500" />
-            </button>
-          </div>
+          <CompanySelector />
 
           {/* Botones derechos */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 pr-4">
             {/* Centro de ayuda */}
-            <div className="flex items-center gap-2 text-sm text-gray-700">
+            <div className="flex items-center gap-2 text-[13px] text-gray-600 font-normal">
               <button className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50">
                 <Zap size={16} />
               </button>
@@ -60,7 +54,7 @@ const Navbar = ({ onMenuClick }) => {
             </div>
 
             {/* Perfil */}
-            <div className="flex items-center gap-2 text-sm text-gray-700">
+            <div className="flex items-center gap-2 text-[13px] text-gray-600 font-normal">
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50"
@@ -79,21 +73,22 @@ const Navbar = ({ onMenuClick }) => {
         </div>
       </div>
 
-      {/* Black alert bar */}
-      <div className="bg-black text-white text-sm px-6 py-2 flex justify-between items-center">
-        <span>
-          <strong>Nueva actualización del sistema 12 octubre 2024 14:00 hrs</strong>
-          &nbsp; Toma las precauciones pertinentes
-        </span>
-        <button className="bg-white text-black text-xs font-medium px-3 py-1 rounded hover:bg-gray-100">
-          Entendido
-        </button>
+      <div className="bg-black text-white text-sm">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 flex justify-between items-center py-3">
+          <p className="text-[13px] leading-snug">
+            <strong>Nueva actualización del sistema 12 octubre 2024 14:00 hrs</strong>{' '}
+            <span className="text-gray-300">Toma las precauciones pertinentes</span>
+          </p>
+          <button className="bg-white text-black text-xs font-medium px-3 py-1.5 rounded hover:bg-gray-100">
+            Entendido
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
       <ModuleTabs />
 
-      {/* Profile dropdown */}
+      {/* Profile popup */}
       <ProfilePopup
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
