@@ -33,7 +33,9 @@ const Navbar = ({ onMenuClick }) => {
           {/* Main navbar */}
           <div className="flex-1 max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-16">
             {/* Selector de empresa */}
-            <CompanySelector />
+            <div className="w-40 sm:w-auto mr-4">
+              <CompanySelector />
+            </div>
 
             {/* Botones derechos */}
             <div className="flex items-center gap-6 pr-4">
@@ -84,7 +86,7 @@ const Navbar = ({ onMenuClick }) => {
           onClose={() => setIsProfileOpen(false)}
         />
       </nav>
-      
+
       {/* Alerta de actualización - después del navbar */}
       <div className="bg-black text-white text-sm">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 flex justify-between items-center py-3">

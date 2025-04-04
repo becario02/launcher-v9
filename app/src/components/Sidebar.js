@@ -83,10 +83,10 @@ const Sidebar = () => {
   const [activeItem, setActiveItem] = useState("Dashboard");
 
   return (
-    <div className="w-64 h-screen flex flex-col border-r border-gray-200 bg-white fixed top-0 left-0 z-10">
+    <div className="w-60 h-screen flex flex-col border-r border-gray-200 bg-white fixed top-0 left-0 z-10">
       {/* Header */}
       <div
-        className="h-24 w-64 flex items-center justify-center"
+        className="h-24 w-60 flex items-center justify-center"
         style={{ backgroundColor: '#757575' }}
       >
         <Image

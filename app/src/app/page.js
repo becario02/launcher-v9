@@ -22,7 +22,7 @@ export default function Home() {
       {/* Sidebar Mobile Overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 flex md:hidden">
-          <div className="relative z-50 w-64 h-full bg-white shadow-lg">
+          <div className="relative z-50 w-60 h-full bg-white shadow-lg">
             <Sidebar onClose={() => setSidebarOpen(false)} />
           </div>
           <div
@@ -32,7 +32,7 @@ export default function Home() {
         </div>
       )}
 
-      <div className="flex-1 md:ml-64">
+      <div className="flex-1 md:ml-60">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
         <main className="min-h-screen bg-[#f7f7f7] pt-14 pb-14">
