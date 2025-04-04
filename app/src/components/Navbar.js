@@ -87,7 +87,7 @@ const Navbar = ({ onMenuClick }) => {
         />
       </nav>
 
-      {/* Alerta de actualización - después del navbar */}
+      {/* Alerta de actualización - después del navbar 
       <div className="bg-black text-white text-sm">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 flex justify-between items-center py-3">
           <p className="text-[13px] leading-snug">
@@ -98,7 +98,7 @@ const Navbar = ({ onMenuClick }) => {
             Entendido
           </button>
         </div>
-      </div>
+      </div>*/}
     </>
   );
 };
