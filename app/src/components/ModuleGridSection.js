@@ -1,19 +1,23 @@
 'use client';
 
-import { ImageIcon } from 'lucide-react';
-
 const modules = [
   {
     name: 'Nucleares',
     description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
+    image: '/assets/modules/nucleares.png',
+    icon: '/assets/modules/icon-nucleares.png',
   },
   {
     name: 'Financieros',
     description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
+    image: '/assets/modules/financieros.png',
+    icon: '/assets/modules/icon-financieros.png',
   },
   {
     name: 'Auxiliares',
     description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
+    image: '/assets/modules/auxiliares.png',
+    icon: '/assets/modules/icon-auxiliar.png',
   },
 ];
 
@@ -23,17 +27,24 @@ const ModuleGridSection = () => {
       {modules.map((mod) => (
         <div
           key={mod.name}
-          className="bg-white border border-gray-200 rounded-md p-6 hover:shadow-sm transition cursor-pointer h-[300px] flex"
+          className="bg-white border border-gray-200 rounded-md p-6 hover:shadow-sm transition cursor-pointer h-[300px] relative"
         >
-          <div className="flex flex-col items-start justify-center">
-            <div className="mb-3">
-              <div className="w-14 h-14 text-gray-600">
-                <ImageIcon className="w-full h-full" strokeWidth={1.5} />
-              </div>
-            </div>
-            <h3 className="text-lg font-normal text-gray-900 mb-2">{mod.name}</h3>
-            <p className="text-xs text-gray-500 leading-normal">
-              Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.
+          {/* Icono en esquina superior izquierda con contenedor circular */}
+          <div className="absolute top-4 left-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+            <img
+              src={mod.icon}
+              alt={`${mod.name} icon`}
+              className="w-4 h-4 object-contain"
+            />
+          </div>
+
+          <div className="flex flex-col items-start justify-center h-full">
+            <img src={mod.image} alt={mod.name} className="h-[120px] object-contain mb-4" />
+            <h2 className="text-[20px] text-[#171725] font-medium font-[Poppins] mb-2">
+              {mod.name}
+            </h2>
+            <p className="text-[12px] leading-[18px] text-[#696974] font-[Poppins] text-left">
+              {mod.description}
             </p>
           </div>
         </div>
