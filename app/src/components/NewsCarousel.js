@@ -6,54 +6,39 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 const news = [
   {
     id: 1,
-    title: 'Lorem ipsum duis scelerisque',
-    description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
+    text: 'Lorem ipsum parturient egestas risus ut elit massa egestas.',
+    image:
+      'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?q=80&w=1472&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
   },
   {
     id: 2,
-    title: 'Lorem ipsum duis scelerisque',
-    description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
+    text: 'Lorem ipsum parturient egestas risus ut elit massa egestas.',
+    image:
+      'https://images.unsplash.com/photo-1559297434-fae8a1916a79?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
   },
   {
     id: 3,
-    title: 'Lorem ipsum duis scelerisque',
-    description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
+    text: 'Lorem ipsum parturient egestas risus ut elit massa egestas.',
+    image: 'https://source.unsplash.com/featured/?green-energy',
   },
   {
     id: 4,
-    title: 'Lorem ipsum duis scelerisque',
-    description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-  },
-  {
-    id: 5,
-    title: 'Lorem ipsum duis scelerisque',
-    description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-  },
-  {
-    id: 6,
-    title: 'Lorem ipsum duis scelerisque',
-    description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-  },
-  {
-    id: 7,
-    title: 'Lorem ipsum duis scelerisque',
-    description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
+    text: 'Lorem ipsum parturient egestas risus ut elit massa egestas.',
+    image: 'https://source.unsplash.com/featured/?technology',
   },
 ];
 
 const NewsCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [visibleCount, setVisibleCount] = useState(3);
+  const [visibleCount, setVisibleCount] = useState(2);
 
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
       if (width < 640) {
         setVisibleCount(1);
-      } else if (width < 1024) {
-        setVisibleCount(2);
       } else {
-        setVisibleCount(3);
+        setVisibleCount(2);
       }
     };
 
@@ -66,7 +51,6 @@ const NewsCarousel = () => {
     return Math.max(0, Math.ceil(news.length / visibleCount) - 1);
   }, [visibleCount]);
 
-  // Ensure currentIndex doesn't go out of bounds when visibleCount changes
   useEffect(() => {
     if (currentIndex > maxIndex) {
       setCurrentIndex(maxIndex);
@@ -84,26 +68,30 @@ const NewsCarousel = () => {
   const translateX = (100 / (news.length / visibleCount)) * currentIndex;
 
   return (
-    <div className="w-full bg-white border border-gray-200 rounded-md p-4 shadow-sm">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-base font-medium text-gray-900">Noticias recientes</h2>
-        <button className="text-sm text-gray-500 hover:text-gray-700">Ver todo</button>
+    <div className="w-full bg-white border border-gray-200 rounded-[8px] p-[20px] shadow-sm relative">
+      <div className="flex items-center justify-between mb-[20px] px-[4px]">
+        <h2 className="text-[14px] leading-[21px] text-black font-semibold font-[Poppins]">
+          Noticias recientes
+        </h2>
+        <button className="text-[12px] leading-[18px] text-black font-medium font-[Poppins] text-right">
+          Ver todo
+        </button>
       </div>
 
       <div className="relative overflow-hidden">
-        {/* Left Nav */}
+        {/* Flecha izquierda */}
         <button
           onClick={prevSlide}
-          className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 
+          className="absolute left-[12px] top-[50%] transform -translate-y-1/2 z-10 
             bg-white rounded-full w-8 h-8 flex items-center justify-center 
             shadow-md hover:bg-gray-50"
         >
           <ChevronLeft className="w-4 h-4 text-gray-600" />
         </button>
 
-        {/* Carousel Items */}
+        {/* Carousel content */}
         <div
-          className="flex transition-transform duration-300 ease-in-out"
+          className="flex transition-transform duration-300 ease-in-out justify-center"
           style={{
             width: `${(news.length / visibleCount) * 100}%`,
             transform: `translateX(-${translateX}%)`,
@@ -112,33 +100,29 @@ const NewsCarousel = () => {
           {news.map((item) => (
             <div
               key={item.id}
-              className="flex-shrink-0"
-              style={{
-                width: `${100 / news.length}%`,
-                padding: '0 0.25rem',
-              }}
+              className="flex-shrink-0 px-[6px] flex justify-center"
+              style={{ width: `${100 / news.length}%` }}
             >
-              <div className="border border-gray-200 rounded cursor-pointer">
-                <div className="p-2">
-                  <div className="bg-gray-200 h-28 w-full rounded mb-2"></div>
+              <div className="border border-gray-200 rounded-[8px] overflow-hidden w-[188px] h-[200px] flex flex-col items-center justify-start pt-[12px]">
+                <div className="w-[168px] h-[100px] mb-[8px]">
+                  <img
+                    src={item.image}
+                    alt={item.text}
+                    className="w-full h-full object-cover rounded-[6px]"
+                  />
                 </div>
-                <div className="px-2 pb-2">
-                  <h3 className="text-xs font-medium text-gray-800 mb-1">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 line-clamp-2">
-                    {item.description}
-                  </p>
-                </div>
+                <p className="text-[12px] leading-[18px] text-[#171725] text-center font-medium font-[Poppins] px-[12px]">
+                  {item.text}
+                </p>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Right Nav */}
+        {/* Flecha derecha */}
         <button
           onClick={nextSlide}
-          className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 
+          className="absolute right-[12px] top-[50%] transform -translate-y-1/2 z-10 
             bg-white rounded-full w-8 h-8 flex items-center justify-center 
             shadow-md hover:bg-gray-50"
         >
@@ -146,13 +130,13 @@ const NewsCarousel = () => {
         </button>
       </div>
 
-      {/* Pagination Dots */}
-      <div className="flex justify-center mt-2 space-x-1.5">
+      {/* Pagination */}
+      <div className="flex justify-center mt-[12px] space-x-[6px]">
         {Array.from({ length: maxIndex + 1 }).map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
-            className={`w-2 h-2 rounded-full transition-colors duration-200 
+            className={`w-[8px] h-[8px] rounded-full transition-colors duration-200 
               ${currentIndex === index ? 'bg-gray-800' : 'bg-gray-300'}`}
           />
         ))}

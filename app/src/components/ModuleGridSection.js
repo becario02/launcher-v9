@@ -27,10 +27,10 @@ const ModuleGridSection = () => {
       {modules.map((mod) => (
         <div
           key={mod.name}
-          className="bg-white border border-gray-200 rounded-md p-6 hover:shadow-sm transition cursor-pointer h-[300px] relative"
+          className="bg-white border border-gray-200 rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer h-[300px] relative"
         >
           {/* Icono en esquina superior izquierda con contenedor circular */}
-          <div className="absolute top-4 left-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+          <div className="absolute top-4 left-4 w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center">
             <img
               src={mod.icon}
               alt={`${mod.name} icon`}
@@ -38,12 +38,13 @@ const ModuleGridSection = () => {
             />
           </div>
 
-          <div className="flex flex-col items-start justify-center h-full">
+          {/* Contenido principal */}
+          <div className="flex flex-col items-start justify-center h-full pt-6">
             <img src={mod.image} alt={mod.name} className="h-[120px] object-contain mb-4" />
-            <h2 className="text-[20px] text-[#171725] font-medium font-[Poppins] mb-2">
+            <h2 className="text-[20px] text-[#171725] font-medium font-poppins mb-2">
               {mod.name}
             </h2>
-            <p className="text-[12px] leading-[18px] text-[#696974] font-[Poppins] text-left">
+            <p className="text-[12px] leading-[18px] text-[#696974] font-poppins text-left">
               {mod.description}
             </p>
           </div>
