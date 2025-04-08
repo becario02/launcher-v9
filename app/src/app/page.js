@@ -10,6 +10,8 @@ const DirectAccessSection = dynamic(() => import('@/components/DirectAccessSecti
 import ModuleGridSection from '@/components/ModuleGridSection';
 import NotificationsPanel from '@/components/NotificationsPanel';
 import NewsCarousel from '@/components/NewsCarousel';
+import HelpCenterCard from '@/components/HelpCenterCard';
+import PromotionCard from '@/components/PromotionCard';
 
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -64,15 +66,13 @@ export default function Home() {
                   <div className="lg:col-span-2">
                     <NewsCarousel />
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-md p-4 h-full min-h-[200px] shadow-sm flex items-center justify-center">
-                    <span className="text-gray-400 text-sm">Centro de ayuda (Próximamente)</span>
-                  </div>
+                  <HelpCenterCard />
                 </div>
               </div>
               <div className="lg:col-span-1">
                 {/* Contenedor de Promoción (derecha) */}
-                <div className="bg-white border border-gray-200 rounded-md p-4 h-full min-h-[200px] shadow-sm flex items-center justify-center">
-                  <span className="text-gray-400 text-sm">Promoción (Próximamente)</span>
+                <div className="lg:col-span-1">
+                  <PromotionCard />
                 </div>
               </div>
             </div>

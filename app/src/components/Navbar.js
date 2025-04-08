@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import {
   ChevronDown,
-  Zap,
   Menu,
 } from 'lucide-react';
 import ModuleTabs from './ModuleTabs';
@@ -38,7 +37,7 @@ const Navbar = ({ onMenuClick }) => {
             </div>
 
             {/* Botones derechos */}
-            <div className="flex items-center  gap-6 lg:gap-12 pr-4">
+            <div className="flex items-center gap-6 lg:gap-12 pr-4">
               {/* Centro de ayuda */}
               <div className="flex items-center gap-2 text-[13px] font-normal">
                 <button className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50">
@@ -48,7 +47,7 @@ const Navbar = ({ onMenuClick }) => {
                     className="w-5 h-5"
                   />
                 </button>
-                <span className="hidden sm:inline font-[Poppins] font-semibold text-sm tracking-[0.1px] text-gray-600">
+                <span className="hidden lg:inline font-[Poppins] font-semibold text-sm tracking-[0.1px] text-gray-600">
                   Centro de ayuda
                 </span>
               </div>
@@ -58,7 +57,7 @@ const Navbar = ({ onMenuClick }) => {
                 <button
                   onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                   className={`w-9 h-9 rounded-full flex items-center justify-center transition-all 
-      border ${isNotificationsOpen ? 'bg-[#0080ff] border-[#0080ff]' : 'border-gray-300 hover:bg-gray-50'}`}
+                    border ${isNotificationsOpen ? 'bg-[#0080ff] border-[#0080ff]' : 'border-gray-300 hover:bg-gray-50'}`}
                 >
                   <img
                     src={`/assets/navbar/${isNotificationsOpen ? 'icon-frame-12' : 'icon-frame-11'}.svg`}
@@ -89,7 +88,7 @@ const Navbar = ({ onMenuClick }) => {
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                 >
                   <span
-                    className={`hidden sm:inline font-semibold text-sm tracking-[0.1px] 
+                    className={`hidden lg:inline font-semibold text-sm tracking-[0.1px] 
                       ${isProfileOpen ? 'text-[#171725]' : 'text-gray-600'} 
                       font-[Poppins]`}
                   >
@@ -97,7 +96,7 @@ const Navbar = ({ onMenuClick }) => {
                   </span>
                   <ChevronDown
                     size={16}
-                    className={`transition-transform duration-200 ${isProfileOpen ? 'text-[#0080ff] rotate-180' : 'text-gray-600 rotate-0'
+                    className={`hidden lg:inline transition-transform duration-200 ${isProfileOpen ? 'text-[#0080ff] rotate-180' : 'text-gray-600 rotate-0'
                       }`}
                   />
                 </span>

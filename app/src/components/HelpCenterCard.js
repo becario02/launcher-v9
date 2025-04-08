@@ -1,18 +1,31 @@
+'use client';
+
 export default function HelpCenterCard() {
-    return (
-      <div className="bg-white p-4 rounded-lg shadow h-full">
-        <h3 className="font-semibold text-sm mb-2">Centro de ayuda</h3>
-        <p className="text-xs text-gray-600">
-          Lorem ipsum placerat mi tellus non ac risus facilisis nibh.
-        </p>
-        <div className="flex justify-end mt-2">
-          <img
-            src="https://source.unsplash.com/random/80x80/?support"
-            alt="Centro de ayuda"
-            className="w-10 h-10 rounded"
-          />
-        </div>
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer h-[300px] relative">
+      {/* Icono en esquina superior izquierda con contenedor circular */}
+      <div className="absolute top-4 left-4 w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center">
+        <img
+          src="/assets/HelpCenterCard/icon-ayuda.svg"
+          alt="Ayuda icon"
+          className="w-4 h-4 object-contain"
+        />
       </div>
-    );
-  }
-  
+
+      {/* Contenido principal */}
+      <div className="flex flex-col items-start justify-center h-full pt-6">
+        <img
+          src="/assets/HelpCenterCard/centro-de-ayuda.png"
+          alt="Centro de ayuda"
+          className="h-[120px] object-contain mb-4"
+        />
+        <h2 className="text-[20px] text-[#171725] font-medium font-poppins mb-2">
+          Centro de ayuda
+        </h2>
+        <p className="text-[12px] leading-[18px] text-[#696974] font-poppins text-left">
+          Encuentra respuestas, tutoriales y soporte técnico para sacarle el máximo provecho a la plataforma.
+        </p>
+      </div>
+    </div>
+  );
+}

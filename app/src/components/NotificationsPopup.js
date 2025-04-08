@@ -58,7 +58,7 @@ const NotificationsPopup = ({ isOpen, onClose }) => {
       <div className="fixed inset-0 z-40" onClick={onClose} />
 
       <div
-        className={`fixed top-0 right-0 mt-[110px] mr-4 sm:mr-16 md:mr-36 w-[292px] h-[351px] bg-white rounded-2xl shadow-xl 
+        className={`fixed top-0 right-0 mt-[110px] mr-4 sm:mr-4 md:mr-36 w-[292px] h-[351px] bg-white rounded-2xl shadow-xl 
           border border-gray-100 z-50 transition-all duration-200
           ${showAnimation ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
       >
