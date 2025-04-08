@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import WelcomeSection from '@/components/WelcomeSection';
 import LastSessionCard from '@/components/LastSessionCard';
-import DirectAccessSection from '@/components/DirectAccessSection';
+const DirectAccessSection = dynamic(() => import('@/components/DirectAccessSection'), { ssr: false });
 import ModuleGridSection from '@/components/ModuleGridSection';
 import NotificationsPanel from '@/components/NotificationsPanel';
 import NewsCarousel from '@/components/NewsCarousel';

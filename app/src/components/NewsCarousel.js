@@ -19,12 +19,12 @@ const news = [
   {
     id: 3,
     text: 'Lorem ipsum parturient egestas risus ut elit massa egestas.',
-    image: 'https://source.unsplash.com/featured/?green-energy',
+    image: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?q=80&w=1472&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
   },
   {
     id: 4,
     text: 'Lorem ipsum parturient egestas risus ut elit massa egestas.',
-    image: 'https://source.unsplash.com/featured/?technology',
+    image: 'https://images.unsplash.com/photo-1559297434-fae8a1916a79?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
   },
 ];
 
