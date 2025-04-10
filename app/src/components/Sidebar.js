@@ -3,19 +3,18 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  LayoutDashboard,
+  LayoutGrid,
   ChevronDown,
   ChevronRight,
-  Sun,
-  Moon,
   Copy,
-  FolderTree,
-  FileText,
-  Shield,
-  LayoutGrid,
   Newspaper,
 } from "lucide-react";
-import Image from 'next/image';
+import Image from "next/image";
+
+import IconModulos from "@/components/icons/sidebar/IconModulos";
+import IconNucleares from "@/components/icons/sidebar/IconNucleares";
+import IconFinancieros from "@/components/icons/sidebar/IconFinancieros";
+import IconAuxiliares from "@/components/icons/sidebar/IconAuxiliares";
 
 const SidebarItem = ({ icon: Icon, text, active = false, onClick, indent = false }) => (
   <button
@@ -24,7 +23,11 @@ const SidebarItem = ({ icon: Icon, text, active = false, onClick, indent = false
       ${active ? 'bg-[#007BFF] text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'}
       ${indent ? 'pl-8' : ''}`}
   >
-    <Icon size={16} className={`${active ? 'text-white' : 'text-gray-500'}`} />
+    {typeof Icon === "function" ? (
+      <Icon size={16} color={active ? "#FFFFFF" : "#6B7280"} />
+    ) : (
+      <Icon size={16} className={`${active ? 'text-white' : 'text-gray-500'}`} />
+    )}
     {text}
   </button>
 );
@@ -38,9 +41,9 @@ const ExpandableItem = ({ icon: Icon, text, children, defaultOpen = false }) => 
         onClick={() => setOpen(!open)}
         className={`font-[Poppins] w-full px-5 py-2 flex items-center justify-between text-[12px] font-medium rounded-md transition-colors duration-150 text-gray-700 hover:bg-gray-100 ${open ? 'bg-[#F2F6FD] text-[#007BFF]' : ''}`}
       >
-        <div className="flex items-center gap-3">
-          <Icon size={16} className={open ? 'text-[#007BFF]' : 'text-gray-500'} />
-          {text}
+        <div className={`flex items-center gap-3 ${open ? 'text-[#007BFF]' : 'text-gray-700'}`}>
+          <Icon color={open ? "#007BFF" : "#6B7280"} size={16} />
+          <span className="font-medium">{text}</span>
         </div>
         {open ? <ChevronDown size={16} className="text-[#007BFF]" /> : <ChevronRight size={16} className="text-gray-500" />}
       </button>
@@ -107,23 +110,40 @@ const Sidebar = () => {
           onClick={() => setActiveItem("Dashboard")}
         />
 
-        <ExpandableItem icon={FolderTree} text="Divisiones" defaultOpen>
+        <ExpandableItem icon={IconModulos} text="Divisiones" defaultOpen>
           <SidebarItem
-            icon={FileText}
+            icon={({ size }) => (
+              <IconNucleares
+                size={size}
+                color={activeItem === "Nucleares" ? "#FFFFFF" : "#6B7280"}
+              />
+            )}
             text="Nucleares"
             indent
             active={activeItem === "Nucleares"}
             onClick={() => setActiveItem("Nucleares")}
           />
+
           <SidebarItem
-            icon={FileText}
+            icon={({ size }) => (
+              <IconFinancieros
+                size={size}
+                color={activeItem === "Financieros" ? "#FFFFFF" : "#6B7280"}
+              />
+            )}
             text="Financieros"
             indent
             active={activeItem === "Financieros"}
             onClick={() => setActiveItem("Financieros")}
           />
+
           <SidebarItem
-            icon={Shield}
+            icon={({ size }) => (
+              <IconAuxiliares
+                size={size}
+                color={activeItem === "Auxiliares" ? "#FFFFFF" : "#6B7280"}
+              />
+            )}
             text="Auxiliares"
             indent
             active={activeItem === "Auxiliares"}
