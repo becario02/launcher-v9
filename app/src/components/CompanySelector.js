@@ -21,7 +21,7 @@ export default function CompanySelector() {
   }, []);
 
   return (
-    <div ref={dropdownRef} className="relative w-full sm:w-72 text-sm font-medium text-gray-700">
+    <div ref={dropdownRef} className="font-[Poppins] relative w-full sm:w-72 text-sm font-medium text-gray-700">
       <button
         onClick={() => setOpen(!open)}
         className={`w-full flex items-center justify-between border ${

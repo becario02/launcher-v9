@@ -20,7 +20,7 @@ import Image from 'next/image';
 const SidebarItem = ({ icon: Icon, text, active = false, onClick, indent = false }) => (
   <button
     onClick={onClick}
-    className={`w-full py-2 px-5 flex items-center gap-3 text-[10px] rounded-md transition-all duration-150 font-medium
+    className={`font-[Poppins] w-full py-2 px-5 flex items-center gap-3 text-[12px] rounded-md transition-all duration-150 font-medium
       ${active ? 'bg-[#007BFF] text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'}
       ${indent ? 'pl-8' : ''}`}
   >
@@ -36,7 +36,7 @@ const ExpandableItem = ({ icon: Icon, text, children, defaultOpen = false }) => 
     <div>
       <button
         onClick={() => setOpen(!open)}
-        className={`w-full px-5 py-2 flex items-center justify-between text-[11px] font-medium rounded-md transition-colors duration-150 text-gray-700 hover:bg-gray-100 ${open ? 'bg-[#F2F6FD] text-[#007BFF]' : ''}`}
+        className={`font-[Poppins] w-full px-5 py-2 flex items-center justify-between text-[12px] font-medium rounded-md transition-colors duration-150 text-gray-700 hover:bg-gray-100 ${open ? 'bg-[#F2F6FD] text-[#007BFF]' : ''}`}
       >
         <div className="flex items-center gap-3">
           <Icon size={16} className={open ? 'text-[#007BFF]' : 'text-gray-500'} />

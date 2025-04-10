@@ -100,7 +100,7 @@ const DirectAccessSection = () => {
   const hasMore = items.length > 3;
 
   return (
-    <section className="bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm">
+    <section className="font-[Poppins] bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-[13px] font-medium text-gray-800">Mis accesos directos</h2>
         {hasMore && (
