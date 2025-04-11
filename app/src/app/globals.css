@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Fuentes */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;300;400;500;600;700&display=swap');
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -15,7 +18,7 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Poppins', sans-serif;
 }
 
 @keyframes fadeIn {
@@ -44,4 +47,35 @@ body {
 .scrollbar-thin::-webkit-scrollbar-thumb {
   background-color: #d1d5db;
   border-radius: 9999px;
+}
+
+/* Estilos tipográficos según guía de diseño */
+@layer components {
+  .heading-1 {
+    @apply font-poppins text-h1 font-semibold text-gray-5 leading-standard;
+  }
+  
+  .heading-2 {
+    @apply font-poppins text-h2 font-medium text-gray-5 leading-standard;
+  }
+  
+  .heading-3 {
+    @apply font-poppins text-h3 font-medium text-gray-4 leading-standard;
+  }
+  
+  .heading-4 {
+    @apply font-poppins text-h4 font-medium text-gray-4 leading-standard;
+  }
+  
+  .paragraph {
+    @apply font-poppins text-p font-regular text-gray-3 leading-standard;
+  }
+  
+  .paragraph-small {
+    @apply font-poppins text-p-small font-regular text-gray-3 leading-standard;
+  }
+  
+  .tag {
+    @apply font-poppins text-xs font-medium rounded-full px-2 py-0.5;
+  }
 }

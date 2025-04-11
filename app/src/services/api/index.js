@@ -64,3 +64,4 @@ export async function fetchApi(endpoint, options = {}) {
 
 
 export * from './recuperarContraseña';
+export * from './newsService';
