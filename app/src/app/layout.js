@@ -2,7 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Poppins } from "next/font/google";
 import { AuthProvider } from "@/context/auth";
 import { TabsProvider } from "@/context/tabs";
-import ChatBotButton from '@/components/ChatBotButton';
+import ChatContainer from '@/components/chat/ChatContainer';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,7 +34,7 @@ export default function RootLayout({ children }) {
           <TabsProvider>
             {children}
           </TabsProvider>
-          <ChatBotButton />
+          <ChatContainer />
         </AuthProvider>
       </body>
     </html>
