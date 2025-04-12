@@ -1,18 +1,27 @@
 import { useState, useEffect, useRef } from 'react';
 import ChatMessage from './ChatMessage';
-import { X } from 'lucide-react';
+import { X, Mic } from 'lucide-react';
 
 const ChatWindow = ({ messages, onSendMessage, onClose, loading, isClosing }) => {
   const [input, setInput] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const finalTranscriptRef = useRef('');
 
-  // Activar animación de entrada al montar
+  // Animación de entrada
   useEffect(() => {
-    const timeout = setTimeout(() => setAnimateIn(true), 10); // delay corto para activar transición
+    const timeout = setTimeout(() => setAnimateIn(true), 10);
     return () => clearTimeout(timeout);
   }, []);
 
+  // Scroll automático
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
+
+  // Enviar mensaje
   const handleSend = () => {
     if (input.trim()) {
       onSendMessage(input);
@@ -20,9 +29,54 @@ const ChatWindow = ({ messages, onSendMessage, onClose, loading, isClosing }) =>
     }
   };
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
+  // Grabar por voz
+  const startRecording = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Tu navegador no soporta reconocimiento de voz.');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'es-ES';
+    recognition.interimResults = true;
+    recognition.continuous = false;
+
+    recognitionRef.current = recognition;
+    finalTranscriptRef.current = '';
+    setIsRecording(true);
+
+    recognition.onresult = (event) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscriptRef.current += transcript;
+        } else {
+          interim += transcript;
+        }
+      }
+
+      setInput(finalTranscriptRef.current || interim);
+    };
+
+    recognition.onerror = (e) => {
+      console.error('Error de reconocimiento:', e.error);
+      setIsRecording(false);
+      alert('Error al capturar la voz. Intenta de nuevo.');
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+      const message = finalTranscriptRef.current.trim();
+      if (message) {
+        onSendMessage(message);
+        setInput('');
+      }
+    };
+
+    recognition.start();
+  };
 
   return (
     <div
@@ -45,6 +99,7 @@ const ChatWindow = ({ messages, onSendMessage, onClose, loading, isClosing }) =>
           <ChatMessage key={idx} text={msg.text} from={msg.from} />
         ))}
 
+        {/* Indicador de escritura */}
         {loading && (
           <div className="flex items-end gap-2 mb-4">
             <div className="w-[30px] h-[30px] flex-shrink-0">
@@ -66,7 +121,7 @@ const ChatWindow = ({ messages, onSendMessage, onClose, loading, isClosing }) =>
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
+      {/* Input y botones */}
       <div className="flex items-center gap-2 border-t p-3 bg-white">
         <input
           type="text"
@@ -74,8 +129,21 @@ const ChatWindow = ({ messages, onSendMessage, onClose, loading, isClosing }) =>
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="Escribe un mensaje..."
+          placeholder={isRecording ? 'Escuchando...' : 'Escribe tu mensaje...'}
         />
+
+        {/* Botón de micrófono */}
+        <button
+          onClick={startRecording}
+          title="Dictar por voz"
+          className={`p-2 rounded-md transition ${
+            isRecording ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+          }`}
+        >
+          <Mic size={18} />
+        </button>
+
+        {/* Botón enviar */}
         <button
           className="px-4 py-2 rounded-md text-sm text-white bg-[#0080ff] hover:bg-blue-600 transition"
           onClick={handleSend}
