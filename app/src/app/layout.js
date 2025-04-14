@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Poppins } from "next/font/google";
 import { AuthProvider } from "@/context/auth";
 import { TabsProvider } from "@/context/tabs";
+import { ThemeProvider } from "@/context/theme";
 import ChatContainer from '@/components/chat/ChatContainer';
 import "./globals.css";
 
@@ -30,12 +31,14 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased`}>
-        <AuthProvider>
-          <TabsProvider>
-            {children}
-          </TabsProvider>
-          <ChatContainer />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <TabsProvider>
+              {children}
+            </TabsProvider>
+            <ChatContainer />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
+import { useTheme } from "@/context/theme";
+
 import IconModulos from "@/components/icons/sidebar/IconModulos";
 import IconNucleares from "@/components/icons/sidebar/IconNucleares";
 import IconFinancieros from "@/components/icons/sidebar/IconFinancieros";
@@ -20,13 +22,13 @@ const SidebarItem = ({ icon: Icon, text, active = false, onClick, indent = false
   <button
     onClick={onClick}
     className={`font-[Poppins] w-full py-2 px-5 flex items-center gap-3 text-[12px] rounded-md transition-all duration-150 font-medium
-      ${active ? 'bg-[#007BFF] text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'}
+      ${active ? 'bg-[#007BFF] text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}
       ${indent ? 'pl-8' : ''}`}
   >
     {typeof Icon === "function" ? (
       <Icon size={16} color={active ? "#FFFFFF" : "#6B7280"} />
     ) : (
-      <Icon size={16} className={`${active ? 'text-white' : 'text-gray-500'}`} />
+      <Icon size={16} className={`${active ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`} />
     )}
     {text}
   </button>
@@ -39,13 +41,19 @@ const ExpandableItem = ({ icon: Icon, text, children, defaultOpen = false }) => 
     <div>
       <button
         onClick={() => setOpen(!open)}
-        className={`font-[Poppins] w-full px-5 py-2 flex items-center justify-between text-[12px] font-medium rounded-md transition-colors duration-150 text-gray-700 hover:bg-gray-100 ${open ? 'bg-[#F2F6FD] text-[#007BFF]' : ''}`}
+        className={`font-[Poppins] w-full px-5 py-2 flex items-center justify-between text-[12px] font-medium rounded-md transition-colors duration-150
+          text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
+          ${open ? 'bg-[#F2F6FD] dark:bg-gray-800 text-[#007BFF]' : ''}`}
       >
-        <div className={`flex items-center gap-3 ${open ? 'text-[#007BFF]' : 'text-gray-700'}`}>
+        <div className={`flex items-center gap-3 ${open ? 'text-[#007BFF]' : ''}`}>
           <Icon color={open ? "#007BFF" : "#6B7280"} size={16} />
           <span className="font-medium">{text}</span>
         </div>
-        {open ? <ChevronDown size={16} className="text-[#007BFF]" /> : <ChevronRight size={16} className="text-gray-500" />}
+        {open ? (
+          <ChevronDown size={16} className="text-[#007BFF]" />
+        ) : (
+          <ChevronRight size={16} className="text-gray-500 dark:text-gray-400" />
+        )}
       </button>
 
       <AnimatePresence initial={false}>
@@ -56,9 +64,7 @@ const ExpandableItem = ({ icon: Icon, text, children, defaultOpen = false }) => 
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="py-1 space-y-1">
-              {children}
-            </div>
+            <div className="py-1 space-y-1">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -67,28 +73,28 @@ const ExpandableItem = ({ icon: Icon, text, children, defaultOpen = false }) => 
 };
 
 const InfoItem = ({ label, value }) => (
-  <div className="flex items-center justify-between text-[11px] text-gray-700">
+  <div className="flex items-center justify-between text-[11px] text-gray-700 dark:text-gray-300">
     <div>
-      <p className="text-[10px] text-gray-400">{label}</p>
-      <p className="font-medium text-gray-800 mt-0.5 text-[11px]">{value}</p>
+      <p className="text-[10px] text-gray-400 dark:text-gray-500">{label}</p>
+      <p className="font-medium text-gray-800 dark:text-gray-200 mt-0.5 text-[11px]">{value}</p>
     </div>
     <button
       onClick={() => navigator.clipboard.writeText(value)}
-      className="p-1 hover:bg-gray-100 rounded"
+      className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
     >
-      <Copy size={14} className="text-gray-400 hover:text-gray-600" />
+      <Copy size={14} className="text-gray-400 hover:text-gray-600 dark:text-gray-500" />
     </button>
   </div>
 );
 
 const Sidebar = () => {
-  const [theme, setTheme] = useState("light");
   const [activeItem, setActiveItem] = useState("Dashboard");
+  const { theme, setTheme } = useTheme();
 
   return (
-    <div className="w-60 h-screen flex flex-col bg-white text-gray-800 fixed top-0 left-0 z-10 border-r border-gray-200">
+    <div className="w-60 h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 fixed top-0 left-0 z-10 border-r border-gray-200 dark:border-gray-700">
       {/* Header */}
-      <div className="h-24 w-60 flex items-center justify-center border-b border-gray-100">
+      <div className="h-24 w-60 flex items-center justify-center border-b border-gray-100 dark:border-gray-700">
         <Image
           src="/logoAdvan.svg"
           alt="Advan Logo"
@@ -101,7 +107,7 @@ const Sidebar = () => {
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 scrollbar-thin">
-        <p className="text-[12px] text-gray-400 px-4 pt-1 px-0">Menú</p>
+        <p className="text-[12px] text-gray-400 dark:text-gray-500 px-4 pt-1 px-0">Menú</p>
 
         <SidebarItem
           icon={LayoutGrid}
@@ -160,25 +166,27 @@ const Sidebar = () => {
       </div>
 
       {/* Footer info */}
-      <div className="mt-auto border-t border-gray-100 px-4 py-5">
-        <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 space-y-3">
+      <div className="mt-auto border-t border-gray-100 dark:border-gray-700 px-4 py-5">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 space-y-3">
           <InfoItem label="Versión de licencia" value="12345" />
           <InfoItem label="Versión de BD" value="12345" />
           <InfoItem label="IP" value="12345" />
         </div>
 
-        {/* Theme toggle (estático) */}
-        <div className="mt-4 bg-gray-100 rounded-full p-1 flex items-center justify-between w-full text-[11px] font-medium text-gray-600">
-          <div
+        {/* Theme toggle */}
+        <div className="mt-4 bg-gray-100 dark:bg-gray-800 rounded-full p-1 flex items-center justify-between w-full text-[11px] font-medium text-gray-600 dark:text-gray-300">
+          <button
+            onClick={() => setTheme("light")}
             className={`w-1/2 py-1.5 text-center rounded-full transition-all duration-200 ${theme === 'light' ? 'bg-white text-gray-800 shadow' : ''}`}
           >
             Light
-          </div>
-          <div
+          </button>
+          <button
+            onClick={() => setTheme("dark")}
             className={`w-1/2 py-1.5 text-center rounded-full transition-all duration-200 ${theme === 'dark' ? 'bg-white text-gray-800 shadow' : ''}`}
           >
             Dark
-          </div>
+          </button>
         </div>
       </div>
     </div>
