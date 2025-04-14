@@ -68,12 +68,12 @@ const NewsCarousel = () => {
   const translateX = (100 / (news.length / visibleCount)) * currentIndex;
 
   return (
-    <div className="w-full bg-white border border-gray-200 rounded-[8px] p-[20px] shadow-sm relative">
+    <div className="w-full bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-[8px] p-[20px] shadow-sm relative">
       <div className="flex items-center justify-between mb-[20px] px-[4px]">
-        <h2 className="text-[14px] leading-[21px] text-black font-semibold font-[Poppins]">
+        <h2 className="text-[14px] leading-[21px] text-black dark:text-gray-200 font-semibold font-[Poppins]">
           Noticias recientes
         </h2>
-        <button className="text-[12px] leading-[18px] text-black font-medium font-[Poppins] text-right">
+        <button className="text-[12px] leading-[18px] text-black dark:text-gray-200 font-medium font-[Poppins] text-right">
           Ver todo
         </button>
       </div>
@@ -83,10 +83,10 @@ const NewsCarousel = () => {
         <button
           onClick={prevSlide}
           className="absolute left-[12px] top-[50%] transform -translate-y-1/2 z-10 
-            bg-white rounded-full w-8 h-8 flex items-center justify-center 
-            shadow-md hover:bg-gray-50"
+            bg-white dark:bg-[#2C2C38] rounded-full w-8 h-8 flex items-center justify-center 
+            shadow-md hover:bg-gray-50 dark:hover:bg-[#333]"
         >
-          <ChevronLeft className="w-4 h-4 text-gray-600" />
+          <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-300" />
         </button>
 
         {/* Carousel content */}
@@ -103,7 +103,7 @@ const NewsCarousel = () => {
               className="flex-shrink-0 px-[6px] flex justify-center"
               style={{ width: `${100 / news.length}%` }}
             >
-              <div className="border border-gray-200 rounded-[8px] overflow-hidden w-[188px] h-[200px] flex flex-col items-center justify-start pt-[12px]">
+              <div className="border border-gray-200 dark:border-[#2C2C38] rounded-[8px] overflow-hidden w-[188px] h-[200px] flex flex-col items-center justify-start pt-[12px] bg-white dark:bg-[#1C1C24]">
                 <div className="w-[168px] h-[100px] mb-[8px]">
                   <img
                     src={item.image}
@@ -111,7 +111,7 @@ const NewsCarousel = () => {
                     className="w-full h-full object-cover rounded-[6px]"
                   />
                 </div>
-                <p className="text-[12px] leading-[18px] text-[#171725] text-center font-medium font-[Poppins] px-[12px]">
+                <p className="text-[12px] leading-[18px] text-[#171725] dark:text-gray-200 text-center font-medium font-[Poppins] px-[12px]">
                   {item.text}
                 </p>
               </div>
@@ -123,10 +123,10 @@ const NewsCarousel = () => {
         <button
           onClick={nextSlide}
           className="absolute right-[12px] top-[50%] transform -translate-y-1/2 z-10 
-            bg-white rounded-full w-8 h-8 flex items-center justify-center 
-            shadow-md hover:bg-gray-50"
+            bg-white dark:bg-[#2C2C38] rounded-full w-8 h-8 flex items-center justify-center 
+            shadow-md hover:bg-gray-50 dark:hover:bg-[#333]"
         >
-          <ChevronRight className="w-4 h-4 text-gray-600" />
+          <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-300" />
         </button>
       </div>
 
@@ -137,7 +137,7 @@ const NewsCarousel = () => {
             key={index}
             onClick={() => setCurrentIndex(index)}
             className={`w-[8px] h-[8px] rounded-full transition-colors duration-200 
-              ${currentIndex === index ? 'bg-gray-800' : 'bg-gray-300'}`}
+              ${currentIndex === index ? 'bg-gray-800 dark:bg-gray-100' : 'bg-gray-300 dark:bg-gray-600'}`}
           />
         ))}
       </div>

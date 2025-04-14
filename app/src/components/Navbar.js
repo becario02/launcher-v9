@@ -10,21 +10,23 @@ import ProfilePopup from './ProfilePopup';
 import NotificationsPopup from './NotificationsPopup';
 import { useTabs } from '@/context/tabs';
 import CompanySelector from './CompanySelector';
+import { useTheme } from '@/context/theme'; // ✅ Importar useTheme
 
 const Navbar = ({ onMenuClick }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { tabs } = useTabs();
+  const { theme, setTheme } = useTheme(); // ✅ Obtener tema actual
   const showTabs = tabs.length > 0;
 
   return (
     <>
       {/* Navbar con posición sticky */}
-      <nav className="sticky top-0 w-full bg-white z-20">
-        <div className="w-full flex h-24 border-b border-gray-200 items-center">
+      <nav className="sticky top-0 w-full bg-white dark:bg-[#1c1c24] z-20">
+        <div className="w-full flex h-24 items-center border-b border-gray-200 dark:border-gray-700">
           {/* Mobile menu */}
           <div className="md:hidden px-4">
-            <button onClick={onMenuClick} className="text-gray-700 hover:text-black">
+            <button onClick={onMenuClick} className="text-gray-700 dark:text-gray-300 hover:text-black">
               <Menu size={24} />
             </button>
           </div>
@@ -40,14 +42,14 @@ const Navbar = ({ onMenuClick }) => {
             <div className="flex items-center gap-6 lg:gap-12 pr-4">
               {/* Centro de ayuda */}
               <div className="flex items-center gap-2 text-[13px] font-normal">
-                <button className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50">
+                <button className="w-9 h-9 border border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center hover:bg-gray-50 dark:hover:bg-[#2c2c38]">
                   <img
                     src="/assets/navbar/icon-frame.svg"
                     alt="Centro de ayuda"
                     className="w-5 h-5"
                   />
                 </button>
-                <span className="hidden lg:inline font-[Poppins] font-semibold text-sm tracking-[0.1px] text-gray-600">
+                <span className="hidden lg:inline font-[Poppins] font-semibold text-sm tracking-[0.1px] text-gray-600 dark:text-gray-300">
                   Centro de ayuda
                 </span>
               </div>
@@ -57,7 +59,9 @@ const Navbar = ({ onMenuClick }) => {
                 <button
                   onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                   className={`w-9 h-9 rounded-full flex items-center justify-center transition-all 
-                    border ${isNotificationsOpen ? 'bg-[#0080ff] border-[#0080ff]' : 'border-gray-300 hover:bg-gray-50'}`}
+                    border ${isNotificationsOpen
+                      ? 'bg-[#0080ff] border-[#0080ff]'
+                      : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-[#2c2c38]'}`}
                 >
                   <img
                     src={`/assets/navbar/${isNotificationsOpen ? 'icon-frame-12' : 'icon-frame-11'}.svg`}
@@ -75,7 +79,7 @@ const Navbar = ({ onMenuClick }) => {
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className={`w-9 h-9 border rounded-full overflow-hidden transition-all
-                    ${isProfileOpen ? 'border-[#0080ff]' : 'border-white'}`}
+                    ${isProfileOpen ? 'border-[#0080ff]' : 'border-white dark:border-gray-700'}`}
                 >
                   <img
                     src="/assets/navbar/perfil.jpg"
@@ -88,15 +92,16 @@ const Navbar = ({ onMenuClick }) => {
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                 >
                   <span
-                    className={`hidden lg:inline font-semibold text-sm tracking-[0.1px] 
-                      ${isProfileOpen ? 'text-[#171725]' : 'text-gray-600'} 
-                      font-[Poppins]`}
+                    className={`hidden lg:inline font-semibold text-sm tracking-[0.1px] font-[Poppins]
+                      ${isProfileOpen ? 'text-[#171725] dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}
                   >
                     Luis González
                   </span>
                   <ChevronDown
                     size={16}
-                    className={`hidden lg:inline transition-transform duration-200 ${isProfileOpen ? 'text-[#0080ff] rotate-180' : 'text-gray-600 rotate-0'
+                    className={`hidden lg:inline transition-transform duration-200 ${isProfileOpen
+                      ? 'text-[#0080ff] rotate-180'
+                      : 'text-gray-600 dark:text-gray-400 rotate-0'
                       }`}
                   />
                 </span>
@@ -113,7 +118,6 @@ const Navbar = ({ onMenuClick }) => {
           isOpen={isProfileOpen}
           onClose={() => setIsProfileOpen(false)}
         />
-
         <NotificationsPopup
           isOpen={isNotificationsOpen}
           onClose={() => setIsNotificationsOpen(false)}

@@ -42,10 +42,10 @@ const ExpandableItem = ({ icon: Icon, text, children, defaultOpen = false }) => 
       <button
         onClick={() => setOpen(!open)}
         className={`font-[Poppins] w-full px-5 py-2 flex items-center justify-between text-[12px] font-medium rounded-md transition-colors duration-150
-          text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
-          ${open ? 'bg-[#F2F6FD] dark:bg-gray-800 text-[#007BFF]' : ''}`}
+          text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#31313e]
+          ${open ? 'bg-[#F2F6FD] dark:bg-[#31313e] text-[#007BFF]' : ''}`}
       >
-        <div className={`flex items-center gap-3 ${open ? 'text-[#007BFF]' : ''}`}>
+        <div className={`flex items-center gap-3 ${open ? 'text-[#007BFF] dark:text-[#f5f7fa]' : ''}`}>
           <Icon color={open ? "#007BFF" : "#6B7280"} size={16} />
           <span className="font-medium">{text}</span>
         </div>
@@ -92,7 +92,7 @@ const Sidebar = () => {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="w-60 h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 fixed top-0 left-0 z-10 border-r border-gray-200 dark:border-gray-700">
+    <div className="w-60 h-screen flex flex-col bg-white dark:bg-[#1c1c24] text-gray-800 dark:text-gray-100 fixed top-0 left-0 z-10 border-r border-gray-200 dark:border-gray-700">
       {/* Header */}
       <div className="h-24 w-60 flex items-center justify-center border-b border-gray-100 dark:border-gray-700">
         <Image
@@ -167,7 +167,7 @@ const Sidebar = () => {
 
       {/* Footer info */}
       <div className="mt-auto border-t border-gray-100 dark:border-gray-700 px-4 py-5">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 space-y-3">
+        <div className="bg-white dark:bg-[#1c1c24] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 space-y-3">
           <InfoItem label="Versión de licencia" value="12345" />
           <InfoItem label="Versión de BD" value="12345" />
           <InfoItem label="IP" value="12345" />

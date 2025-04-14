@@ -58,23 +58,21 @@ const NotificationsPopup = ({ isOpen, onClose }) => {
       <div className="fixed inset-0 z-40" onClick={onClose} />
 
       <div
-        className={`fixed top-0 right-0 mt-[110px] mr-4 sm:mr-4 md:mr-36 w-[292px] h-[351px] bg-white rounded-2xl shadow-xl 
-          border border-gray-100 z-50 transition-all duration-200
+        className={`fixed top-0 right-0 mt-[110px] mr-4 sm:mr-4 md:mr-36 w-[292px] h-[351px] 
+          bg-white dark:bg-[#1C1C24] rounded-2xl shadow-xl border border-gray-100 dark:border-[#2C2C38] 
+          z-50 transition-all duration-200
           ${showAnimation ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
       >
         <div className="p-5 h-full flex flex-col justify-between">
           {/* Header */}
-          <h3 className="text-[14px] leading-[21px] font-medium text-black font-poppins">
+          <h3 className="text-[14px] leading-[21px] font-medium text-black dark:text-gray-200 font-poppins">
             Mis notificaciones
           </h3>
 
           {/* Notificaciones */}
           <div className="flex flex-col gap-y-[20px] py-2 overflow-auto flex-1">
             {notifications.map((n) => (
-              <div
-                key={n.id}
-                className="flex items-start gap-3 min-h-[36px]"
-              >
+              <div key={n.id} className="flex items-start gap-3 min-h-[36px]">
                 <div
                   className="w-9 h-9 flex items-center justify-center rounded-md shrink-0"
                   style={{ backgroundColor: n.bgColor }}
@@ -89,10 +87,10 @@ const NotificationsPopup = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="flex-1 overflow-hidden">
-                  <h4 className="text-[12px] leading-[18px] font-medium text-[#171725] font-poppins truncate">
+                  <h4 className="text-[12px] leading-[18px] font-medium text-[#171725] dark:text-gray-200 font-poppins truncate">
                     {n.title}
                   </h4>
-                  <p className="text-[10px] leading-[15px] text-[#92929d] font-poppins truncate">
+                  <p className="text-[10px] leading-[15px] text-[#92929d] dark:text-gray-400 font-poppins truncate">
                     {n.subtitle}
                   </p>
                 </div>
@@ -102,7 +100,7 @@ const NotificationsPopup = ({ isOpen, onClose }) => {
 
           {/* Footer */}
           <div className="pt-2">
-            <button className="w-full border border-gray-300 text-[12px] font-medium text-[#171725] py-2 rounded-lg hover:bg-gray-50 transition font-poppins">
+            <button className="w-full border border-gray-300 dark:border-[#3A3A46] text-[12px] font-medium text-[#171725] dark:text-gray-200 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-[#2C2C38] transition font-poppins">
               Ver todas las notificaciones
             </button>
           </div>

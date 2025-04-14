@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import { useTheme } from '@/context/theme'; // ✅ Importamos useTheme si lo necesitas en el futuro
 
 const companies = ['Express Logistics S.A de C.V', 'Logística del Bajío S.A'];
 
@@ -21,16 +22,19 @@ export default function CompanySelector() {
   }, []);
 
   return (
-    <div ref={dropdownRef} className="font-[Poppins] relative w-full sm:w-72 text-sm font-medium text-gray-700">
+    <div
+      ref={dropdownRef}
+      className="font-[Poppins] relative w-full sm:w-72 text-sm font-medium text-gray-700 dark:text-gray-200"
+    >
       <button
         onClick={() => setOpen(!open)}
         className={`w-full flex items-center justify-between border ${
-          open ? 'border-[#0080ff] border-b-transparent' : 'border-gray-300'
+          open ? 'border-[#0080ff] border-b-transparent' : 'border-gray-300 dark:border-gray-600'
         } ${open ? 'rounded-t-lg' : 'rounded-lg'}
-          px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-50 bg-white transition-all z-20 relative`}
+          px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-50 dark:hover:bg-[#2c2c38] bg-white dark:bg-[#1c1c24] transition-all z-20 relative`}
       >
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-300 overflow-hidden">
+          <div className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 overflow-hidden">
             <Image
               src="/assets/company-selector/company-picture.jpg"
               alt="Company"
@@ -50,7 +54,7 @@ export default function CompanySelector() {
       </button>
 
       {open && (
-        <ul className="absolute top-full w-full bg-white border border-[#0080ff] border-t-0 rounded-b-lg shadow z-10 overflow-hidden">
+        <ul className="absolute top-full w-full bg-white dark:bg-[#1c1c24] border border-[#0080ff] border-t-0 rounded-b-lg shadow z-10 overflow-hidden">
           {companies
             .filter((company) => company !== selected)
             .map((company, idx) => (
@@ -60,9 +64,9 @@ export default function CompanySelector() {
                   setSelected(company);
                   setOpen(false);
                 }}
-                className="cursor-pointer px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-100 flex items-center gap-2 sm:gap-3"
+                className="cursor-pointer px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-100 dark:hover:bg-[#2c2c38] flex items-center gap-2 sm:gap-3"
               >
-                <div className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-300 overflow-hidden">
+                <div className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 overflow-hidden">
                   <Image
                     src="/assets/company-selector/company-picture2.jpg"
                     alt="Company"
@@ -71,7 +75,7 @@ export default function CompanySelector() {
                     className="object-cover"
                   />
                 </div>
-                <span className="text-[13px] font-medium">{company}</span>
+                <span className="text-[13px] font-medium text-gray-700 dark:text-gray-200">{company}</span>
               </li>
             ))}
         </ul>

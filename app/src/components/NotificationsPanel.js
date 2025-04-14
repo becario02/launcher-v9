@@ -35,18 +35,18 @@ const notifications = [
 
 const NotificationsPanel = () => {
   return (
-    <section className="bg-white border border-gray-200 rounded-xl p-5 shadow-md h-full flex flex-col">
+    <section className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-xl p-5 shadow-md h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[16px] leading-[24px] md:text-[14px] md:leading-[21px] font-medium text-black font-poppins">
+        <h3 className="text-[16px] leading-[24px] md:text-[14px] md:leading-[21px] font-medium text-black dark:text-gray-200 font-poppins">
           Mis notificaciones
         </h3>
-        <button className="text-[14px] leading-[20px] md:text-[12px] md:leading-[18px] font-medium text-black hover:underline font-poppins">
+        <button className="text-[14px] leading-[20px] md:text-[12px] md:leading-[18px] font-medium text-black dark:text-gray-200 hover:underline font-poppins">
           Ver más
         </button>
       </div>
 
-      {/* Lista de notificaciones con espaciado adaptativo */}
+      {/* Lista de notificaciones */}
       <div className="flex flex-col justify-between flex-1 gap-4 md:gap-2">
         {notifications.map((n) => (
           <div
@@ -67,10 +67,10 @@ const NotificationsPanel = () => {
             </div>
 
             <div className="flex-1 overflow-hidden">
-              <h4 className="text-[15px] leading-[22px] md:text-[12px] md:leading-[18px] font-medium text-[#171725] font-poppins truncate">
+              <h4 className="text-[15px] leading-[22px] md:text-[12px] md:leading-[18px] font-medium text-[#171725] dark:text-gray-200 font-poppins truncate">
                 {n.title}
               </h4>
-              <p className="text-[13px] leading-[19px] md:text-[10px] md:leading-[15px] text-[#92929d] font-poppins truncate">
+              <p className="text-[13px] leading-[19px] md:text-[10px] md:leading-[15px] text-[#92929d] dark:text-gray-400 font-poppins truncate">
                 {n.subtitle}
               </p>
             </div>
