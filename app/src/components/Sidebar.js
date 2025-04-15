@@ -10,6 +10,7 @@ import {
   Newspaper,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { useTheme } from "@/context/theme";
 
@@ -95,14 +96,16 @@ const Sidebar = () => {
     <div className="w-60 h-screen flex flex-col bg-white dark:bg-[#1c1c24] text-gray-800 dark:text-gray-100 fixed top-0 left-0 z-10 border-r border-gray-200 dark:border-gray-700">
       {/* Header */}
       <div className="h-24 w-60 flex items-center justify-center border-b border-gray-100 dark:border-gray-700">
-        <Image
-          src="/logoAdvan.svg"
-          alt="Advan Logo"
-          width={200}
-          height={70}
-          className="h-auto"
-          priority
-        />
+        <Link href="/">
+          <Image
+            src="/logoAdvan.svg"
+            alt="Advan Logo"
+            width={200}
+            height={70}
+            className="h-auto"
+            priority
+          />
+        </Link>
       </div>
 
       {/* Scrollable content */}
