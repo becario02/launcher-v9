@@ -6,14 +6,16 @@ import Sidebar from '@/components/Sidebar';
 import Image from 'next/image';
 import { Eye, Pencil, Check, Settings } from 'lucide-react';
 import clsx from 'clsx';
+import { usePrimaryColor } from '@/context/primaryColor'; // NUEVO
 
 const colorOptions = ['#0080FF', '#8B5CF6', '#EC4899', '#22C55E', '#F97316'];
 const themeOptions = ['light', 'dark'];
 
 export default function ProfilePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedColor, setSelectedColor] = useState('#0080FF');
   const [selectedTheme, setSelectedTheme] = useState('light');
+
+  const { primaryColor, setPrimaryColor } = usePrimaryColor(); // NUEVO
 
   return (
     <div className="flex">
@@ -38,9 +40,7 @@ export default function ProfilePage() {
 
             {/* TÍTULO PRINCIPAL */}
             <div className="flex items-center mb-2">
-              <Settings
-                className="w-6 h-6 mr-[10px] text-[#3B82F6] dark:text-[#3B82F6]"
-              />
+              <Settings className="w-6 h-6 mr-[10px] text-primary" />
               <h1 className="text-[26px] leading-[39px] font-semibold font-poppins text-[#44444f] dark:text-[#e2e2ea]">
                 Configuración
               </h1>
@@ -126,9 +126,9 @@ export default function ProfilePage() {
             {/* BLOQUE COLOR DE TEMA */}
             <div className="flex gap-10 items-start">
               <div className="w-60 pt-2">
-              <h3 className="text-[14px] leading-[21px] font-medium font-poppins text-[#000000] dark:text-[#e2e2ea]">
-                Color de tema
-              </h3>
+                <h3 className="text-[14px] leading-[21px] font-medium font-poppins text-[#000000] dark:text-[#e2e2ea]">
+                  Color de tema
+                </h3>
                 <p className="text-[12px] leading-[18px] font-normal font-poppins text-[#696974] dark:text-[#92929d] mt-1">
                   Elige un tema preferido para la app.
                 </p>
@@ -138,14 +138,14 @@ export default function ProfilePage() {
                   {colorOptions.map((color) => (
                     <button
                       key={color}
-                      onClick={() => setSelectedColor(color)}
+                      onClick={() => setPrimaryColor(color)}
                       className={clsx(
                         'w-8 h-8 rounded-md flex items-center justify-center relative',
-                        selectedColor === color ? 'ring-2 ring-white' : ''
+                        primaryColor === color ? 'ring-2 ring-white' : ''
                       )}
                       style={{ backgroundColor: color }}
                     >
-                      {selectedColor === color && <Check className="w-4 h-4 text-white" />}
+                      {primaryColor === color && <Check className="w-4 h-4 text-white" />}
                     </button>
                   ))}
                 </div>
@@ -155,9 +155,9 @@ export default function ProfilePage() {
             {/* BLOQUE MODO DE TEMA */}
             <div className="flex gap-10 items-start">
               <div className="w-60 pt-2">
-              <h3 className="text-[14px] leading-[21px] font-medium font-poppins text-[#000000] dark:text-[#e2e2ea]">
-                Modo de tema
-              </h3>
+                <h3 className="text-[14px] leading-[21px] font-medium font-poppins text-[#000000] dark:text-[#e2e2ea]">
+                  Modo de tema
+                </h3>
                 <p className="text-[12px] leading-[18px] font-normal font-poppins text-[#696974] dark:text-[#92929d] mt-1">
                   Elige el modo claro u oscuro, o cámbialo automáticamente según la configuración del sistema.
                 </p>
@@ -176,9 +176,7 @@ export default function ProfilePage() {
                         selectedTheme === theme && 'ring-2 ring-white'
                       )}
                     >
-                      {selectedTheme === theme && (
-                        <Check className="w-4 h-4 text-white" />
-                      )}
+                      {selectedTheme === theme && <Check className="w-4 h-4 text-white" />}
                     </button>
                   ))}
                 </div>

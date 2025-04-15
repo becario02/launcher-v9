@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import { AuthProvider } from "@/context/auth";
 import { TabsProvider } from "@/context/tabs";
 import { ThemeProvider } from "@/context/theme";
+import { PrimaryColorProvider } from "@/context/primaryColor";
 import ChatContainer from '@/components/chat/ChatContainer';
 import "./globals.css";
 
@@ -32,12 +33,14 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased`}>
         <ThemeProvider>
-          <AuthProvider>
-            <TabsProvider>
-              {children}
-            </TabsProvider>
-            <ChatContainer />
-          </AuthProvider>
+          <PrimaryColorProvider>
+            <AuthProvider>
+              <TabsProvider>
+                {children}
+              </TabsProvider>
+              <ChatContainer />
+            </AuthProvider>
+          </PrimaryColorProvider>
         </ThemeProvider>
       </body>
     </html>

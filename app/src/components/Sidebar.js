@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import clsx from 'clsx';
 
 import { useTheme } from "@/context/theme";
 
@@ -23,7 +24,7 @@ const SidebarItem = ({ icon: Icon, text, active = false, onClick, indent = false
   <button
     onClick={onClick}
     className={`font-[Poppins] w-full py-2 px-5 flex items-center gap-3 text-[12px] rounded-md transition-all duration-150 font-medium
-      ${active ? 'bg-[#007BFF] text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}
+      ${active ? 'bg-[var(--primary-color)] text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}
       ${indent ? 'pl-8' : ''}`}
   >
     {typeof Icon === "function" ? (
@@ -46,12 +47,17 @@ const ExpandableItem = ({ icon: Icon, text, children, defaultOpen = false }) => 
           text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#31313e]
           ${open ? 'bg-[#F2F6FD] dark:bg-[#31313e] text-[#007BFF]' : ''}`}
       >
-        <div className={`flex items-center gap-3 ${open ? 'text-[#007BFF] dark:text-[#f5f7fa]' : ''}`}>
-          <Icon color={open ? "#007BFF" : "#6B7280"} size={16} />
+        <div
+          className={clsx(
+            'flex items-center gap-3',
+            open ? 'text-[var(--primary-color)] dark:text-[#f5f7fa]' : 'text-gray-700 dark:text-gray-300'
+          )}
+        >
+          <Icon className={clsx(open ? 'text-[var(--primary-color)]' : 'text-gray-500 dark:text-gray-400')} size={16} />
           <span className="font-medium">{text}</span>
         </div>
         {open ? (
-          <ChevronDown size={16} className="text-[#007BFF]" />
+          <ChevronDown size={16} className="text-[var(--primary-color)]" />
         ) : (
           <ChevronRight size={16} className="text-gray-500 dark:text-gray-400" />
         )}
