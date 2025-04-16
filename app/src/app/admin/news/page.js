@@ -12,8 +12,12 @@ import PermissionsModal from '@/components/admin/news/PermissionsModal';
 import { getCategoryColor } from '@/utils/categoryUtils';
 import { initialNewsData } from '@/services/newsService';
 import { newsService } from '@/services/api/newsService';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function NewsAdminDashboard() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const [news, setNews] = useState([]);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,10 +47,10 @@ export default function NewsAdminDashboard() {
   
   const [formData, setFormData] = useState({
     title: '',
-    category: 'NEWS', // Usa 'NEWS' en lugar de 'Tecnología'
+    category: 'NEWS',
     date: '',
     newsLink: '',
-    status: 'ACTIVE', // En mayúsculas
+    status: 'ACTIVE',
     imageUrl: '',
     dateExpiration: ''
   });
@@ -124,7 +128,7 @@ export default function NewsAdminDashboard() {
         title: newsItem.title || '',
         category: mapCategoryToEnum(newsItem.category),
         date: newsItem.date || '',
-        dateExpiration: newsItem.dateExpiration || '', // Asignar la fecha de expiración correctamente
+        dateExpiration: newsItem.dateExpiration || '',
         newsLink: newsItem.newsLink || '',
         status: newsItem.status ? newsItem.status.toUpperCase() : 'ACTIVE',
         imageUrl: newsItem.imageUrl || ''
@@ -134,7 +138,7 @@ export default function NewsAdminDashboard() {
         title: '',
         category: 'NEWS',
         date: new Date().toISOString().split('T')[0],
-        dateExpiration: '', // Inicializar también para nuevos items
+        dateExpiration: '',
         newsLink: '',
         status: 'ACTIVE',
         imageUrl: ''
@@ -145,7 +149,6 @@ export default function NewsAdminDashboard() {
   };
 
   const mapCategoryToEnum = (category) => {
-    // Mapea las categorías antiguas a los nuevos valores de enum
     const categoryMap = {
       'Tecnología': 'NEWS',
       'NOTIFICATION': 'NOTIFICATION',
@@ -154,7 +157,7 @@ export default function NewsAdminDashboard() {
       'Eventos': 'NEWS'
     };
     
-    return categoryMap[category] || 'NEWS'; // Por defecto, usa 'NEWS' si no hay coincidencia
+    return categoryMap[category] || 'NEWS';
   };
   
   const handleCloseModal = () => {
@@ -175,7 +178,6 @@ export default function NewsAdminDashboard() {
     if (newsItem) {
         setCurrentNews(newsItem);
         setConfirmAction(() => async () => {
-            // Verificar usando mayúsculas como en el resto de la aplicación
             const newStatus = newsItem.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
             
             const data = { 
@@ -242,42 +244,38 @@ export default function NewsAdminDashboard() {
       }
   
       let isoDate;
-try {
-  const dateValue = formData.dateExpiration || formData.date;
-  console.log('Valor de fecha original:', dateValue);
-  
-  let normalizedDate;
-  
-  // Formato simple YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
-    normalizedDate = `${dateValue}T00:00:00.000Z`;
-  } 
-  // Formato con T pero sin Z
-  else if (dateValue.includes('T') && !dateValue.includes('Z')) {
-    normalizedDate = `${dateValue}.000Z`;
-  }
-  // Ya incluye T y Z
-  else if (dateValue.includes('T') && dateValue.includes('Z')) {
-    normalizedDate = dateValue;
-  } 
-  else {
-    throw new Error('Formato de fecha no reconocido');
-  }
-  
-  // Crear objeto Date y verificar validez
-  const dateObj = new Date(normalizedDate);
-  if (isNaN(dateObj.getTime())) {
-    throw new Error('Fecha inválida después de normalización');
-  }
-  
-  isoDate = dateObj.toISOString();
-  console.log('Fecha normalizada:', normalizedDate);
-  console.log('Fecha ISO final:', isoDate);
-} catch (error) {
-  console.error('Error al procesar fecha:', error);
-  showNotification('error', 'Formato de fecha inválido');
-  return;
-}
+      try {
+        const dateValue = formData.dateExpiration || formData.date;
+        console.log('Valor de fecha original:', dateValue);
+        
+        let normalizedDate;
+        
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+          normalizedDate = `${dateValue}T00:00:00.000Z`;
+        } 
+        else if (dateValue.includes('T') && !dateValue.includes('Z')) {
+          normalizedDate = `${dateValue}.000Z`;
+        }
+        else if (dateValue.includes('T') && dateValue.includes('Z')) {
+          normalizedDate = dateValue;
+        } 
+        else {
+          throw new Error('Formato de fecha no reconocido');
+        }
+        
+        const dateObj = new Date(normalizedDate);
+        if (isNaN(dateObj.getTime())) {
+          throw new Error('Fecha inválida después de normalización');
+        }
+        
+        isoDate = dateObj.toISOString();
+        console.log('Fecha normalizada:', normalizedDate);
+        console.log('Fecha ISO final:', isoDate);
+      } catch (error) {
+        console.error('Error al procesar fecha:', error);
+        showNotification('error', 'Formato de fecha inválido');
+        return;
+      }
   
       const newsData = {
         newsType: formData.category,
@@ -290,17 +288,13 @@ try {
 
       setIsLoading(true);
       
-      let response;
-      
       if (modalType === 'add') {
         try {
           console.log('Adding news:', newsData);
           setIsLoading(true);
           
-          // 1. Primero agregamos la noticia y esperamos que termine
           await newsService.agregarNoticia(newsData);
           
-          // 2. Después recargamos todos los datos
           const response = await initialNewsData();
           
           if (response && response.data && Array.isArray(response.data)) {
@@ -314,10 +308,8 @@ try {
               imageUrl: item.imageContent || '',
             }));
             
-            // 3. Actualizamos el estado con los datos actualizados
             setNews(transformedData);
             
-            // 4. Solo entonces cerramos el modal y mostramos la notificación
             handleCloseModal();
             showNotification('success', 'Noticia creada exitosamente', 'toast');
           }
@@ -333,7 +325,7 @@ try {
               errorMessage = error.message;
             }
           } catch (e) {
-
+            // Ignorar error de parseo
           }
           
           showNotification('error', errorMessage, 'toast');
@@ -341,11 +333,9 @@ try {
 
       } else if (modalType === 'edit' && currentNews) {
         try {
-              // Preparar los datos correctamente para la actualización
           const data = {
             ...newsData,
-            idNews: currentNews.id,  // Usar idNews en lugar de id
-            // Asegurar que la imagen se envía correctamente
+            idNews: currentNews.id,
             imageContent: formData.imageUrl ? formData.imageUrl.substring(0, 100000) : null
           };
           
@@ -378,7 +368,7 @@ try {
               errorMessage = error.message;
             }
           } catch (e) {
-
+            // Ignorar error de parseo
           }
           showNotification('error', errorMessage, 'toast');
         }
@@ -401,7 +391,7 @@ try {
                           item.category.toLowerCase().includes(searchTerm.toLowerCase());
           const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
           const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-          return matchesSearch && matchesStatus && matchesCategory; // Usa && en lugar de comas
+          return matchesSearch && matchesStatus && matchesCategory;
         })
       : []);
   
@@ -426,135 +416,133 @@ try {
     ? news.map(item => item.category)
     : [])];
   
-    const handleOpenPermissionsModal = (newsId) => {
-      setCurrentNewsForPermissions(newsId);
+  const handleOpenPermissionsModal = (newsId) => {
+    setCurrentNewsForPermissions(newsId);
+    
+    setNewsPermissions(prevPermissions => ({
+      ...prevPermissions,
+      [newsId]: prevPermissions[newsId] || {
+        applications: [],
+        clients: [],
+        users: []
+      }
+    }));
+    
+    setIsPermissionsModalOpen(true);
+  };
+  
+  const handleClosePermissionsModal = () => {
+    setIsPermissionsModalOpen(false);
+    setCurrentNewsForPermissions(null);
+  };
+  
+  const handleSavePermissions = async (newsId, permissions) => {
+    try {
+      setIsLoading(true);
       
-      // Aquí podrías cargar los permisos actuales de la noticia desde el backend
-      // Por ahora, usamos un objeto vacío o los permisos guardados previamente
       setNewsPermissions(prevPermissions => ({
         ...prevPermissions,
-        [newsId]: prevPermissions[newsId] || {
-          applications: [],
-          clients: [],
-          users: []
-        }
+        [newsId]: permissions
       }));
       
-      setIsPermissionsModalOpen(true);
-    };
-    
-    // Añadir esta función para cerrar el modal de permisos
-    const handleClosePermissionsModal = () => {
       setIsPermissionsModalOpen(false);
-      setCurrentNewsForPermissions(null);
-    };
-    
-    const handleSavePermissions = async (newsId, permissions) => {
-      try {
-        setIsLoading(true);
-        
-        // Ya no es necesario llamar a la API aquí, ya se hizo dentro del modal
-        // Solo actualizamos el estado local
-        setNewsPermissions(prevPermissions => ({
-          ...prevPermissions,
-          [newsId]: permissions
-        }));
-        
-        setIsPermissionsModalOpen(false);
-        showNotification('success', 'Permisos actualizados correctamente', 'toast');
-      } catch (error) {
-        console.error('Error al guardar permisos:', error);
-        showNotification('error', 'Error al guardar los permisos', 'toast');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      showNotification('success', 'Permisos actualizados correctamente', 'toast');
+    } catch (error) {
+      console.error('Error al guardar permisos:', error);
+      showNotification('error', 'Error al guardar los permisos', 'toast');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    return (
-      <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col relative">
-        <NewsHeader />
-        
-        {notification.visible && notification.style === 'toast' && (
-          <div className="fixed top-4 right-4 z-[9999] w-auto">
+  // Clases para el modo oscuro
+  const bgClass = isDark ? 'bg-gray-8 text-white' : 'bg-gray-50 text-gray-900';
+
+  return (
+    <div className={`min-h-screen ${bgClass} flex flex-col relative transition-colors duration-300`} style={{ width: '100%' }}>
+      <NewsHeader />
+      
+      {notification.visible && notification.style === 'toast' && (
+        <div className="fixed top-4 right-4 z-[9999] w-auto">
+          <Notification 
+            visible={true}
+            type={notification.type}
+            message={notification.message}
+            style="toast" 
+            onClose={closeNotification}
+          />
+        </div>
+      )}
+      
+      <div className="max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 min-h-[calc(100vh-64px)]">
+        {notification.visible && notification.style === 'inline' && (
+          <div className="relative z-[9999]">
             <Notification 
               visible={true}
               type={notification.type}
               message={notification.message}
-              style="toast"
+              style="inline"
               onClose={closeNotification}
             />
           </div>
         )}
         
-        {/* Cambiar esta línea */}
-        <main className="flex-1 max-w-7xl mx-auto px-4 lg:px-8 py-6 relative">
-          {notification.visible && notification.style === 'inline' && (
-            <div className="relative z-[9999]">
-              <Notification 
-                visible={true}
-                type={notification.type}
-                message={notification.message}
-                style="inline"
-                onClose={closeNotification}
-              />
-            </div>
-          )}
-          
-          <NewsFilters 
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            categoryFilter={categoryFilter}
-            setCategoryFilter={setCategoryFilter}
-            categories={categories}
-            handleOpenModal={handleOpenModal}
-            setCurrentPage={setCurrentPage}
-          />
-          
-          <NewsGrid 
-            currentItems={currentItems}
-            handleOpenModal={handleOpenModal}
-            handleConfirmStatusToggle={handleConfirmStatusToggle}
-            handleOpenPermissionsModal={handleOpenPermissionsModal} // Pasar la función
-            getCategoryColor={getCategoryColor}
-            isLoading={isLoading}
-          />
-          
-          <NewsPagination 
-            currentPage={currentPage}
-            totalPages={totalPages}
-            indexOfFirstItem={indexOfFirstItem}
-            indexOfLastItem={indexOfLastItem}
-            filteredNewsLength={filteredNews.length}
-            prevPage={prevPage}
-            nextPage={nextPage}
-          />
-        </main>
-        
-        <NewsModal 
-          isOpen={isModalOpen}
-          modalType={modalType}
-          formData={formData}
-          handleFormChange={handleFormChange}
-          handleCloseModal={handleCloseModal}
-          handleSaveNews={handleSaveNews}
+        <NewsFilters 
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          categoryFilter={categoryFilter}
+          setCategoryFilter={setCategoryFilter}
+          categories={categories}
+          handleOpenModal={handleOpenModal}
+          setCurrentPage={setCurrentPage}
         />
         
-        <ConfirmModal 
-          isOpen={isConfirmModalOpen}
-          currentNews={currentNews}
-          confirmAction={confirmAction}
-          handleCloseConfirmModal={handleCloseConfirmModal}
+        <NewsGrid 
+          currentItems={currentItems}
+          handleOpenModal={handleOpenModal}
+          handleConfirmStatusToggle={handleConfirmStatusToggle}
+          handleOpenPermissionsModal={handleOpenPermissionsModal}
+          getCategoryColor={getCategoryColor}
+          isLoading={isLoading}
+          searchTerm={searchTerm}
         />
-
-        <PermissionsModal
-          isOpen={isPermissionsModalOpen}
-          newsId={currentNewsForPermissions}
-          initialPermissions={currentNewsForPermissions ? newsPermissions[currentNewsForPermissions] : null}
-          handleCloseModal={handleClosePermissionsModal}
-          handleSavePermissions={handleSavePermissions}
+        
+        <NewsPagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          indexOfFirstItem={indexOfFirstItem}
+          indexOfLastItem={indexOfLastItem}
+          filteredNewsLength={filteredNews.length}
+          prevPage={prevPage}
+          nextPage={nextPage}
         />
       </div>
-    );
+      
+      <NewsModal 
+        isOpen={isModalOpen}
+        modalType={modalType}
+        formData={formData}
+        handleFormChange={handleFormChange}
+        handleCloseModal={handleCloseModal}
+        handleSaveNews={handleSaveNews}
+      />
+      
+      <ConfirmModal 
+        isOpen={isConfirmModalOpen}
+        currentNews={currentNews}
+        confirmAction={confirmAction}
+        handleCloseConfirmModal={handleCloseConfirmModal}
+      />
+
+      <PermissionsModal
+        isOpen={isPermissionsModalOpen}
+        newsId={currentNewsForPermissions}
+        initialPermissions={currentNewsForPermissions ? newsPermissions[currentNewsForPermissions] : null}
+        handleCloseModal={handleClosePermissionsModal}
+        handleSavePermissions={handleSavePermissions}
+      />
+    </div>
+  );
 }

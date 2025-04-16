@@ -18,7 +18,8 @@ export default function AddPermissions({
   setExpandedClients,
   onSavePermissions,
   handleCloseModal,
-  assignedAudience
+  assignedAudience,
+  isDark
 }) {
   const [saving, setSaving] = useState(false);
   const [appSearchTerm, setAppSearchTerm] = useState('');
@@ -367,13 +368,13 @@ export default function AddPermissions({
   return (
     <>
       {/* Content */}
-      <div className="p-6 overflow-y-auto flex-grow">
+      <div className={`p-6 overflow-y-auto flex-grow ${isDark ? 'bg-gray-7' : ''}`}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Aplicaciones */}
-          <div className="bg-gray-1 rounded-xl p-4 border border-gray-2 flex flex-col">
+          <div className={`${isDark ? 'bg-gray-6 border-gray-6' : 'bg-gray-1 border-gray-2'} rounded-xl p-4 border flex flex-col`}>
             <div className="flex items-center mb-3">
               <Layers className="text-primary-blue mr-2" size={18} />
-              <h3 className="font-medium text-gray-5 text-h3">APLICACIONES</h3>
+              <h3 className={`font-medium ${isDark ? 'text-gray-2' : 'text-gray-5'} text-h3`}>APLICACIONES</h3>
             </div>
             
             {/* Buscador de aplicaciones */}
@@ -383,29 +384,33 @@ export default function AddPermissions({
                 placeholder="Buscar aplicaciones..."
                 value={appSearchTerm || ''}
                 onChange={(e) => setAppSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border placeholder:text-primary-blue text-primary-blue border-gray-2 rounded-md text-p focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className={`w-full pl-9 pr-3 py-2 border ${
+                  isDark 
+                    ? 'bg-gray-7 border-gray-6 text-white placeholder:text-gray-3' 
+                    : 'border-gray-2 text-primary-blue placeholder:text-primary-blue'
+                } rounded-md text-p focus:outline-none focus:ring-2 focus:ring-primary-blue`}
               />
-              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-blue" />
+              <Search size={16} className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-3' : 'text-primary-blue'}`} />
               {appSearchTerm && (
                 <button
                   onClick={() => setAppSearchTerm('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-5"
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-4 hover:text-gray-2' : 'text-primary-blue hover:text-gray-5'}`}
                 >
-                  <X size={14} className='text-primary-blue ' />
+                  <X size={14} />
                 </button>
               )}
             </div>
             
             <div className="mb-2">
-              <label className="flex items-center p-2 hover:bg-white rounded-lg cursor-pointer">
+              <label className={`flex items-center p-2 ${isDark ? 'hover:bg-gray-7' : 'hover:bg-white'} rounded-lg cursor-pointer`}>
                 <input 
                   type="checkbox"
-                  className="h-4 w-4 rounded text-primary-blue focus:ring-primary-blue border-gray-2"
+                  className={`h-4 w-4 rounded text-primary-blue focus:ring-primary-blue ${isDark ? 'border-gray-5 bg-gray-7' : 'border-gray-2'}`}
                   checked={allApplications}
                   onChange={handleSelectAllApplications}
                   disabled={!Array.isArray(filteredApplications) || filteredApplications.length === 0}
                 />
-                <span className="ml-2 text-p font-medium text-gray-5 hover:text-primary-blue">
+                <span className={`ml-2 text-p font-medium ${isDark ? 'text-gray-2 hover:text-primary-blue' : 'text-gray-5 hover:text-primary-blue'}`}>
                   {appSearchTerm 
                     ? `Todas las aplicaciones filtradas` 
                     : `Todas las aplicaciones`}
@@ -413,26 +418,34 @@ export default function AddPermissions({
               </label>
             </div>
             
-            <div className="flex-grow overflow-y-auto max-h-[280px] px-1 py-2 bg-white rounded-lg border border-gray-2">
+            <div className={`flex-grow overflow-y-auto max-h-[280px] px-1 py-2 ${isDark ? 'bg-gray-7 border-gray-6' : 'bg-white border-gray-2'} rounded-lg border`}>
               {Array.isArray(filteredApplications) && filteredApplications.length > 0 ? (
                 filteredApplications.map(app => app && app.id && (
                   <div 
                     key={app.id} 
                     className={`flex items-center p-2 mb-1 rounded-md transition-colors ${
-                      isAlreadyAssigned('applications', app) ? "bg-gray-1" : "hover:bg-semantic-blue cursor-pointer"
+                      isAlreadyAssigned('applications', app) 
+                        ? isDark ? "bg-gray-6" : "bg-gray-1" 
+                        : isDark ? "hover:bg-blue-900 hover:bg-opacity-30 cursor-pointer" : "hover:bg-semantic-blue cursor-pointer"
                     }`}
                     title={isAlreadyAssigned('applications', app) ? "Esta aplicación ya tiene asignada esta noticia" : ""}
                   >
                     <input 
                       type="checkbox"
-                      className={`h-4 w-4 rounded focus:ring-indigo-500 border-gray-300 ${
+                      className={`h-4 w-4 rounded focus:ring-indigo-500 ${
+                        isDark ? 'border-gray-5 bg-gray-7' : 'border-gray-300'
+                      } ${
                         isAlreadyAssigned('applications', app) ? "text-green-500 opacity-70 cursor-not-allowed" : "text-primary-blue"
                       }`}
                       checked={isAlreadyAssigned('applications', app) || Array.isArray(permissions.applications) && permissions.applications.includes(app.id)}
                       onChange={() => handlePermissionChange('applications', app.id, app)}
                       disabled={isAlreadyAssigned('applications', app)}
                     />
-                    <span className={`ml-2 text-p hover:text-white ${isAlreadyAssigned('applications', app) ? "text-gray-3" : "text-gray-5"}`}>
+                    <span className={`ml-2 text-p ${
+                      isAlreadyAssigned('applications', app) 
+                        ? isDark ? "text-gray-4" : "text-gray-3" 
+                        : isDark ? "text-gray-2 hover:text-blue-300" : "text-gray-5 hover:text-white"
+                    }`}>
                       {app.name || 'Sin nombre'}
                     </span>
                     
@@ -444,7 +457,7 @@ export default function AddPermissions({
                   </div>
                 ))
               ) : (
-                <p className="text-p text-gray-3 text-center py-4">
+                <p className={`text-p ${isDark ? 'text-gray-4' : 'text-gray-3'} text-center py-4`}>
                   {appSearchTerm 
                     ? `No se encontraron resultados para "${appSearchTerm}"` 
                     : `No hay aplicaciones disponibles`}
@@ -454,10 +467,10 @@ export default function AddPermissions({
           </div>
           
           {/* Clientes */}
-          <div className="bg-gray-1 rounded-xl p-4 border border-gray-2 flex flex-col">
+          <div className={`${isDark ? 'bg-gray-6 border-gray-6' : 'bg-gray-1 border-gray-2'} rounded-xl p-4 border flex flex-col`}>
             <div className="flex items-center mb-3">
               <Building2 className="text-primary-blue mr-2" size={18} />
-              <h3 className="font-medium text-gray-5 text-h3">CLIENTES</h3>
+              <h3 className={`font-medium ${isDark ? 'text-gray-2' : 'text-gray-5'} text-h3`}>CLIENTES</h3>
             </div>
             
             {/* Buscador de clientes */}
@@ -467,29 +480,33 @@ export default function AddPermissions({
                 placeholder="Buscar clientes..."
                 value={clientSearchTerm || ''}
                 onChange={(e) => setClientSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 placeholder:text-primary-blue border text-primary-blue border-gray-2 rounded-md text-p focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className={`w-full pl-9 pr-3 py-2 ${
+                  isDark 
+                    ? 'bg-gray-7 border-gray-6 text-white placeholder:text-gray-3' 
+                    : 'border-gray-2 text-primary-blue placeholder:text-primary-blue'
+                } border rounded-md text-p focus:outline-none focus:ring-2 focus:ring-primary-blue`}
               />
-              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-blue" />
+              <Search size={16} className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-3' : 'text-primary-blue'}`} />
               {clientSearchTerm && (
                 <button
                   onClick={() => setClientSearchTerm('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-3 hover:text-gray-4"
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-4 hover:text-gray-2' : 'text-primary-blue hover:text-gray-4'}`}
                 >
-                  <X size={14} className='text-primary-blue' />
+                  <X size={14} />
                 </button>
               )}
             </div>
             
             <div className="mb-2">
-              <label className="flex items-center p-2 hover:bg-white rounded-lg cursor-pointer">
+              <label className={`flex items-center p-2 ${isDark ? 'hover:bg-gray-7' : 'hover:bg-white'} rounded-lg cursor-pointer`}>
                 <input 
                   type="checkbox"
-                  className="h-4 w-4 rounded text-primary-blue focus:ring-primary-blue border-gray-5"
+                  className={`h-4 w-4 rounded text-primary-blue focus:ring-primary-blue ${isDark ? 'border-gray-5 bg-gray-7' : 'border-gray-5'}`}
                   checked={allClients}
                   onChange={handleSelectAllClients}
                   disabled={!Array.isArray(filteredClients) || filteredClients.length === 0}
                 />
-                <span className="ml-2 text-p font-medium text-gray-5 hover:text-primary-blue">
+                <span className={`ml-2 text-p font-medium ${isDark ? 'text-gray-2 hover:text-primary-blue' : 'text-gray-5 hover:text-primary-blue'}`}>
                   {clientSearchTerm 
                     ? `Todos los clientes filtrados` 
                     : `Todos los clientes`}
@@ -497,26 +514,34 @@ export default function AddPermissions({
               </label>
             </div>
             
-            <div className="flex-grow overflow-y-auto max-h-[280px] px-1 py-2 bg-white rounded-lg border border-gray-2">
+            <div className={`flex-grow overflow-y-auto max-h-[280px] px-1 py-2 ${isDark ? 'bg-gray-7 border-gray-6' : 'bg-white border-gray-2'} rounded-lg border`}>
               {Array.isArray(filteredClients) && filteredClients.length > 0 ? (
                 filteredClients.map(client => client && client.id && (
                   <div 
                     key={client.id} 
                     className={`flex items-center p-2 mb-1 rounded-md transition-colors ${
-                      isAlreadyAssigned('clients', client) ? "bg-gray-1" : "hover:bg-gray-1 cursor-pointer"
+                      isAlreadyAssigned('clients', client) 
+                        ? isDark ? "bg-gray-6" : "bg-gray-1" 
+                        : isDark ? "hover:bg-gray-6 cursor-pointer" : "hover:bg-gray-1 cursor-pointer"
                     }`}
                     title={isAlreadyAssigned('clients', client) ? "Este cliente ya tiene asignada esta noticia" : ""}
                   >
                     <input 
                       type="checkbox"
-                      className={`h-4 w-4 rounded focus:ring-primary-blue border-gray-2 ${
+                      className={`h-4 w-4 rounded focus:ring-primary-blue ${
+                        isDark ? 'border-gray-5 bg-gray-7' : 'border-gray-2'
+                      } ${
                         isAlreadyAssigned('clients', client) ? "text-green-500 opacity-70 cursor-not-allowed" : "text-primary-blue"
                       }`}
                       checked={isAlreadyAssigned('clients', client) || Array.isArray(permissions.clients) && permissions.clients.includes(client.id)}
                       onChange={() => handlePermissionChange('clients', client.id, client)}
                       disabled={isAlreadyAssigned('clients', client)}
                     />
-                    <span className={`ml-2 text-p ${isAlreadyAssigned('clients', client) ? "text-gray-3" : "text-gray-5"}`}>
+                    <span className={`ml-2 text-p ${
+                      isAlreadyAssigned('clients', client) 
+                        ? isDark ? "text-gray-4" : "text-gray-3" 
+                        : isDark ? "text-gray-2" : "text-gray-5"
+                    }`}>
                       {client.name || 'Cliente sin nombre'}
                     </span>
                     
@@ -528,7 +553,7 @@ export default function AddPermissions({
                   </div>
                 ))
               ) : (
-                <p className="text-p text-gray-3 text-center py-4">
+                <p className={`text-p ${isDark ? 'text-gray-4' : 'text-gray-3'} text-center py-4`}>
                   {clientSearchTerm 
                     ? `No se encontraron resultados para "${clientSearchTerm}"` 
                     : `No hay clientes disponibles`}
@@ -538,10 +563,10 @@ export default function AddPermissions({
           </div>
           
           {/* Usuarios */}
-          <div className="bg-gray-1 rounded-xl p-4 border border-gray-2 flex flex-col">
+          <div className={`${isDark ? 'bg-gray-6 border-gray-6' : 'bg-gray-1 border-gray-2'} rounded-xl p-4 border flex flex-col`}>
             <div className="flex items-center mb-3">
               <Users className="text-primary-blue mr-2" size={18} />
-              <h3 className="font-medium text-gray-5 text-h3">USUARIOS</h3>
+              <h3 className={`font-medium ${isDark ? 'text-gray-2' : 'text-gray-5'} text-h3`}>USUARIOS</h3>
             </div>
             
             {Array.isArray(permissions.clients) && permissions.clients.length > 0 ? (
@@ -553,28 +578,32 @@ export default function AddPermissions({
                     placeholder="Buscar usuarios..."
                     value={userSearchTerm || ''}
                     onChange={(e) => setUserSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-primary-blue placeholder:text-primary-blue border border-gray-200 rounded-md text-p focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                    className={`w-full pl-9 pr-3 py-2 ${
+                      isDark 
+                        ? 'bg-gray-7 border-gray-6 text-white placeholder:text-gray-3' 
+                        : 'border-gray-200 text-primary-blue placeholder:text-primary-blue'
+                    } border rounded-md text-p focus:outline-none focus:ring-2 focus:ring-primary-blue`}
                   />
-                  <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-blue" />
+                  <Search size={16} className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-3' : 'text-primary-blue'}`} />
                   {userSearchTerm && (
                     <button
                       onClick={() => setUserSearchTerm('')}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-4 hover:text-gray-2' : 'text-primary-blue hover:text-gray-600'}`}
                     >
-                      <X size={14} className='text-primary-blue' />
+                      <X size={14} />
                     </button>
                   )}
                 </div>
                 
                 <div className="mb-2">
-                  <label className="flex items-center p-2 hover:bg-white rounded-lg cursor-pointer">
+                  <label className={`flex items-center p-2 ${isDark ? 'hover:bg-gray-7' : 'hover:bg-white'} rounded-lg cursor-pointer`}>
                     <input 
                       type="checkbox"
-                      className="h-4 w-4 rounded text-primary-blue focus:ring-primary-blue border-gray-3"
+                      className={`h-4 w-4 rounded text-primary-blue focus:ring-primary-blue ${isDark ? 'border-gray-5 bg-gray-7' : 'border-gray-3'}`}
                       checked={allUsersSelected}
                       onChange={handleSelectAllUsers}
                     />
-                    <span className="ml-2 text-p font-medium text-gray-5 hover:text-primary-blue">
+                    <span className={`ml-2 text-p font-medium ${isDark ? 'text-gray-2 hover:text-primary-blue' : 'text-gray-5 hover:text-primary-blue'}`}>
                       {userSearchTerm 
                         ? `Todos los usuarios filtrados` 
                         : `Todos los usuarios`}
@@ -582,7 +611,7 @@ export default function AddPermissions({
                   </label>
                 </div>
                 
-                <div className="flex-grow overflow-y-auto max-h-[280px] px-1 py-2 bg-white rounded-lg border border-gray-1">
+                <div className={`flex-grow overflow-y-auto max-h-[280px] px-1 py-2 ${isDark ? 'bg-gray-7 border-gray-6' : 'bg-white border-gray-1'} rounded-lg border`}>
                   {permissions.clients.map(clientId => {
                     if (!clientId) return null;
                     
@@ -606,15 +635,17 @@ export default function AddPermissions({
                     return (
                       <div key={clientId} className="mb-3">
                         {/* Encabezado del grupo de cliente con botón para colapsar/expandir */}
-                        <div className="w-full bg-gray-1 rounded-md mb-1 flex flex-col">
+                        <div className={`w-full ${isDark ? 'bg-gray-6' : 'bg-gray-1'} rounded-md mb-1 flex flex-col`}>
                           <button 
                             onClick={() => toggleClientExpanded(clientId)}
-                            className="w-full px-3 py-1.5 text-p font-medium text-gray-5 flex items-center justify-between hover:bg-gray-2 transition-colors"
+                            className={`w-full px-3 py-1.5 text-p font-medium ${
+                              isDark ? 'text-gray-2 hover:bg-gray-5' : 'text-gray-5 hover:bg-gray-2'
+                            } flex items-center justify-between transition-colors`}
                           >
                             <div className="flex items-center">
                               <Building2 size={14} className="mr-1.5 text-primary-blue" />
                               <span>{clientName}</span>
-                              <span className="ml-2 text-xs text-gray-500">
+                              <span className={`ml-2 text-xs ${isDark ? 'text-gray-4' : 'text-gray-500'}`}>
                                 ({clientUsers.length} {clientUsers.length === 1 ? 'usuario' : 'usuarios'})
                               </span>
                             </div>
@@ -633,10 +664,12 @@ export default function AddPermissions({
                               className="flex items-center text-p-small"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <span className="mr-1 text-gray-4">Seleccionar todos</span>
+                              <span className={`mr-1 ${isDark ? 'text-gray-3' : 'text-gray-4'}`}>Seleccionar todos</span>
                               <input 
                                 type="checkbox"
-                                className="h-3.5 w-3.5 rounded text-primary-blue focus:ring-primary-blue border-gray-300"
+                                className={`h-3.5 w-3.5 rounded text-primary-blue focus:ring-primary-blue ${
+                                  isDark ? 'border-gray-5 bg-gray-7' : 'border-gray-300'
+                                }`}
                                 checked={allClientUsersSelected}
                                 onChange={() => handleSelectClientUsers(clientId, clientUsers)}
                                 disabled={selectableUsers.length === 0}
@@ -655,20 +688,28 @@ export default function AddPermissions({
                             <div 
                               key={user.id} 
                               className={`flex items-center p-2 mb-1 rounded-md transition-colors ${
-                                isAlreadyAssigned('users', user) ? "bg-gray-50" : "hover:bg-gray-50 cursor-pointer"
+                                isAlreadyAssigned('users', user) 
+                                  ? isDark ? "bg-gray-6" : "bg-gray-50" 
+                                  : isDark ? "hover:bg-gray-6 cursor-pointer" : "hover:bg-gray-50 cursor-pointer"
                               }`}
                               title={isAlreadyAssigned('users', user) ? "Este usuario ya tiene asignada esta noticia" : ""}
                             >
                               <input 
                                 type="checkbox"
-                                className={`h-4 w-4 rounded focus:ring-primary-blue border-gray-3 ${
+                                className={`h-4 w-4 rounded focus:ring-primary-blue ${
+                                  isDark ? 'border-gray-5 bg-gray-7' : 'border-gray-3'
+                                } ${
                                   isAlreadyAssigned('users', user) ? "text-green-500 opacity-70 cursor-not-allowed" : "text-primary-blue"
                                 }`}
                                 checked={isAlreadyAssigned('users', user) || Array.isArray(permissions.users) && permissions.users.includes(user.id)}
                                 onChange={() => handlePermissionChange('users', user.id, user)}
                                 disabled={isAlreadyAssigned('users', user)}
                               />
-                              <span className={`ml-2 text-p ${isAlreadyAssigned('users', user) ? "text-gray-3" : "text-gray-5"} truncate`}>
+                              <span className={`ml-2 text-p truncate ${
+                                isAlreadyAssigned('users', user) 
+                                  ? isDark ? "text-gray-4" : "text-gray-3" 
+                                  : isDark ? "text-gray-2" : "text-gray-5"
+                              }`}>
                                 {user.email || user.name || 'Usuario sin nombre'}
                               </span>
                               
@@ -691,7 +732,7 @@ export default function AddPermissions({
                     !Array.isArray(getClientUsers(clientId)) || 
                     getClientUsers(clientId).length === 0
                   ) && (
-                    <p className="text-sm text-gray-3 text-center py-4">
+                    <p className={`text-sm ${isDark ? 'text-gray-4' : 'text-gray-3'} text-center py-4`}>
                       {userSearchTerm 
                         ? `No se encontraron resultados para "${userSearchTerm}"` 
                         : `No hay usuarios disponibles para los clientes seleccionados`}
@@ -700,8 +741,8 @@ export default function AddPermissions({
                 </div>
               </>
             ) : (
-              <div className="flex-grow bg-gray-1 rounded-lg p-4 text-center flex items-center justify-center">
-                <p className="text-p text-gray-4">
+              <div className={`flex-grow ${isDark ? 'bg-gray-7' : 'bg-gray-1'} rounded-lg p-4 text-center flex items-center justify-center`}>
+                <p className={`text-p ${isDark ? 'text-gray-3' : 'text-gray-4'}`}>
                   Selecciona al menos un cliente para ver los usuarios disponibles
                 </p>
               </div>
@@ -711,10 +752,14 @@ export default function AddPermissions({
       </div>
       
       {/* Footer */}
-      <div className="px-6 py-4 bg-gray-1 border-t border-gray-2 flex justify-end gap-3 sticky bottom-0 z-10">
+      <div className={`px-6 py-4 ${isDark ? 'bg-gray-8 border-gray-6' : 'bg-gray-1 border-gray-2'} border-t flex justify-end gap-3 sticky bottom-0 z-10`}>
         <button 
           onClick={handleCloseModal}
-          className="px-4 py-2 text-p text-semantic.red bg-white border border-semantic.red rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5"
+          className={`px-4 py-2 text-p ${
+            isDark 
+              ? 'text-semantic-red bg-gray-7 border-semantic-red hover:bg-gray-6' 
+              : 'text-semantic.red bg-white border-semantic.red hover:bg-semantic-r'
+          } border rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5`}
         >
           Cancelar
         </button>
@@ -722,7 +767,9 @@ export default function AddPermissions({
         <button 
           onClick={handleSave}
           disabled={saving}
-          className="px-4 py-2 text-p text-white bg-primary-blue hover:from-primary-blue rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5 hover:shadow-md flex items-center disabled:opacity-70 disabled:cursor-not-allowed"
+          className={`px-4 py-2 text-p text-white bg-primary-blue ${
+            isDark ? 'hover:bg-blue-600' : 'hover:from-primary-blue'
+          } rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5 hover:shadow-md flex items-center disabled:opacity-70 disabled:cursor-not-allowed`}
         >
           {saving ? (
             <>

@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/context/auth";
 import { TabsProvider } from "@/context/tabs";
 import ChatBotButton from '@/components/ChatBotButton';
+import { ThemeProvider } from "@/context/ThemeContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -21,14 +22,37 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  // Verificamos el tema guardado o preferencia del sistema
+                  var savedTheme = localStorage.getItem('theme');
+                  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  var isDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+                  
+                  // Solo agregamos la clase, sin modificar estilos inline
+                  if (isDark) {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>
-          <TabsProvider>
-            {children}
-          </TabsProvider>
-          <ChatBotButton />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <TabsProvider>
+              {children}
+            </TabsProvider>
+            <ChatBotButton />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

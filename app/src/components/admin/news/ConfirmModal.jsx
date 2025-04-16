@@ -1,8 +1,8 @@
-// components/admin/news/ConfirmModal.jsx
 "use client";
 
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function ConfirmModal({ 
   isOpen, 
@@ -10,6 +10,9 @@ export default function ConfirmModal({
   confirmAction, 
   handleCloseConfirmModal 
 }) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -39,11 +42,11 @@ export default function ConfirmModal({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div 
-        className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden transform transition-all duration-300 animate-fadeIn my-4"
+        className={`${isDark ? 'bg-gray-7' : 'bg-white'} rounded-xl shadow-xl w-full max-w-md overflow-hidden transform transition-all duration-300 animate-fadeIn my-4`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-4 sm:px-6 py-4 border-b border-gray-1 flex justify-between items-center bg-primary-blue">
+        <div className="px-4 sm:px-6 py-4 border-b-0 border-gray-1 flex justify-between items-center bg-primary-blue">
           <h2 className="text-base sm:text-lg font-medium text-white text-h3">
             Confirmar {currentNews.status === 'ACTIVE' ? 'Desactivación' : 'Activación'}
           </h2>
@@ -57,12 +60,12 @@ export default function ConfirmModal({
         
         {/* Modal Body */}
         <div className="px-4 sm:px-6 py-5 sm:py-6">
-          <p className="text-gray-4 mb-4 text-p sm:text-base">
+          <p className={`${isDark ? 'text-gray-3' : 'text-gray-4'} mb-4 text-p sm:text-base`}>
             ¿Estás seguro que deseas {currentNews.status === 'active' ? 'desactivar' : 'activar'} la noticia <span className="font-medium">&quot;{currentNews.title}&quot;</span>?
           </p>
           
-          <div className="p-3 bg-gray-1 rounded-lg border border-gray-2">
-            <p className="text-p-small sm:text-p text-gray-4">
+          <div className={`p-3 ${isDark ? 'bg-gray-8 border-gray-6' : 'bg-gray-1 border-gray-2'} rounded-lg border`}>
+            <p className={`text-p-small sm:text-p ${isDark ? 'text-gray-3' : 'text-gray-4'}`}>
               {currentNews.status === 'ACTIVE' 
                 ? 'La noticia ya no será visible para los usuarios.' 
                 : 'La noticia será visible nuevamente para todos los usuarios.'}
@@ -71,10 +74,14 @@ export default function ConfirmModal({
         </div>
         
         {/* Modal Footer */}
-        <div className="px-4 sm:px-6 py-4 bg-gray-1 border-t border-gray-2 flex justify-end gap-3">
+        <div className={`px-4 sm:px-6 py-4 ${isDark ? 'bg-gray-8 border-gray-6' : 'bg-gray-1 border-gray-2'} border-t flex justify-end gap-3`}>
           <button 
             onClick={handleCloseConfirmModal}
-            className="px-3 sm:px-4 py-2 text-p sm:text-p text-semantic.red bg-white border border-semantic.red rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5"
+            className={`px-3 sm:px-4 py-2 text-p sm:text-p ${
+              isDark 
+                ? 'text-semantic-red bg-gray-7 border-semantic-red hover:bg-gray-6' 
+                : 'text-semantic.red bg-white border-semantic.red hover:bg-semantic-r'
+            } border rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5`}
             disabled={isLoading}
           >
             Cancelar

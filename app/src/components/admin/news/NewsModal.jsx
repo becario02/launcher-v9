@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Upload, Link as LinkIcon, AlertCircle } from 'lucide-react';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function NewsModal({
   isOpen,
@@ -11,6 +12,9 @@ export default function NewsModal({
   handleCloseModal,
   handleSaveNews
 }) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  
   const [previewImage, setPreviewImage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [modalNotification, setModalNotification] = useState({
@@ -149,7 +153,7 @@ export default function NewsModal({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div 
-        className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden transform transition-all duration-300 animate-fadeIn my-4 relative"
+        className={`${isDark ? 'bg-gray-7' : 'bg-white'} rounded-xl shadow-xl w-full max-w-2xl overflow-hidden transform transition-all duration-300 animate-fadeIn my-4 relative`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-4 sm:px-6 py-4 border-b border-primary-blue flex justify-between items-center bg-primary-blue">
@@ -160,7 +164,7 @@ export default function NewsModal({
           </h2>
           <button 
             onClick={handleCloseModal}
-            className="text-gray-400 hover:text-primary-blue transition-colors p-1 rounded-full hover:bg-gray-100"
+            className={`text-gray-400 hover:text-primary-blue transition-colors p-1 rounded-full ${isDark ? 'hover:bg-gray-6' : 'hover:bg-gray-100'}`}
           >
             <X size={20} className='text-white hover:text-primary-blue'/>
           </button>
@@ -169,14 +173,14 @@ export default function NewsModal({
         <div className="px-4 sm:px-6 py-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
           {/* Notificación dentro del modal */}
           {modalNotification.visible && (
-            <div className="w-full border-l-4 border-red-300 bg-red-50 p-4 mb-5 flex items-center justify-between animate-fadeIn">
+            <div className={`w-full border-l-4 ${isDark ? 'border-red-500 bg-red-900 bg-opacity-30' : 'border-red-300 bg-red-50'} p-4 mb-5 flex items-center justify-between animate-fadeIn`}>
               <div className="flex items-center">
-                <AlertCircle className="text-red-500" size={20} />
-                <span className="ml-2 text-red-700">{modalNotification.message}</span>
+                <AlertCircle className={isDark ? 'text-red-400' : 'text-red-500'} size={20} />
+                <span className={`ml-2 ${isDark ? 'text-red-300' : 'text-red-700'}`}>{modalNotification.message}</span>
               </div>
               <button
                 onClick={() => setModalNotification({...modalNotification, visible: false})}
-                className="text-red-700 hover:text-gray-900 focus:outline-none"
+                className={isDark ? 'text-red-300 hover:text-white' : 'text-red-700 hover:text-gray-900'}
               >
                 <X size={16} />
               </button>
@@ -185,7 +189,7 @@ export default function NewsModal({
 
           <form className="space-y-5">
             <div>
-              <label htmlFor="title" className="block text-h3 font-medium text-gray-5 mb-1">Título</label>
+              <label htmlFor="title" className={`block text-h3 font-medium ${isDark ? 'text-gray-2' : 'text-gray-5'} mb-1`}>Título</label>
               <input 
                 type="text" 
                 id="title" 
@@ -193,19 +197,19 @@ export default function NewsModal({
                 value={formData.title} 
                 onChange={handleFormChange}
                 readOnly={modalType === 'view'}
-                className={`w-full px-4 py-3 border border-gray-2 rounded-lg text-primary-blue text-p focus:outline-none focus:ring-2 focus:ring-primary-blue focus:border-transparent ${modalType === 'view' ? 'bg-gray-50 cursor-not-allowed' : ''}`} 
+                className={`w-full px-4 py-3 border ${isDark ? 'bg-gray-6 border-gray-6 text-white focus:ring-blue-400' : 'border-gray-2 text-primary-blue focus:ring-primary-blue'} rounded-lg text-p focus:outline-none focus:ring-2 focus:border-transparent ${modalType === 'view' ? isDark ? 'bg-gray-8 cursor-not-allowed' : 'bg-gray-50 cursor-not-allowed' : ''}`} 
               />
             </div>
             
             <div>
-              <label htmlFor="category" className="block text-h3 font-medium text-gray-5 mb-1">Categoría</label>
+              <label htmlFor="category" className={`block text-h3 font-medium ${isDark ? 'text-gray-2' : 'text-gray-5'} mb-1`}>Categoría</label>
               <select 
                 id="category" 
                 name="category"
                 value={formData.category} 
                 onChange={handleFormChange}
                 disabled={modalType === 'view'}
-                className={`w-full px-4 py-3 border text-primary-blue text-p border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-blue focus:border-transparent ${modalType === 'view' ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                className={`w-full px-4 py-3 border ${isDark ? 'bg-gray-6 border-gray-6 text-white focus:ring-blue-400' : 'border-gray-200 text-primary-blue focus:ring-primary-blue'} rounded-lg text-p focus:outline-none focus:ring-2 focus:border-transparent ${modalType === 'view' ? isDark ? 'bg-gray-8 cursor-not-allowed' : 'bg-gray-50 cursor-not-allowed' : ''}`}
               >
                 <option value="NEWS">NEWS</option>
                 <option value="ADVICE">ADVICE</option>
@@ -214,7 +218,7 @@ export default function NewsModal({
             </div>
             
             <div>
-              <label htmlFor="date" className="block text-h3 font-medium text-gray-5 mb-1">Fecha de Expiración</label>
+              <label htmlFor="date" className={`block text-h3 font-medium ${isDark ? 'text-gray-2' : 'text-gray-5'} mb-1`}>Fecha de Expiración</label>
               <input 
                 type="date" 
                 id="date" 
@@ -222,15 +226,15 @@ export default function NewsModal({
                 value={formData.dateExpiration ? new Date(formData.dateExpiration).toISOString().split('T')[0] : ''} 
                 onChange={handleFormChange}
                 readOnly={modalType === 'view'}
-                className={`w-full px-4 py-3 border text-p text-primary-blue border-gray-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-blue focus:border-transparent ${modalType === 'view' ? 'bg-gray-50 cursor-not-allowed' : ''}`} 
+                className={`w-full px-4 py-3 border ${isDark ? 'bg-gray-6 border-gray-6 text-white focus:ring-blue-400' : 'border-gray-2 text-primary-blue focus:ring-primary-blue'} rounded-lg text-p focus:outline-none focus:ring-2 focus:border-transparent ${modalType === 'view' ? isDark ? 'bg-gray-8 cursor-not-allowed' : 'bg-gray-50 cursor-not-allowed' : ''}`} 
               />
             </div>
             
             <div>
-              <label className="block text-h3 font-medium text-gray-5 mb-1">Imagen</label>
+              <label className={`block text-h3 font-medium ${isDark ? 'text-gray-2' : 'text-gray-5'} mb-1`}>Imagen</label>
               {modalType !== 'view' ? (
                 <div className="flex flex-col space-y-2">
-                  <label className="flex flex-col items-center px-4 py-6 bg-white text-gray-3 rounded-lg border border-gray-2 cursor-pointer hover:bg-gray-1 transition-colors">
+                  <label className={`flex flex-col items-center px-4 py-6 ${isDark ? 'bg-gray-7 text-gray-3 border-gray-6 hover:bg-gray-6' : 'bg-white text-gray-3 border-gray-2 hover:bg-gray-1'} rounded-lg border cursor-pointer transition-colors`}>
                     <Upload size={18} className='text-primary-blue' />
                     <span className="mt-2 text-p-small text-primary-blue">Haz clic para subir una imagen</span>
                     <input 
@@ -260,12 +264,12 @@ export default function NewsModal({
                   />
                 </div>
               ) : (
-                <p className="text-gray-3 text-p italic">No hay imagen disponible</p>
+                <p className={`${isDark ? 'text-gray-4' : 'text-gray-3'} text-p italic`}>No hay imagen disponible</p>
               )}
             </div>
             
             <div>
-              <label htmlFor="newsLink" className="block text-h3 font-medium text-gray-5 mb-1">
+              <label htmlFor="newsLink" className={`block text-h3 font-medium ${isDark ? 'text-gray-2' : 'text-gray-5'} mb-1`}>
                 <span className="flex items-center gap-1">
                   <LinkIcon size={16} />
                   Enlace de la noticia
@@ -280,11 +284,11 @@ export default function NewsModal({
                   value={formData.newsLink || ''} 
                   onChange={handleFormChange}
                   readOnly={modalType === 'view'}
-                  className={`w-full px-4 py-3 text-p text-primary-blue placeholder:text-semantic-blue border placeholder:text-p border-gray-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-blue focus:border-transparent ${modalType === 'view' ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                  className={`w-full px-4 py-3 text-p ${isDark ? 'bg-gray-6 border-gray-6 text-white placeholder:text-gray-4 focus:ring-blue-400' : 'border-gray-2 text-primary-blue placeholder:text-semantic-blue focus:ring-primary-blue'} border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${modalType === 'view' ? isDark ? 'bg-gray-8 cursor-not-allowed' : 'bg-gray-50 cursor-not-allowed' : ''}`}
                 />
               </div>
               {modalType !== 'view' && (
-                <p className="text-p-small text-gray-3 mt-1">Ingresa la URL completa donde se puede leer la noticia completa.</p>
+                <p className={`text-p-small ${isDark ? 'text-gray-4' : 'text-gray-3'} mt-1`}>Ingresa la URL completa donde se puede leer la noticia completa.</p>
               )}
               {modalType === 'view' && formData.newsLink && (
                 <div className="mt-2">
@@ -303,10 +307,10 @@ export default function NewsModal({
           </form>
         </div>
         
-        <div className="px-4 sm:px-6 py-4 bg-gray-1 border-t border-gray-2 flex justify-end gap-3">
+        <div className={`px-4 sm:px-6 py-4 ${isDark ? 'bg-gray-8 border-gray-6' : 'bg-gray-1 border-gray-2'} border-t flex justify-end gap-3`}>
           <button 
             onClick={handleCloseModal}
-            className="px-4 py-2 text-h3 text-semantic.red bg-white border border-semantic.red rounded-full hover:bg-semantic-r transition-all duration-200 shadow-sm transform hover:-translate-y-0.5"
+            className={`px-4 py-2 text-h3 ${isDark ? 'text-semantic-red bg-gray-7 border-semantic-red hover:bg-gray-6' : 'text-semantic.red bg-white border-semantic.red hover:bg-semantic-r'} border rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5`}
           >
             {modalType === 'view' ? 'Cerrar' : 'Cancelar'}
           </button>

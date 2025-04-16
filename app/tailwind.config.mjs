@@ -20,12 +20,15 @@ const config = {
         'gray-2': '#E2E2EA',
         'gray-3': '#92929D',
         'gray-4': '#696974',
-        'gray-5': '#171725',
+        'gray-5': '#44444F',
+        'gray-6': '#262633',
+        'gray-7': '#171725',
+        'gray-8': '#0B0B10',
         
         // Colores semánticos
         'semantic.green': '#2CC022',
-        'semantic-blue': '#2AB0FC',
-        'semantic-yellow': '#FCC132',
+        'semantic.blue': '#2AB0FC',
+        'semantic.yellow': '#FCC132',
         'semantic.orange': '#FF740D',
         'semantic.red': '#FF3F3F'
       },

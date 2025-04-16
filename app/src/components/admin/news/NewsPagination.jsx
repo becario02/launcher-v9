@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function NewsPagination({
   currentPage,
@@ -11,6 +12,9 @@ export default function NewsPagination({
   prevPage,
   nextPage
 }) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   if (filteredNewsLength === 0) return null;
   
   return (
@@ -19,31 +23,57 @@ export default function NewsPagination({
         <button 
           onClick={prevPage}
           disabled={currentPage === 1}
-          className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-1"
+          className={`flex items-center gap-1 px-2 py-1 rounded ${
+            isDark 
+              ? 'hover:bg-gray-6' 
+              : 'hover:bg-gray-1'
+          }`}
           aria-label="Página anterior"
         >
-          <ChevronLeft size={18} className={`${currentPage === 1 ? 'text-gray-3' : 'text-gray-5'}`} />
-          <span className={`text-p ${currentPage === 1 ? 'text-gray-3' : 'text-gray-4'}`}>Anterior</span>
+          <ChevronLeft size={18} className={`${
+            currentPage === 1 
+              ? isDark ? 'text-gray-5' : 'text-gray-3' 
+              : isDark ? 'text-gray-3' : 'text-gray-5'
+          }`} />
+          <span className={`text-p ${
+            currentPage === 1 
+              ? isDark ? 'text-gray-5' : 'text-gray-3' 
+              : isDark ? 'text-gray-3' : 'text-gray-4'
+          }`}>Anterior</span>
         </button>
         
         <div className="flex items-center gap-2">
-          <span className="font-medium">{currentPage}</span>
-          <span className="text-gray-5">/</span>
-          <span>{totalPages}</span>
+          <span className={`font-medium ${isDark ? 'text-white' : ''}`}>{currentPage}</span>
+          <span className={isDark ? 'text-gray-3' : 'text-gray-5'}>/</span>
+          <span className={isDark ? 'text-gray-3' : ''}>{totalPages}</span>
         </div>
         
         <button 
           onClick={nextPage}
           disabled={currentPage === totalPages}
-          className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-1"
+          className={`flex items-center gap-1 px-2 py-1 rounded ${
+            isDark 
+              ? 'hover:bg-gray-6' 
+              : 'hover:bg-gray-1'
+          }`}
           aria-label="Página siguiente"
         >
-          <span className={`text-p ${currentPage === totalPages ? 'text-gray-3' : 'text-gray-5'}`}>Siguiente</span>
-          <ChevronRight size={18} className={`${currentPage === totalPages ? 'text-gray-3' : 'text-gray-4'}`} />
+          <span className={`text-p ${
+            currentPage === totalPages 
+              ? isDark ? 'text-gray-5' : 'text-gray-3' 
+              : isDark ? 'text-gray-3' : 'text-gray-5'
+          }`}>Siguiente</span>
+          <ChevronRight size={18} className={`${
+            currentPage === totalPages 
+              ? isDark ? 'text-gray-5' : 'text-gray-3' 
+              : isDark ? 'text-gray-3' : 'text-gray-4'
+          }`} />
         </button>
       </div>
       
-      <span className="text-gray-4 text-p-small sm:text-p text-center sm:text-right order-1 sm:order-2">
+      <span className={`${
+        isDark ? 'text-gray-3' : 'text-gray-4'
+      } text-p-small sm:text-p text-center sm:text-right order-1 sm:order-2`}>
         Mostrando {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredNewsLength)} de {filteredNewsLength} noticias
       </span>
     </div>

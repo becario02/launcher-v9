@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, X, Layers, Building2, Users, ChevronDown } from 'lucide-react';
 
-export default function ViewAudience({ assignedAudience, handleCloseModal }) {
+export default function ViewAudience({ assignedAudience, handleCloseModal, isDark }) {
   // Estados para búsqueda
   const [appSearchTerm, setAppSearchTerm] = useState('');
   const [clientSearchTerm, setClientSearchTerm] = useState('');
@@ -92,17 +92,30 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
   
   const filteredUserGroups = getFilteredUsers();
 
+  // Clases condicionales para el modo oscuro
+  const panelBgClass = isDark ? 'bg-gray-6 border-gray-6' : 'bg-gray-1 border-gray-2';
+  const contentBgClass = isDark ? 'bg-gray-7 border-gray-6' : 'bg-white border-gray-2';
+  const textTitleClass = isDark ? 'text-gray-2' : 'text-gray-5';
+  const textSubtitleClass = isDark ? 'text-gray-3' : 'text-gray-3';
+  const pillBgClass = isDark ? 'bg-blue-900 bg-opacity-20' : 'bg-indigo-50';
+  const noResultsClass = isDark ? 'text-gray-3' : 'text-primary-blue';
+  const itemHoverClass = isDark ? 'hover:bg-gray-6' : 'hover:bg-gray-1';
+  const iconBgClass = isDark ? 'bg-blue-900 bg-opacity-20' : 'bg-indigo-100';
+  const groupHeaderBgClass = isDark ? 'bg-gray-6' : 'bg-gray-1';
+  const groupHeaderHoverClass = isDark ? 'hover:bg-gray-5' : 'hover:bg-gray-2';
+  const footerBgClass = isDark ? 'bg-gray-8 border-gray-6' : 'bg-gray-1 border-gray-2';
+
   return (
     <>
       {/* Content */}
-      <div className="p-6 overflow-y-auto flex-grow">
+      <div className={`p-6 overflow-y-auto flex-grow ${isDark ? 'bg-gray-7' : ''}`}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Aplicaciones */}
-          <div className="bg-gray-1 rounded-xl p-4 border border-gray-2 flex flex-col">
+          <div className={`${panelBgClass} rounded-xl p-4 border flex flex-col`}>
             <div className="flex items-center mb-3">
               <Layers className="text-primary-blue mr-2" size={18} />
-              <h3 className="font-medium text-gray-5 text-h3">APLICACIONES</h3>
-              <span className="ml-2 bg-indigo-50 text-primary-blue text-p-small font-medium px-2 py-0.5 rounded-full">
+              <h3 className={`font-medium ${textTitleClass} text-h3`}>APLICACIONES</h3>
+              <span className={`ml-2 ${pillBgClass} text-primary-blue text-p-small font-medium px-2 py-0.5 rounded-full`}>
                 {filteredApplications.length}
               </span>
             </div>
@@ -114,40 +127,44 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
                 placeholder="Buscar aplicaciones..."
                 value={appSearchTerm || ''}
                 onChange={(e) => setAppSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-primary-blue placeholder:text-primary-blue border border-gray-2 rounded-md text-p focus:outline-none focus:ring-2 focus:ring-primary-blue"
+                className={`w-full pl-9 pr-3 py-2 ${
+                  isDark 
+                    ? 'bg-gray-7 border-gray-6 text-white placeholder:text-gray-3' 
+                    : 'border-gray-2 text-primary-blue placeholder:text-primary-blue'
+                } border rounded-md text-p focus:outline-none focus:ring-2 focus:ring-primary-blue`}
               />
-              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-blue" />
+              <Search size={16} className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-3' : 'text-primary-blue'}`} />
               {appSearchTerm && (
                 <button
                   onClick={() => setAppSearchTerm('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-2 hover:text-gray-4"
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-4 hover:text-gray-2' : 'text-gray-2 hover:text-gray-4'}`}
                 >
-                  <X size={14} className='text-primary-blue'/>
+                  <X size={14} className={isDark ? 'text-gray-3' : 'text-primary-blue'} />
                 </button>
               )}
             </div>
             
-            <div className="flex-grow overflow-y-auto max-h-[280px] px-1 py-2 bg-white rounded-lg border border-gray-2">
+            <div className={`flex-grow overflow-y-auto max-h-[280px] px-1 py-2 ${contentBgClass} rounded-lg border`}>
               {filteredApplications.length > 0 ? (
                 filteredApplications.map((app, index) => (
                   <div 
                     key={index} 
-                    className="flex items-center p-2 mb-1 hover:bg-gray-1 rounded-md transition-colors"
+                    className={`flex items-center p-2 mb-1 ${itemHoverClass} rounded-md transition-colors`}
                   >
-                    <div className="bg-indigo-50 p-2 rounded-md mr-3 flex-shrink-0">
+                    <div className={`${iconBgClass} p-2 rounded-md mr-3 flex-shrink-0`}>
                       <Layers size={16} className="text-primary-blue" />
                     </div>
                     <div className="flex-grow">
-                      <p className="text-p font-medium text-gray-5">{app.name || 'Sin nombre'}</p>
+                      <p className={`text-p font-medium ${textTitleClass}`}>{app.name || 'Sin nombre'}</p>
                       {app.count > 0 && (
-                        <p className="text-p-small text-gray-3">{app.count} asignaciones</p>
+                        <p className={`text-p-small ${textSubtitleClass}`}>{app.count} asignaciones</p>
                       )}
                     </div>
                     <div className="ml-2 w-2 h-2 rounded-full bg-green-500 flex-shrink-0" title="Asignado"></div>
                   </div>
                 ))
               ) : (
-                <p className="text-p text-primary-blue text-center py-4">
+                <p className={`text-p ${noResultsClass} text-center py-4`}>
                   {appSearchTerm 
                     ? `No se encontraron aplicaciones con "${appSearchTerm}"` 
                     : 'No hay aplicaciones asignadas'}
@@ -157,11 +174,11 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
           </div>
           
           {/* Clientes */}
-          <div className="bg-gray-1 rounded-xl p-4 border border-gray-2 flex flex-col">
+          <div className={`${panelBgClass} rounded-xl p-4 border flex flex-col`}>
             <div className="flex items-center mb-3">
               <Building2 className="text-primary-blue mr-2" size={18} />
-              <h3 className="font-medium text-gray-5 text-h3">CLIENTES</h3>
-              <span className="ml-2 bg-indigo-50 text-primary-blue text-p-small font-medium px-2 py-0.5 rounded-full">
+              <h3 className={`font-medium ${textTitleClass} text-h3`}>CLIENTES</h3>
+              <span className={`ml-2 ${pillBgClass} text-primary-blue text-p-small font-medium px-2 py-0.5 rounded-full`}>
                 {filteredClients.length}
               </span>
             </div>
@@ -173,32 +190,36 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
                 placeholder="Buscar clientes..."
                 value={clientSearchTerm || ''}
                 onChange={(e) => setClientSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border border-gray-2 rounded-md text-p focus:outline-none focus:ring-2 focus:ring-primary-blue placeholder:text-primary-blue text-primary-blue"
+                className={`w-full pl-9 pr-3 py-2 ${
+                  isDark 
+                    ? 'bg-gray-7 border-gray-6 text-white placeholder:text-gray-3' 
+                    : 'border-gray-2 text-primary-blue placeholder:text-primary-blue'
+                } border rounded-md text-p focus:outline-none focus:ring-2 focus:ring-primary-blue`}
               />
-              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-blue" />
+              <Search size={16} className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-3' : 'text-primary-blue'}`} />
               {clientSearchTerm && (
                 <button
                   onClick={() => setClientSearchTerm('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-3 hover:text-gray-4"
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-4 hover:text-gray-2' : 'text-gray-3 hover:text-gray-4'}`}
                 >
-                  <X size={14} className='text-primary-blue'/>
+                  <X size={14} className={isDark ? 'text-gray-3' : 'text-primary-blue'} />
                 </button>
               )}
             </div>
             
-            <div className="flex-grow overflow-y-auto max-h-[280px] px-1 py-2 bg-white rounded-lg border border-gray-2">
+            <div className={`flex-grow overflow-y-auto max-h-[280px] px-1 py-2 ${contentBgClass} rounded-lg border`}>
               {filteredClients.length > 0 ? (
                 filteredClients.map((client, index) => (
                   <div 
                     key={index} 
-                    className="flex items-center p-2 mb-1 hover:bg-gray-1 rounded-md transition-colors"
+                    className={`flex items-center p-2 mb-1 ${itemHoverClass} rounded-md transition-colors`}
                   >
-                    <div className="bg-indigo-100 p-2 rounded-md mr-3 flex-shrink-0">
+                    <div className={`${iconBgClass} p-2 rounded-md mr-3 flex-shrink-0`}>
                       <Building2 size={16} className="text-primary-blue" />
                     </div>
                     <div className="flex-grow">
-                      <p className="text-p font-medium text-gray-5">{client.name || 'Sin nombre'}</p>
-                      <p className="text-p-small text-gray-3">
+                      <p className={`text-p font-medium ${textTitleClass}`}>{client.name || 'Sin nombre'}</p>
+                      <p className={`text-p-small ${textSubtitleClass}`}>
                         {client.userCount} {client.userCount === 1 ? 'usuario' : 'usuarios'}
                       </p>
                     </div>
@@ -206,7 +227,7 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
                   </div>
                 ))
               ) : (
-                <p className="text-p text-primary-blue text-center py-4">
+                <p className={`text-p ${noResultsClass} text-center py-4`}>
                   {clientSearchTerm 
                     ? `No se encontraron clientes con "${clientSearchTerm}"` 
                     : 'No hay clientes asignados'}
@@ -216,11 +237,11 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
           </div>
           
           {/* Usuarios */}
-          <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex flex-col">
+          <div className={`${panelBgClass} rounded-xl p-4 border flex flex-col`}>
             <div className="flex items-center mb-3">
-              <Users className="text-indigo-600 mr-2" size={18} />
-              <h3 className="font-medium text-gray-700">USUARIOS</h3>
-              <span className="ml-2 bg-indigo-50 text-indigo-600 text-xs font-medium px-2 py-0.5 rounded-full">
+              <Users className="text-primary-blue mr-2" size={18} />
+              <h3 className={`font-medium ${textTitleClass} text-h3`}>USUARIOS</h3>
+              <span className={`ml-2 ${pillBgClass} text-primary-blue text-p-small font-medium px-2 py-0.5 rounded-full`}>
                 {Object.values(filteredUserGroups).reduce((total, group) => total + group.users.length, 0)}
               </span>
             </div>
@@ -232,20 +253,24 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
                 placeholder="Buscar usuarios..."
                 value={userSearchTerm || ''}
                 onChange={(e) => setUserSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border border-gray-2 rounded-md text-p focus:outline-none focus:ring-2 focus:ring-primary-blue placeholder:text-primary-blue text-primary-blue"
+                className={`w-full pl-9 pr-3 py-2 ${
+                  isDark 
+                    ? 'bg-gray-7 border-gray-6 text-white placeholder:text-gray-3' 
+                    : 'border-gray-2 text-primary-blue placeholder:text-primary-blue'
+                } border rounded-md text-p focus:outline-none focus:ring-2 focus:ring-primary-blue`}
               />
-              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-blue" />
+              <Search size={16} className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-3' : 'text-primary-blue'}`} />
               {userSearchTerm && (
                 <button
                   onClick={() => setUserSearchTerm('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-3 hover:text-gray-4"
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-4 hover:text-gray-2' : 'text-gray-3 hover:text-gray-4'}`}
                 >
-                  <X size={14} className='text-primary-blue' />
+                  <X size={14} className={isDark ? 'text-gray-3' : 'text-primary-blue'} />
                 </button>
               )}
             </div>
             
-            <div className="flex-grow overflow-y-auto max-h-[280px] px-1 py-2 bg-white rounded-lg border border-gray-2">
+            <div className={`flex-grow overflow-y-auto max-h-[280px] px-1 py-2 ${contentBgClass} rounded-lg border`}>
               {Object.keys(filteredUserGroups).length > 0 ? (
                 Object.keys(filteredUserGroups).map(clientId => {
                   const clientGroup = filteredUserGroups[clientId];
@@ -254,15 +279,15 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
                   return (
                     <div key={clientId} className="mb-3">
                       {/* Encabezado del grupo de cliente con botón para colapsar/expandir */}
-                      <div className="w-full bg-gray-1 rounded-md mb-1">
+                      <div className={`w-full ${groupHeaderBgClass} rounded-md mb-1`}>
                         <button 
                           onClick={() => toggleClientExpanded(clientId)}
-                          className="w-full px-3 py-1.5 text-p font-medium text-gray-5 flex items-center justify-between hover:bg-gray-2 transition-colors"
+                          className={`w-full px-3 py-1.5 text-p font-medium ${textTitleClass} flex items-center justify-between ${groupHeaderHoverClass} transition-colors`}
                         >
                           <div className="flex items-center">
                             <Building2 size={14} className="mr-1.5 text-primary-blue" />
                             <span>{clientGroup.clientName}</span>
-                            <span className="ml-2 text-p-small text-gray-3">
+                            <span className={`ml-2 text-p-small ${textSubtitleClass}`}>
                               ({clientGroup.users.length} {clientGroup.users.length === 1 ? 'usuario' : 'usuarios'})
                             </span>
                           </div>
@@ -285,14 +310,14 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
                         {clientGroup.users.map((user, index) => (
                           <div 
                             key={index} 
-                            className="flex items-center p-2 mb-1 hover:bg-gray-1 rounded-md transition-colors"
+                            className={`flex items-center p-2 mb-1 ${itemHoverClass} rounded-md transition-colors`}
                           >
-                            <div className="bg-indigo-100 p-2 rounded-md mr-3 flex-shrink-0">
+                            <div className={`${iconBgClass} p-2 rounded-md mr-3 flex-shrink-0`}>
                               <Users size={14} className="text-primary-blue" />
                             </div>
                             <div className="flex-grow">
-                              <p className="text-p font-medium text-gray-5">{user.name || 'Sin nombre'}</p>
-                              <p className="text-p-small text-gray-3 truncate">{user.email || 'Sin email'}</p>
+                              <p className={`text-p font-medium ${textTitleClass}`}>{user.name || 'Sin nombre'}</p>
+                              <p className={`text-p-small ${textSubtitleClass} truncate`}>{user.email || 'Sin email'}</p>
                             </div>
                             <div className="ml-2 w-2 h-2 rounded-full bg-green-500 flex-shrink-0" title="Asignado"></div>
                           </div>
@@ -302,7 +327,7 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
                   );
                 })
               ) : (
-                <p className="text-p text-primary-blue text-center py-4">
+                <p className={`text-p ${noResultsClass} text-center py-4`}>
                   {userSearchTerm 
                     ? `No se encontraron usuarios con "${userSearchTerm}"` 
                     : 'No hay usuarios asignados'}
@@ -314,8 +339,8 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
       </div>
       
       {/* Footer */}
-      <div className="px-6 py-4 bg-gray-1 border-t border-gray-2 flex justify-between sticky bottom-0 z-10">
-        <div className="text-p text-gray-4">
+      <div className={`px-6 py-4 ${footerBgClass} border-t flex justify-between sticky bottom-0 z-10`}>
+        <div className={`text-p ${isDark ? 'text-gray-3' : 'text-gray-4'}`}>
           {assignedAudience.rawData?.length > 0 ? (
             <span>
               {assignedAudience.applications?.length || 0} aplicaciones, {assignedAudience.clients?.length || 0} clientes, {assignedAudience.users?.length || 0} usuarios asignados
@@ -327,7 +352,11 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
         
         <button 
           onClick={handleCloseModal}
-          className="px-4 py-2 text-p text-semantic.red bg-white border border-semantic.red rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5"
+          className={`px-4 py-2 text-p ${
+            isDark 
+              ? 'text-semantic-red bg-gray-7 border-semantic-red hover:bg-gray-6' 
+              : 'text-semantic.red bg-white border-semantic.red hover:bg-semantic-r'
+          } border rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5`}
         >
           Cerrar
         </button>

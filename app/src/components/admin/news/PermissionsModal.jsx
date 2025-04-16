@@ -5,6 +5,7 @@ import { X, Users, PlusCircle, Eye } from 'lucide-react';
 import { newsPermissionsService } from '@/services/newsPermissionsService';
 import AddPermissions from '../PermissionsModal/addPermissions';
 import ViewAudience from '../PermissionsModal/viewPermissions';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function PermissionsModal({
   isOpen,
@@ -12,6 +13,9 @@ export default function PermissionsModal({
   handleCloseModal,
   handleSavePermissions
 }) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  
   // Estado para controlar la vista (agregar o ver)
   const [viewMode, setViewMode] = useState('add'); // 'add' o 'view'
   const [loading, setLoading] = useState(true);
@@ -183,33 +187,33 @@ export default function PermissionsModal({
       
       <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
         <div 
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden transform transition-all duration-300 animate-fadeIn pointer-events-auto relative max-h-[90vh] flex flex-col"
+          className={`${isDark ? 'bg-gray-7' : 'bg-white'} rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden transform transition-all duration-300 animate-fadeIn pointer-events-auto relative max-h-[90vh] flex flex-col`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header del modal */}
-          <div className="px-6 py-4 border-b border-gray-1 flex items-center bg-primary-blue sticky top-0 z-10">
-            {/* Título a la izquierda - Visible en tamaño normal, oculto en móvil */}
-            <div className="absolute left-6 hidden sm:block">
+          <div className="px-6 py-4 border-b-0 border-gray-1 flex items-center bg-primary-blue sticky top-0 z-10">
+            {/* Título a la izquierda - Visible solo en pantallas grandes */}
+            <div className="absolute left-6 hidden lg:block">
               <h2 className="text-h2 font-semibold text-white flex items-center">
                 <Users className="mr-2 text-white" />
                 Configurar Audiencia
               </h2>
             </div>
             
-            {/* Ícono pequeño solo en móvil (a la izquierda) */}
-            <div className="sm:hidden flex items-center">
+            {/* Ícono pequeño solo en móvil y tablet (a la izquierda) */}
+            <div className="lg:hidden flex items-center">
               <Users className="text-white" size={20} />
             </div>
             
-            {/* Switch de vistas absolutamente centrado en laptops, y centrado-izquierda en móvil */}
+            {/* Switch de vistas absolutamente centrado en laptops, y centrado-izquierda en móvil/tablet */}
             <div className="flex-grow flex justify-center">
-              <div className="bg-gray-2 rounded-full p-1 flex items-center">
+              <div className={`${isDark ? 'bg-gray-6' : 'bg-gray-2'} rounded-full p-1 flex items-center`}>
                 <button 
                   onClick={() => setViewMode('add')}
                   className={`px-2 sm:px-3 py-1 sm:py-1.5 text-p-small sm:text-p font-medium rounded-full transition-colors flex items-center ${
                     viewMode === 'add' 
-                      ? 'bg-white shadow-sm text-primary-blue' 
-                      : 'text-gray-4 hover:text-gray-5'
+                      ? `${isDark ? 'bg-gray-7' : 'bg-white'} shadow-sm text-primary-blue` 
+                      : isDark ? 'text-gray-3 hover:text-gray-2' : 'text-gray-4 hover:text-gray-5'
                   }`}
                 >
                   <PlusCircle size={14} className="mr-1 sm:mr-1.5" />
@@ -219,8 +223,8 @@ export default function PermissionsModal({
                   onClick={() => setViewMode('view')}
                   className={`px-2 sm:px-3 py-1 sm:py-1.5 text-p-small sm:text-p font-medium rounded-full transition-colors flex items-center ${
                     viewMode === 'view' 
-                      ? 'bg-white shadow-sm text-primary-blue' 
-                      : 'text-gray-4 hover:text-gray-5'
+                      ? `${isDark ? 'bg-gray-7' : 'bg-white'} shadow-sm text-primary-blue` 
+                      : isDark ? 'text-gray-3 hover:text-gray-2' : 'text-gray-4 hover:text-gray-5'
                   }`}
                 >
                   <Eye size={14} className="mr-1 sm:mr-1.5" />
@@ -232,7 +236,7 @@ export default function PermissionsModal({
             {/* Botón de cerrar a la derecha */}
             <button 
               onClick={handleCloseModal}
-              className="absolute right-6 text-white ml-5 hover:text-primary-blue transition-colors p-1 rounded-full hover:bg-gray-1"
+              className={`absolute right-6 text-white ml-5 hover:text-primary-blue transition-colors p-1 rounded-full ${isDark ? 'hover:bg-gray-6' : 'hover:bg-gray-1'}`}
             >
               <X size={18} className="sm:w-5 sm:h-5" />
             </button>
@@ -240,7 +244,7 @@ export default function PermissionsModal({
           
           {/* Contenido principal */}
           {loading ? (
-            <div className="flex justify-center items-center h-40 flex-grow">
+            <div className={`flex justify-center items-center h-40 flex-grow ${isDark ? 'bg-gray-7' : ''}`}>
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-blue"></div>
             </div>
           ) : viewMode === 'add' ? (
@@ -262,11 +266,13 @@ export default function PermissionsModal({
               onSavePermissions={onSavePermissions}
               handleCloseModal={handleCloseModal}
               assignedAudience={assignedAudience}
+              isDark={isDark}
             />
           ) : (
             <ViewAudience 
               assignedAudience={assignedAudience}
               handleCloseModal={handleCloseModal}
+              isDark={isDark}
             />
           )}
         </div>
