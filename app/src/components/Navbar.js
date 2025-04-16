@@ -2,98 +2,128 @@
 
 import React, { useState } from 'react';
 import {
-  Bell,
-  User,
   ChevronDown,
-  Zap,
   Menu,
 } from 'lucide-react';
 import ModuleTabs from './ModuleTabs';
 import ProfilePopup from './ProfilePopup';
+import NotificationsPopup from './NotificationsPopup';
 import { useTabs } from '@/context/tabs';
-import CompanySelector from './CompanySelector'; // nuevo import
+import CompanySelector from './CompanySelector';
+import { useTheme } from '@/context/theme'; // ✅ Importar useTheme
 
 const Navbar = ({ onMenuClick }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { tabs } = useTabs();
+  const { theme, setTheme } = useTheme(); // ✅ Obtener tema actual
   const showTabs = tabs.length > 0;
 
   return (
-    <nav className={`w-full bg-white relative z-20 ${showTabs ? 'pb-0' : 'py-0'}`}>
-      <div className="w-full flex h-24 border-b border-gray-200 items-center">
-        {/* Mobile menu */}
-        <div className="md:hidden px-4">
-          <button onClick={onMenuClick} className="text-gray-700 hover:text-black">
-            <Menu size={24} />
-          </button>
-        </div>
+    <>
+      {/* Navbar con posición sticky */}
+      <nav className="sticky top-0 w-full bg-white dark:bg-[#1c1c24] z-20">
+        <div className="w-full flex h-24 items-center border-b border-gray-200 dark:border-gray-700">
+          {/* Mobile menu */}
+          <div className="md:hidden px-4">
+            <button onClick={onMenuClick} className="text-gray-700 dark:text-gray-300 hover:text-black">
+              <Menu size={24} />
+            </button>
+          </div>
 
-        {/* Main navbar */}
-        <div className="flex-1 max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-16">
-          {/* Selector de empresa */}
-          <CompanySelector />
-
-          {/* Botones derechos */}
-          <div className="flex items-center gap-6 pr-4">
-            {/* Centro de ayuda */}
-            <div className="flex items-center gap-2 text-[13px] text-gray-600 font-normal">
-              <button className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50">
-                <Zap size={16} />
-              </button>
-              <span className="hidden sm:inline">Centro de ayuda</span>
+          {/* Main navbar */}
+          <div className="flex-1 max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-16">
+            {/* Selector de empresa */}
+            <div className="w-40 sm:w-auto mr-4">
+              <CompanySelector />
             </div>
 
-            {/* Notificaciones */}
-            <div className="relative">
-              <button className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50">
-                <Bell size={18} className="text-gray-700" />
-              </button>
-              <span className="absolute -top-1 -right-1 bg-black text-white text-[10px] px-1 py-0.5 rounded-full leading-none">
-                2
-              </span>
-            </div>
+            {/* Botones derechos */}
+            <div className="flex items-center gap-6 lg:gap-12 pr-4">
+              {/* Centro de ayuda */}
+              <div className="flex items-center gap-2 text-[13px] font-normal">
+                <button className="w-9 h-9 border border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center hover:bg-gray-50 dark:hover:bg-[#2c2c38]">
+                  <img
+                    src="/assets/navbar/icon-frame.svg"
+                    alt="Centro de ayuda"
+                    className="w-5 h-5"
+                  />
+                </button>
+                <span className="hidden lg:inline font-[Poppins] font-semibold text-sm tracking-[0.1px] text-gray-600 dark:text-gray-300">
+                  Centro de ayuda
+                </span>
+              </div>
 
-            {/* Perfil */}
-            <div className="flex items-center gap-2 text-[13px] text-gray-600 font-normal">
-              <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="w-9 h-9 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50"
-              >
-                <User size={16} />
-              </button>
-              <span
-                className="flex items-center gap-1 cursor-pointer"
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-              >
-                <span className="hidden sm:inline">Luis González</span>
-                <ChevronDown size={16} />
-              </span>
+              {/* Notificaciones */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-all 
+                    border ${isNotificationsOpen
+                      ? 'bg-[var(--primary-color)] border-[var(--primary-color)]'
+                      : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-[#2c2c38]'}`}
+                >
+                  <img
+                    src={`/assets/navbar/${isNotificationsOpen ? 'icon-frame-12' : 'icon-frame-11'}.svg`}
+                    alt="Notificaciones"
+                    className="w-5 h-5"
+                  />
+                </button>
+                <span className="absolute -top-1.5 -right-1.5 bg-[#fc5a5a] text-white text-[12px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center font-semibold">
+                  2
+                </span>
+              </div>
+
+              {/* Perfil */}
+              <div className="flex items-center gap-2 text-[13px] font-normal">
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className={`w-9 h-9 border rounded-full overflow-hidden transition-all
+                    ${isProfileOpen ? 'border-[#0080ff]' : 'border-white dark:border-gray-700'}`}
+                >
+                  <img
+                    src="/assets/navbar/perfil.jpg"
+                    alt="Perfil"
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+                <span
+                  className="flex items-center gap-1 cursor-pointer"
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                >
+                  <span
+                    className={`hidden lg:inline font-semibold text-sm tracking-[0.1px] font-[Poppins]
+                      ${isProfileOpen ? 'text-[#171725] dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}
+                  >
+                    Luis González
+                  </span>
+                  <ChevronDown
+                    size={16}
+                    className={`hidden lg:inline transition-transform duration-200 ${isProfileOpen
+                      ? 'text-[#0080ff] rotate-180'
+                      : 'text-gray-600 dark:text-gray-400 rotate-0'
+                      }`}
+                  />
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="bg-black text-white text-sm">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 flex justify-between items-center py-3">
-          <p className="text-[13px] leading-snug">
-            <strong>Nueva actualización del sistema 12 octubre 2024 14:00 hrs</strong>{' '}
-            <span className="text-gray-300">Toma las precauciones pertinentes</span>
-          </p>
-          <button className="bg-white text-black text-xs font-medium px-3 py-1.5 rounded hover:bg-gray-100">
-            Entendido
-          </button>
-        </div>
-      </div>
+        {/* Tabs */}
+        <ModuleTabs />
 
-      {/* Tabs */}
-      <ModuleTabs />
-
-      {/* Profile popup */}
-      <ProfilePopup
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-      />
-    </nav>
+        {/* Popups */}
+        <ProfilePopup
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+        />
+        <NotificationsPopup
+          isOpen={isNotificationsOpen}
+          onClose={() => setIsNotificationsOpen(false)}
+        />
+      </nav>
+    </>
   );
 };
 

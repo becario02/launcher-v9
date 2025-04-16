@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Building2 } from 'lucide-react';
+import Image from 'next/image';
 
-const companies = ['EMPRESA 1', 'EMPRESA 2'];
+const companies = ['Express Logistics S.A de C.V', 'Logística del Bajío S.A'];
 
 export default function CompanySelector() {
   const [selected, setSelected] = useState(companies[0]);
@@ -21,26 +21,39 @@ export default function CompanySelector() {
   }, []);
 
   return (
-    <div ref={dropdownRef} className="relative w-full sm:w-56 text-sm font-medium text-gray-700">
+    <div
+      ref={dropdownRef}
+      className="font-[Poppins] relative w-full sm:w-72 text-sm font-medium text-gray-700 dark:text-gray-200"
+    >
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between border border-gray-300 rounded-none px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-50"
+        className={`w-full flex items-center justify-between border ${
+          open ? 'border-[var(--primary-color)] border-b-transparent' : 'border-gray-300 dark:border-gray-600'
+        } ${open ? 'rounded-t-lg' : 'rounded-lg'}
+          px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-50 dark:hover:bg-[#2c2c38] bg-white dark:bg-[#1c1c24] transition-all z-20 relative`}
       >
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full border border-gray-300">
-            <Building2 size={16} className="text-gray-500" />
+          <div className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 overflow-hidden">
+            <Image
+              src="/assets/company-selector/company-picture.jpg"
+              alt="Company"
+              width={36}
+              height={36}
+              className="object-cover"
+            />
           </div>
-          <span className="text-xs sm:text-[13px] font-medium">{selected}</span>
+          <span className="text-[13px] font-medium">{selected}</span>
         </div>
-        {open ? (
-          <ChevronUp size={18} className="text-gray-500" />
-        ) : (
-          <ChevronDown size={18} className="text-gray-500" />
-        )}
+        <Image
+          src={open ? '/assets/company-selector/icon-contrae-2.svg' : '/assets/company-selector/icon-expand.svg'}
+          alt="Toggle Icon"
+          width={16}
+          height={16}
+        />
       </button>
 
       {open && (
-        <ul className="absolute top-full mt-px w-full bg-white border border-gray-300 border-t-0 rounded-none shadow z-10">
+        <ul className="absolute top-full w-full bg-white dark:bg-[#1c1c24] border border-[var(--primary-color)] border-t-0 rounded-b-lg shadow z-10 overflow-hidden">
           {companies
             .filter((company) => company !== selected)
             .map((company, idx) => (
@@ -50,12 +63,18 @@ export default function CompanySelector() {
                   setSelected(company);
                   setOpen(false);
                 }}
-                className="cursor-pointer px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-100 flex items-center gap-2 sm:gap-3"
+                className="cursor-pointer px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-100 dark:hover:bg-[#2c2c38] flex items-center gap-2 sm:gap-3"
               >
-                <div className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full border border-gray-300">
-                  <Building2 size={16} className="text-gray-500" />
+                <div className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 overflow-hidden">
+                  <Image
+                    src="/assets/company-selector/company-picture2.jpg"
+                    alt="Company"
+                    width={36}
+                    height={36}
+                    className="object-cover"
+                  />
                 </div>
-                <span className="text-xs sm:text-[13px] font-medium">{company}</span>
+                <span className="text-[13px] font-medium text-gray-700 dark:text-gray-200">{company}</span>
               </li>
             ))}
         </ul>

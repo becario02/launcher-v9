@@ -14,41 +14,14 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-
-import {
-  Trash2,
-  GripVertical,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
-
+import { Trash2, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
 
 const initialAccesses = [
-  {
-    id: 1,
-    category: 'Nucleares',
-    name: 'Nombre de módulo',
-    isSubmodule: false,
-  },
-  {
-    id: 2,
-    category: 'Financieros',
-    name: 'Nombre de módulo',
-    isSubmodule: false,
-  },
-  {
-    id: 3,
-    category: 'Nucleares',
-    name: 'Nombre de sub módulo',
-    isSubmodule: true,
-  },
-  {
-    id: 4,
-    category: 'Nucleares',
-    name: 'Otro módulo',
-    isSubmodule: false,
-  },
+  { id: 1, category: 'Nucleares', subcategory: 'Tráfico', name: 'Subnivel 2.2' },
+  { id: 2, category: 'Nucleares', subcategory: 'Llantas', name: 'Subnivel 2.3' },
+  { id: 3, category: 'Financieros', subcategory: 'Contabilidad', name: 'Subnivel 1.4' },
+  { id: 4, category: 'Auxiliares', subcategory: 'Logística', name: 'Subnivel 3.1' },
 ];
 
 const SortableItem = ({ item }) => {
@@ -65,28 +38,21 @@ const SortableItem = ({ item }) => {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded border border-gray-100 hover:bg-gray-100"
+      className="flex items-center justify-between px-4 py-3 bg-white dark:bg-[#1C1C24] rounded-md border border-gray-200 dark:border-[#2C2C38] hover:shadow-sm transition-all"
     >
-      <div className="flex items-center gap-3">
-        <GripVertical
-          className="w-4 h-4 text-gray-400 cursor-grab"
-          {...listeners}
-        />
+      <div className="flex items-center gap-3 text-[13px] text-gray-500 dark:text-gray-400">
+        <GripVertical className="w-4 h-4 cursor-grab" {...listeners} />
 
-        <div className="flex items-center gap-1 text-sm text-gray-700">
-          <span className="font-medium">{item.category}</span>
-          {item.isSubmodule && (
-            <>
-              <span>{'>'}</span>
-              <span className="text-gray-400">...</span>
-            </>
-          )}
-          <span>{'>'}</span>
-          <span>{item.name}</span>
+        <div className="flex items-center gap-4">
+          <span>{item.category}</span>
+          <span className="text-gray-300 dark:text-gray-500">{'>'}</span>
+          <span>{item.subcategory}</span>
+          <span className="text-gray-300 dark:text-gray-500">{'>'}</span>
+          <span className="font-semibold text-gray-700 dark:text-gray-200">{item.name}</span>
         </div>
       </div>
 
-      <button className="text-gray-400 hover:text-red-500">
+      <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
         <Trash2 className="w-4 h-4" />
       </button>
     </div>
@@ -97,7 +63,9 @@ const DirectAccessSection = () => {
   const [items, setItems] = useState(initialAccesses);
   const [expanded, setExpanded] = useState(false);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
 
   const handleDragEnd = (event) => {
     const { active, over } = event;
@@ -112,14 +80,14 @@ const DirectAccessSection = () => {
   const hasMore = items.length > 3;
 
   return (
-    <section className="bg-white border border-gray-200 rounded-md px-4 py-4">
+    <section className="font-[Poppins] bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-xl px-5 py-4 shadow-sm">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold text-gray-700 uppercase">
+        <h2 className="text-[13px] font-medium text-gray-800 dark:text-gray-100">
           Mis accesos directos
         </h2>
         {hasMore && (
           <button
-            className="text-gray-500 hover:text-black"
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             onClick={() => setExpanded(!expanded)}
           >
             {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}

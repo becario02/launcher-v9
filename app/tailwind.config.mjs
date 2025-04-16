@@ -8,6 +8,9 @@ const config = {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        poppins: ['var(--font-poppins)', 'sans-serif'],
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
@@ -30,7 +33,8 @@ const config = {
         'semantic.blue': '#2AB0FC',
         'semantic.yellow': '#FCC132',
         'semantic.orange': '#FF740D',
-        'semantic.red': '#FF3F3F'
+        'semantic.red': '#FF3F3F',
+        primary: 'var(--primary-color)',
       },
       fontFamily: {
         'poppins': ['Poppins', 'sans-serif']

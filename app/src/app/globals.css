@@ -6,8 +6,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;300;400;500;600;700&display=swap');
 
 :root {
+  /* Colores base */
   --background: #ffffff;
   --foreground: #171717;
+  --primary-color: #0080FF;
+
+  /* Primarios */
+  --primary-blue: #0080FF;
+  --primary-white: #FFFFFF;
+
+  /* Grises */
+  --gray-1: #F5F7FA;
+  --gray-2: #E2E2EA;
+  --gray-3: #92929D;
+  --gray-4: #696974;
+  --gray-5: #44444F;
+  --gray-6: #262633;
+  --gray-7: #171725;
+  --gray-8: #0B0B10;
+
+  /* Semánticos */
+  --semantic-green: #2C8022;
+  --semantic-blue: #2AB0FC;
+  --semantic-yellow: #FCC132;
+  --semantic-orange: #FF740D;
+  --semantic-red: #FF3F3F;
 }
 
 .dark {
@@ -49,33 +72,26 @@ body {
   border-radius: 9999px;
 }
 
-/* Estilos tipográficos según guía de diseño */
-@layer components {
-  .heading-1 {
-    @apply font-poppins text-h1 font-semibold text-gray-5 leading-standard;
-  }
-  
-  .heading-2 {
-    @apply font-poppins text-h2 font-medium text-gray-5 leading-standard;
-  }
-  
-  .heading-3 {
-    @apply font-poppins text-h3 font-medium text-gray-4 leading-standard;
-  }
-  
-  .heading-4 {
-    @apply font-poppins text-h4 font-medium text-gray-4 leading-standard;
-  }
-  
-  .paragraph {
-    @apply font-poppins text-p font-regular text-gray-3 leading-standard;
-  }
-  
-  .paragraph-small {
-    @apply font-poppins text-p-small font-regular text-gray-3 leading-standard;
-  }
-  
-  .tag {
-    @apply font-poppins text-xs font-medium rounded-full px-2 py-0.5;
-  }
+/* Scrollbar custom minimal */
+.scrollbar-custom::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+/* globals.css */
+.scrollbar-custom::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
 }
