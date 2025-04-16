@@ -4,32 +4,33 @@ const ChatBotButton = ({ onClick }) => {
   return (
     <button
       onClick={onClick}
-      className="fixed bottom-6 right-6 w-14 h-14 z-50 rounded-full flex items-center justify-center bg-[#0080ff] shadow-lg hover:scale-105 transition-transform"
+      className="fixed bottom-6 right-6 w-14 h-14 z-50 rounded-full flex items-center justify-center bg-white hover:scale-105 transition-transform"
+      style={{
+        boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.25)',
+      }}
       aria-label="Abrir chatbot"
     >
-      <svg viewBox="180 50 270 270" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mt-1">
-        <g>
-          <path
-            className="fill-white"
-            d="M429.8,164.5c0-62.8-50.9-113.8-113.8-113.8c-28.8,0-55,10.7-75,28.3c54.4,48.5,121.5,86.4,187,105.6
-            C429.2,178,429.8,171.3,429.8,164.5z"
-          />
-          <path
-            className="fill-white"
-            d="M202.9,176.2c5.9,57.3,54.3,102.1,113.2,102.1c41.5,0,77.7-22.2,97.6-55.3c-1.6,0-3.2,0-4.9,0
-            C369.9,223,287.3,217.4,202.9,176.2z"
-          />
-          <g>
-            <path
-              className="fill-white"
-              d="M435.1,195.5c-3-0.8-5.9-1.7-8.9-2.6c0-0.1,0-0.2,0.1-0.2c-11.6-3.4-23.2-7.3-34.9-11.8
-              c-0.3-0.1-0.6-0.2-0.9-0.4c-3.5-1.4-6.9-2.7-10.4-4.2c-51.7-21.6-102.4-53.4-145.2-91.7c-2.1-1.9-4.2-3.8-6.3-5.8
-              c-20,18.7-35.4,58.4-36.5,79.9c-0.1,1.1-0.1,2.2,0,3.3c0.6,0.3,1.1,0.6,1.7,0.9l0.2-0.5c2.7,1.5,5.5,2.8,8.2,4.2
-              c92.3,46.3,183.2,48.8,215.9,47.9c5.8-0.2,9.8-0.4,11.7-0.6l0,0.1c0.1,0,0.2,0,0.3,0c0.2-0.5,0.5-1.2,0.8-1.9
-              C432.6,208.1,434.8,201,435.1,195.5L435.1,195.5z"
-            />
-          </g>
-        </g>
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="w-6 h-6 text-[var(--primary-color)]"
+      >
+        <path
+          d="M12 21a9 9 0 1 0-9-9c0 1.488.36 2.891 1 4.127L3 21l4.873-1c1.236.64 2.64 1 4.127 1z"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinejoin="round"
+          d="M7.5 12h.01v.01H7.5zM12 12h.01v.01H12zM16.5 12h.01v.01h-.01z"
+        />
       </svg>
     </button>
   );

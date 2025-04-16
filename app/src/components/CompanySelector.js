@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { useTheme } from '@/context/theme'; // ✅ Importamos useTheme si lo necesitas en el futuro
 
 const companies = ['Express Logistics S.A de C.V', 'Logística del Bajío S.A'];
 
@@ -29,7 +28,7 @@ export default function CompanySelector() {
       <button
         onClick={() => setOpen(!open)}
         className={`w-full flex items-center justify-between border ${
-          open ? 'border-[#0080ff] border-b-transparent' : 'border-gray-300 dark:border-gray-600'
+          open ? 'border-[var(--primary-color)] border-b-transparent' : 'border-gray-300 dark:border-gray-600'
         } ${open ? 'rounded-t-lg' : 'rounded-lg'}
           px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-50 dark:hover:bg-[#2c2c38] bg-white dark:bg-[#1c1c24] transition-all z-20 relative`}
       >
@@ -54,7 +53,7 @@ export default function CompanySelector() {
       </button>
 
       {open && (
-        <ul className="absolute top-full w-full bg-white dark:bg-[#1c1c24] border border-[#0080ff] border-t-0 rounded-b-lg shadow z-10 overflow-hidden">
+        <ul className="absolute top-full w-full bg-white dark:bg-[#1c1c24] border border-[var(--primary-color)] border-t-0 rounded-b-lg shadow z-10 overflow-hidden">
           {companies
             .filter((company) => company !== selected)
             .map((company, idx) => (

@@ -60,7 +60,7 @@ const Navbar = ({ onMenuClick }) => {
                   onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                   className={`w-9 h-9 rounded-full flex items-center justify-center transition-all 
                     border ${isNotificationsOpen
-                      ? 'bg-[#0080ff] border-[#0080ff]'
+                      ? 'bg-[var(--primary-color)] border-[var(--primary-color)]'
                       : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-[#2c2c38]'}`}
                 >
                   <img
