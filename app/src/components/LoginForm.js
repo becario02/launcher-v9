@@ -76,8 +76,27 @@ const LoginForm = () => {
       } else if (message.startsWith('Se ha detectado') || message.startsWith('New device detected')) {
         setStep('method');
       } else if (message === 'Inicio de sesión exitoso' || message === 'Login successful') {
+        const userData = response.data?.data?.[0];
+
         Cookies.set('auth', 'dummy-token', { expires: 7 });
-        login({ username: formData.username });
+        Cookies.set('idUser', userData.idUser, { expires: 7 });
+        Cookies.set('fullname', userData.fullname, { expires: 7 });
+        Cookies.set('companyName', userData.name, { expires: 7 });
+        Cookies.set('urlErp', userData.urlErp, { expires: 7 });
+        Cookies.set('passwordErpDb', userData.passwordErpDb, { expires: 7 });
+        Cookies.set('serverErpDb', userData.serverErpDb, { expires: 7 });
+        Cookies.set('nameErpDb', userData.nameErpDb, { expires: 7 });
+
+        login({
+          username: formData.username,
+          idUser: userData.idUser,
+          fullname: userData.fullname,
+          companyName: userData.name,
+          urlErp: userData.urlErp,
+          passwordErpDb: userData.passwordErpDb,
+          serverErpDb: userData.serverErpDb,
+          nameErpDb: userData.nameErpDb
+        });
       } else {
         setError(message);
       }
@@ -119,8 +138,27 @@ const LoginForm = () => {
       if (message === 'El código ingresado es incorrecto' || message === 'The verification code is incorrect') {
         setError(message);
       } else if (message === 'Inicio de sesión exitoso' || message === 'Login successful') {
+        const userData = response.data?.data?.[0];
+
         Cookies.set('auth', 'dummy-token', { expires: 7 });
-        login({ username: formData.username });
+        Cookies.set('idUser', userData.idUser, { expires: 7 });
+        Cookies.set('fullname', userData.fullname, { expires: 7 });
+        Cookies.set('companyName', userData.name, { expires: 7 });
+        Cookies.set('urlErp', userData.urlErp, { expires: 7 });
+        Cookies.set('passwordErpDb', userData.passwordErpDb, { expires: 7 });
+        Cookies.set('serverErpDb', userData.serverErpDb, { expires: 7 });
+        Cookies.set('nameErpDb', userData.nameErpDb, { expires: 7 });
+
+        login({
+          username: formData.username,
+          idUser: userData.idUser,
+          fullname: userData.fullname,
+          companyName: userData.name,
+          urlErp: userData.urlErp,
+          passwordErpDb: userData.passwordErpDb,
+          serverErpDb: userData.serverErpDb,
+          nameErpDb: userData.nameErpDb
+        });
       } else {
         setError(message);
       }
@@ -171,7 +209,7 @@ const LoginForm = () => {
     } catch (error) {
       setModalStates(prev => ({ ...prev, error: true }));
     }
-    
+
   };
 
   const renderModals = () => (
@@ -227,7 +265,7 @@ const LoginForm = () => {
             priority
           />
         </div>
-        
+
 
         {/* Header */}
         <div className="mb-8 text-center">
@@ -238,7 +276,7 @@ const LoginForm = () => {
             Bienvenido de nuevo, ingresa tus credenciales para acceder a tu cuenta
           </p>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-4">
             <div>

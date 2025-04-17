@@ -1,7 +1,17 @@
 'use client';
 
+import Cookies from 'js-cookie';
+
 const WelcomeSection = () => {
-  const userName = 'Luis';
+  // Leer fullname desde la cookie y obtener solo el primer nombre
+  const getFirstName = () => {
+    const fullName = Cookies.get('fullname');
+    if (!fullName) return '';
+    const parts = decodeURIComponent(fullName).split(' ');
+    return parts[0];
+  };
+
+  const userName = getFirstName();
 
   return (
     <section className="pb-4 font-poppins">

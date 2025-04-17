@@ -1,27 +1,34 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  ChevronDown,
-  Menu,
-} from 'lucide-react';
+import { ChevronDown, Menu } from 'lucide-react';
 import ModuleTabs from './ModuleTabs';
 import ProfilePopup from './ProfilePopup';
 import NotificationsPopup from './NotificationsPopup';
 import { useTabs } from '@/context/tabs';
 import CompanySelector from './CompanySelector';
-import { useTheme } from '@/context/theme'; // ✅ Importar useTheme
+import { useTheme } from '@/context/theme';
+import Cookies from 'js-cookie';
 
 const Navbar = ({ onMenuClick }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { tabs } = useTabs();
-  const { theme, setTheme } = useTheme(); // ✅ Obtener tema actual
+  const { theme, setTheme } = useTheme();
   const showTabs = tabs.length > 0;
+
+  // Obtener nombre + primer apellido directamente de la cookie
+  const getUserShortName = () => {
+    const fullName = Cookies.get('fullname');
+    if (!fullName) return '';
+    const parts = decodeURIComponent(fullName).split(' ');
+    return `${parts[0]} ${parts[1] || ''}`;
+  };
+
+  const userShortName = getUserShortName();
 
   return (
     <>
-      {/* Navbar con posición sticky */}
       <nav className="sticky top-0 w-full bg-white dark:bg-[#1c1c24] z-20">
         <div className="w-full flex h-24 items-center border-b border-gray-200 dark:border-gray-700">
           {/* Mobile menu */}
@@ -95,7 +102,7 @@ const Navbar = ({ onMenuClick }) => {
                     className={`hidden lg:inline font-semibold text-sm tracking-[0.1px] font-[Poppins]
                       ${isProfileOpen ? 'text-[#171725] dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}
                   >
-                    Luis González
+                    {userShortName || 'Usuario'}
                   </span>
                   <ChevronDown
                     size={16}
