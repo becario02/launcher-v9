@@ -13,16 +13,16 @@ export default function NewsCard({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Estilo para el valor de la categoría (en el círculo)
-  const categoryValueStyle = 'bg-primary-blue text-white rounded-full px-2 py-0.5';
+  // Usa la clase 'bg-primary' que apunta a tu CSS variable --primary
+  const categoryValueStyle = 'bg-primary text-white rounded-full px-2 py-0.5';
 
   return (
     <div
       className={`
         bg-white dark:bg-gray-7
-        rounded-lg overflow-hidden border-b-4
-        ${item.status === 'ACTIVE'
-          ? 'border-primary-blue'
+        rounded-lg overflow-hidden
+        border-b-4 ${item.status === 'ACTIVE'
+          ? 'border-primary'
           : 'border-gray-3 dark:border-gray-6'}
         shadow-sm hover:shadow dark:hover:shadow-gray-900
         transition-all duration-300
@@ -65,11 +65,9 @@ export default function NewsCard({
           <span
             className={`
               text-xs px-2 py-0.5 rounded-full
-              ${
-                item.status === 'ACTIVE'
-                  ? 'bg-primary-blue text-white'
-                  : 'bg-gray-2 text-gray-4 dark:bg-gray-6 dark:text-gray-3'
-              }
+              ${item.status === 'ACTIVE'
+                ? 'bg-primary text-white'
+                : 'bg-gray-2 text-gray-4 dark:bg-gray-6 dark:text-gray-3'}
             `}
           >
             {item.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
@@ -87,7 +85,9 @@ export default function NewsCard({
             try {
               const originalDate = new Date(item.date);
               if (isNaN(originalDate.getTime())) return "Fecha no disponible";
-              const adjustedDate = new Date(originalDate.getTime() - 6 * 3600_000);
+              const adjustedDate = new Date(
+                originalDate.getTime() - 6 * 3600_000
+              );
               const options = {
                 year: 'numeric',
                 month: 'long',
@@ -96,7 +96,10 @@ export default function NewsCard({
                 minute: '2-digit',
                 hour12: true
               };
-              return `Publicado: ${adjustedDate.toLocaleDateString('es-MX', options)}`;
+              return `Publicado: ${adjustedDate.toLocaleDateString(
+                'es-MX',
+                options
+              )}`;
             } catch {
               return `Publicado: ${item.date}`;
             }
@@ -112,7 +115,7 @@ export default function NewsCard({
               title="Ver detalles"
               aria-label="Ver detalles"
             >
-              <Eye size={18} className="text-gray-4 dark:text-gray-3 hover:text-primary-blue" />
+              <Eye size={18} className="text-gray-4 dark:text-gray-3 hover:text-primary" />
             </button>
             <button
               onClick={() => handleOpenModal('edit', item)}
@@ -120,7 +123,7 @@ export default function NewsCard({
               title="Editar"
               aria-label="Editar"
             >
-              <Edit size={18} className="text-gray-4 dark:text-gray-3 hover:text-primary-blue" />
+              <Edit size={18} className="text-gray-4 dark:text-gray-3 hover:text-primary" />
             </button>
 
             <button
@@ -129,8 +132,8 @@ export default function NewsCard({
               title="Configurar audiencia"
               aria-label="Configurar audiencia"
             >
-              <Users size={18} className="text-gray-4 dark:text-gray-3 group-hover:text-primary-blue" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary-blue rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Users size={18} className="text-gray-4 dark:text-gray-3 group-hover:text-primary" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>
           </div>
 
@@ -141,9 +144,9 @@ export default function NewsCard({
             aria-label={item.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
           >
             {item.status === 'ACTIVE' ? (
-              <ArrowDownCircle size={18} className="text-gray-4 dark:text-gray-3 hover:text-primary-blue" />
+              <ArrowDownCircle size={18} className="text-gray-4 dark:text-gray-3 hover:text-primary" />
             ) : (
-              <ArrowUpCircle size={18} className="text-gray-4 dark:text-gray-3 hover:text-primary-blue" />
+              <ArrowUpCircle size={18} className="text-gray-4 dark:text-gray-3 hover:text-primary" />
             )}
           </button>
         </div>
