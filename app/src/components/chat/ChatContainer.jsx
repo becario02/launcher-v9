@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { usePathname } from 'next/navigation';
 import ChatWindow from './ChatWindow';
 import ChatBotButton from './ChatBotButton';
 
 const ChatContainer = () => {
+  const pathname = usePathname(); // ✅ Hook fuera de condicional
+
   const [open, setOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -14,7 +17,7 @@ const ChatContainer = () => {
 
   useEffect(() => {
     if (!sessionId) setSessionId(uuidv4());
-  }, []);
+  }, [sessionId]);
 
   const handleOpen = () => {
     setOpen(true);
@@ -28,7 +31,7 @@ const ChatContainer = () => {
     setTimeout(() => {
       setOpen(false);
       setIsClosing(false);
-    }, 300); // ⏱️ Tiempo de animación (matchea con Tailwind transition)
+    }, 300);
   };
 
   const sendMessage = async (text) => {
@@ -54,6 +57,9 @@ const ChatContainer = () => {
       setLoading(false);
     }
   };
+
+  // ✅ Render condicional en el return, no antes
+  if (pathname === '/login') return null;
 
   return (
     <>

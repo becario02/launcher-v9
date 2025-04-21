@@ -221,12 +221,15 @@ export default function LoginForm() {
             priority
           />
         </div>
-        <h1 className="text-2xl font-medium text-gray-800 mb-2">
-          Ingresa a tu cuenta
-        </h1>
-        <p className="text-gray-500 text-sm mb-8">
-          Bienvenido de nuevo, ingresa tus credenciales para acceder a tu cuenta
-        </p>
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="text-2xl font-medium text-gray-800 mb-2">
+            Ingresa a tu cuenta
+          </h1>
+          <p className="text-gray-500 text-sm">
+            Bienvenido de nuevo, ingresa tus credenciales para acceder a tu cuenta
+          </p>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-4">
             <div>
