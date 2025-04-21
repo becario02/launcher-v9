@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import { X, Upload, Link as LinkIcon, AlertCircle } from 'lucide-react';
@@ -23,6 +23,7 @@ export default function NewsModal({
     message: ''
   });
 
+  // Reset notification & preview on close
   useEffect(() => {
     if (!isOpen) {
       setModalNotification({ visible: false, type: 'error', message: '' });
@@ -30,75 +31,37 @@ export default function NewsModal({
     }
   }, [isOpen]);
 
+  // Lock body scroll when modal open
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-
-    return () => {
-      document.body.style.overflow = '';
-    };
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
   if (!isOpen) return null;
+  const isView = modalType === 'view';
 
-  const handleImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const compressedFile = await compressImage(file, {
-        maxWidth: 800,
-        maxHeight: 600,
-        quality: 0.7
-      });
-      
+  // Image compression helper
+  const compressImage = (file, { maxWidth = 800, maxHeight = 600, quality = 0.7 } = {}) =>
+    new Promise(resolve => {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64WithPrefix = reader.result;
-        setPreviewImage(base64WithPrefix);
-        handleFormChange({
-          target: {
-            name: 'imageUrl',
-            value: base64WithPrefix,
-            type: 'text'
-          }
-        });
-      };
-      reader.readAsDataURL(compressedFile);
-    }
-  };
-  
-  const compressImage = (file, options = {}) => {
-    return new Promise((resolve) => {
-      const { maxWidth = 800, maxHeight = 600, quality = 0.7 } = options;
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         const img = new Image();
         img.onload = () => {
-
-          let width = img.width;
-          let height = img.height;
-          
+          let { width, height } = img;
           if (width > maxWidth) {
             height = Math.round(height * maxWidth / width);
             width = maxWidth;
           }
-          
           if (height > maxHeight) {
             width = Math.round(width * maxHeight / height);
             height = maxHeight;
           }
-          
           const canvas = document.createElement('canvas');
           canvas.width = width;
           canvas.height = height;
-          
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
-          
-          canvas.toBlob((blob) => {
+          canvas.toBlob(blob => {
             resolve(new File([blob], file.name, { type: 'image/jpeg' }));
           }, 'image/jpeg', quality);
         };
@@ -106,45 +69,42 @@ export default function NewsModal({
       };
       reader.readAsDataURL(file);
     });
+
+  // Handle file input change
+  const handleImageChange = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const compressed = await compressImage(file, { maxWidth: 800, maxHeight: 600, quality: 0.7 });
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result;
+      setPreviewImage(base64);
+      handleFormChange({
+        target: { name: 'imageUrl', value: base64, type: 'text' }
+      });
+    };
+    reader.readAsDataURL(compressed);
   };
 
+  // Validate fields and submit
   const validateAndSubmit = async () => {
-    if (!formData.title) {
-      setModalNotification({
-        visible: true,
-        type: 'error',
-        message: 'Por favor ingresa el título de la noticia'
-      });
+    if (!formData.title.trim()) {
+      setModalNotification({ visible: true, type: 'error', message: 'Por favor ingresa el título' });
       return;
     }
-
-    if (!formData.date) {
-      setModalNotification({
-        visible: true,
-        type: 'error',
-        message: 'Por favor selecciona una fecha de expiración'
-      });
+    if (!formData.dateExpiration) {
+      setModalNotification({ visible: true, type: 'error', message: 'Selecciona la fecha de expiración' });
       return;
     }
-
-    if (!formData.newsLink) {
-      setModalNotification({
-        visible: true,
-        type: 'error',
-        message: 'Por favor ingresa el enlace de la noticia'
-      });
+    if (!formData.newsLink.trim()) {
+      setModalNotification({ visible: true, type: 'error', message: 'Ingresa el enlace de la noticia' });
       return;
     }
-
     setIsSaving(true);
     try {
       await handleSaveNews();
-    } catch (error) {
-      setModalNotification({
-        visible: true,
-        type: 'error',
-        message: 'Ocurrió un error al guardar la noticia'
-      });
+    } catch {
+      setModalNotification({ visible: true, type: 'error', message: 'Error al guardar la noticia' });
     } finally {
       setIsSaving(false);
     }
@@ -152,34 +112,46 @@ export default function NewsModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div 
-        className={`${isDark ? 'bg-gray-7' : 'bg-white'} rounded-xl shadow-xl w-full max-w-2xl overflow-hidden transform transition-all duration-300 animate-fadeIn my-4 relative`}
-        onClick={(e) => e.stopPropagation()}
+      <div
+        className={`
+          bg-white dark:bg-gray-800
+          rounded-xl shadow-xl w-full max-w-2xl overflow-hidden
+          transition-all duration-300 animate-fadeIn my-4 relative
+        `}
+        onClick={e => e.stopPropagation()}
       >
-        <div className="px-4 sm:px-6 py-4 border-b border-primary-blue flex justify-between items-center bg-primary-blue">
+        {/* Header */}
+        <div className="px-4 sm:px-6 py-4 flex justify-between items-center bg-primary-blue">
           <h2 className="text-lg sm:text-xl font-medium text-white">
             {modalType === 'add' && 'Crear Nueva Noticia'}
             {modalType === 'edit' && 'Editar Noticia'}
             {modalType === 'view' && 'Detalles de la Noticia'}
           </h2>
-          <button 
+          <button
             onClick={handleCloseModal}
-            className={`text-gray-400 hover:text-primary-blue transition-colors p-1 rounded-full ${isDark ? 'hover:bg-gray-6' : 'hover:bg-gray-100'}`}
+            className="p-1 rounded-full text-white hover:text-primary-blue hover:bg-white transition-colors"
           >
-            <X size={20} className='text-white hover:text-primary-blue'/>
+            <X size={20} />
           </button>
         </div>
-        
+
+        {/* Body */}
         <div className="px-4 sm:px-6 py-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
-          {/* Notificación dentro del modal */}
           {modalNotification.visible && (
-            <div className={`w-full border-l-4 ${isDark ? 'border-red-500 bg-red-900 bg-opacity-30' : 'border-red-300 bg-red-50'} p-4 mb-5 flex items-center justify-between animate-fadeIn`}>
-              <div className="flex items-center">
+            <div
+              className={`
+                w-full border-l-4 p-4 mb-5 flex items-center justify-between animate-fadeIn
+                ${isDark
+                  ? 'border-red-500 bg-red-900 bg-opacity-30 text-red-300'
+                  : 'border-red-300 bg-red-50 text-red-700'}
+              `}
+            >
+              <div className="flex items-center gap-2">
                 <AlertCircle className={isDark ? 'text-red-400' : 'text-red-500'} size={20} />
-                <span className={`ml-2 ${isDark ? 'text-red-300' : 'text-red-700'}`}>{modalNotification.message}</span>
+                <span>{modalNotification.message}</span>
               </div>
               <button
-                onClick={() => setModalNotification({...modalNotification, visible: false})}
+                onClick={() => setModalNotification(v => ({ ...v, visible: false }))}
                 className={isDark ? 'text-red-300 hover:text-white' : 'text-red-700 hover:text-gray-900'}
               >
                 <X size={16} />
@@ -188,149 +160,185 @@ export default function NewsModal({
           )}
 
           <form className="space-y-5">
+            {/* Título */}
             <div>
-              <label htmlFor="title" className={`block text-h3 font-medium ${isDark ? 'text-gray-2' : 'text-gray-5'} mb-1`}>Título</label>
-              <input 
-                type="text" 
-                id="title" 
+              <label className="block mb-1 font-medium text-gray-800 dark:text-white">
+                Título
+              </label>
+              <input
+                type="text"
                 name="title"
-                value={formData.title} 
+                value={formData.title}
                 onChange={handleFormChange}
-                readOnly={modalType === 'view'}
-                className={`w-full px-4 py-3 border ${isDark ? 'bg-gray-6 border-gray-6 text-white focus:ring-blue-400' : 'border-gray-2 text-primary-blue focus:ring-primary-blue'} rounded-lg text-p focus:outline-none focus:ring-2 focus:border-transparent ${modalType === 'view' ? isDark ? 'bg-gray-8 cursor-not-allowed' : 'bg-gray-50 cursor-not-allowed' : ''}`} 
+                readOnly={isView}
+                className={`
+                  w-full px-4 py-3 rounded-lg text-p focus:outline-none focus:ring-2 focus:ring-primary-blue
+                  bg-gray-100 text-gray-900 placeholder-gray-500 border border-gray-200
+                  dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:border-gray-600
+                  ${isView ? 'cursor-not-allowed opacity-60' : ''}
+                `}
               />
             </div>
-            
+
+            {/* Categoría */}
             <div>
-              <label htmlFor="category" className={`block text-h3 font-medium ${isDark ? 'text-gray-2' : 'text-gray-5'} mb-1`}>Categoría</label>
-              <select 
-                id="category" 
+              <label className="block mb-1 font-medium text-gray-800 dark:text-white">
+                Categoría
+              </label>
+              <select
                 name="category"
-                value={formData.category} 
+                value={formData.category}
                 onChange={handleFormChange}
-                disabled={modalType === 'view'}
-                className={`w-full px-4 py-3 border ${isDark ? 'bg-gray-6 border-gray-6 text-white focus:ring-blue-400' : 'border-gray-200 text-primary-blue focus:ring-primary-blue'} rounded-lg text-p focus:outline-none focus:ring-2 focus:border-transparent ${modalType === 'view' ? isDark ? 'bg-gray-8 cursor-not-allowed' : 'bg-gray-50 cursor-not-allowed' : ''}`}
+                disabled={isView}
+                className={`
+                  w-full px-4 py-3 rounded-lg text-p focus:outline-none focus:ring-2 focus:ring-primary-blue
+                  bg-gray-100 text-gray-900 placeholder-gray-500 border border-gray-200
+                  dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:border-gray-600
+                  ${isView ? 'cursor-not-allowed opacity-60' : ''}
+                `}
               >
                 <option value="NEWS">NEWS</option>
                 <option value="ADVICE">ADVICE</option>
                 <option value="NOTIFICATION">NOTIFICATION</option>
               </select>
             </div>
-            
+
+            {/* Fecha de Expiración */}
             <div>
-              <label htmlFor="date" className={`block text-h3 font-medium ${isDark ? 'text-gray-2' : 'text-gray-5'} mb-1`}>Fecha de Expiración</label>
-              <input 
-                type="date" 
-                id="date" 
-                name="date"
-                value={formData.dateExpiration ? new Date(formData.dateExpiration).toISOString().split('T')[0] : ''} 
+              <label className="block mb-1 font-medium text-gray-800 dark:text-white">
+                Fecha de Expiración
+              </label>
+              <input
+                type="date"
+                name="dateExpiration"
+                value={
+                  formData.dateExpiration
+                    ? new Date(formData.dateExpiration).toISOString().split('T')[0]
+                    : ''
+                }
                 onChange={handleFormChange}
-                readOnly={modalType === 'view'}
-                className={`w-full px-4 py-3 border ${isDark ? 'bg-gray-6 border-gray-6 text-white focus:ring-blue-400' : 'border-gray-2 text-primary-blue focus:ring-primary-blue'} rounded-lg text-p focus:outline-none focus:ring-2 focus:border-transparent ${modalType === 'view' ? isDark ? 'bg-gray-8 cursor-not-allowed' : 'bg-gray-50 cursor-not-allowed' : ''}`} 
+                readOnly={isView}
+                className={`
+                  w-full px-4 py-3 rounded-lg text-p focus:outline-none focus:ring-2 focus:ring-primary-blue
+                  bg-gray-100 text-gray-900 placeholder-gray-500 border border-gray-200
+                  dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:border-gray-600
+                  ${isView ? 'cursor-not-allowed opacity-60' : ''}
+                `}
               />
             </div>
-            
+
+            {/* Imagen */}
             <div>
-              <label className={`block text-h3 font-medium ${isDark ? 'text-gray-2' : 'text-gray-5'} mb-1`}>Imagen</label>
-              {modalType !== 'view' ? (
+              <label className="block mb-1 font-medium text-gray-800 dark:text-white">
+                Imagen
+              </label>
+              {!isView ? (
                 <div className="flex flex-col space-y-2">
-                  <label className={`flex flex-col items-center px-4 py-6 ${isDark ? 'bg-gray-7 text-gray-3 border-gray-6 hover:bg-gray-6' : 'bg-white text-gray-3 border-gray-2 hover:bg-gray-1'} rounded-lg border cursor-pointer transition-colors`}>
-                    <Upload size={18} className='text-primary-blue' />
-                    <span className="mt-2 text-p-small text-primary-blue">Haz clic para subir una imagen</span>
-                    <input 
-                      type="file" 
-                      name="image" 
-                      className="hidden" 
-                      accept="image/*"
-                      onChange={handleImageChange}
-                    />
+                  <label
+                    className={`
+                      flex flex-col items-center p-6 rounded-lg border cursor-pointer transition-colors
+                      bg-gray-100 border-gray-200 text-gray-600
+                      dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300
+                      hover:bg-gray-200 dark:hover:bg-gray-600
+                    `}
+                  >
+                    <Upload size={18} className="text-primary-blue" />
+                    <span className="mt-2 text-p-small text-primary-blue">
+                      Haz clic para subir una imagen
+                    </span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
                   </label>
                   {(previewImage || formData.imageUrl) && (
-                    <div className="mt-2">
-                      <img 
-                        src={previewImage || formData.imageUrl} 
-                        alt="Vista previa" 
-                        className="max-h-40 rounded-lg mx-auto object-contain"
-                      />
-                    </div>
+                    <img
+                      src={previewImage || formData.imageUrl}
+                      alt="Vista previa"
+                      className="max-h-40 rounded-lg object-contain mx-auto"
+                    />
                   )}
                 </div>
               ) : formData.imageUrl ? (
-                <div className="mt-2">
-                  <img 
-                    src={formData.imageUrl} 
-                    alt="Imagen de la noticia" 
-                    className="max-h-40 rounded-lg object-contain"
-                  />
-                </div>
+                <img
+                  src={formData.imageUrl}
+                  alt="Imagen de la noticia"
+                  className="max-h-40 rounded-lg object-contain mx-auto"
+                />
               ) : (
-                <p className={`${isDark ? 'text-gray-4' : 'text-gray-3'} text-p italic`}>No hay imagen disponible</p>
+                <p className={`text-p italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  No hay imagen disponible
+                </p>
               )}
             </div>
-            
+
+            {/* Enlace de la noticia */}
             <div>
-              <label htmlFor="newsLink" className={`block text-h3 font-medium ${isDark ? 'text-gray-2' : 'text-gray-5'} mb-1`}>
+              <label className="block mb-1 font-medium text-gray-800 dark:text-white">
                 <span className="flex items-center gap-1">
                   <LinkIcon size={16} />
                   Enlace de la noticia
                 </span>
               </label>
-              <div className="relative">
-                <input 
-                  type="url" 
-                  id="newsLink" 
-                  name="newsLink"
-                  placeholder="https://example.com/noticias/mi-noticia"
-                  value={formData.newsLink || ''} 
-                  onChange={handleFormChange}
-                  readOnly={modalType === 'view'}
-                  className={`w-full px-4 py-3 text-p ${isDark ? 'bg-gray-6 border-gray-6 text-white placeholder:text-gray-4 focus:ring-blue-400' : 'border-gray-2 text-primary-blue placeholder:text-semantic-blue focus:ring-primary-blue'} border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${modalType === 'view' ? isDark ? 'bg-gray-8 cursor-not-allowed' : 'bg-gray-50 cursor-not-allowed' : ''}`}
-                />
-              </div>
-              {modalType !== 'view' && (
-                <p className={`text-p-small ${isDark ? 'text-gray-4' : 'text-gray-3'} mt-1`}>Ingresa la URL completa donde se puede leer la noticia completa.</p>
+              <input
+                type="url"
+                name="newsLink"
+                placeholder="https://example.com/noticias/mi-noticia"
+                value={formData.newsLink || ''}
+                onChange={handleFormChange}
+                readOnly={isView}
+                className={`
+                  w-full px-4 py-3 rounded-lg text-p focus:outline-none focus:ring-2 focus:ring-primary-blue
+                  bg-gray-100 text-gray-900 placeholder-gray-500 border border-gray-200
+                  dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:border-gray-600
+                  ${isView ? 'cursor-not-allowed opacity-60' : ''}
+                `}
+              />
+              {!isView && (
+                <p className={`mt-1 text-p-small ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Ingresa la URL completa donde se puede leer la noticia completa.
+                </p>
               )}
-              {modalType === 'view' && formData.newsLink && (
-                <div className="mt-2">
-                  <a 
-                    href={formData.newsLink} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-p text-semantic-blue hover:text-primary-blue transition-colors"
-                  >
-                    <LinkIcon size={14} className="mr-1" />
-                    Ver noticia completa
-                  </a>
-                </div>
+              {isView && formData.newsLink && (
+                <a
+                  href={formData.newsLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-p text-semantic-blue hover:text-primary-blue transition-colors mt-2"
+                >
+                  <LinkIcon size={14} className="mr-1" />
+                  Ver noticia completa
+                </a>
               )}
             </div>
           </form>
         </div>
-        
-        <div className={`px-4 sm:px-6 py-4 ${isDark ? 'bg-gray-8 border-gray-6' : 'bg-gray-1 border-gray-2'} border-t flex justify-end gap-3`}>
-          <button 
+
+        {/* Footer */}
+        <div className={`
+          px-4 sm:px-6 py-4 flex justify-end gap-3 border-t
+          bg-gray-100 border-gray-200 dark:bg-gray-700 dark:border-gray-600
+        `}>
+          <button
             onClick={handleCloseModal}
-            className={`px-4 py-2 text-h3 ${isDark ? 'text-semantic-red bg-gray-7 border-semantic-red hover:bg-gray-6' : 'text-semantic.red bg-white border-semantic.red hover:bg-semantic-r'} border rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5`}
+            className={`
+              px-4 py-2 text-h3 border rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5
+              text-semantic.red bg-white border-semantic.red hover:bg-gray-50
+              dark:text-semantic.red dark:bg-gray-700 dark:border-semantic.red dark:hover:bg-gray-600
+            `}
           >
-            {modalType === 'view' ? 'Cerrar' : 'Cancelar'}
+            {isView ? 'Cerrar' : 'Cancelar'}
           </button>
-          
-          {modalType !== 'view' && (
-            <button 
+          {!isView && (
+            <button
               onClick={validateAndSubmit}
               disabled={isSaving}
-              className={`px-4 py-2 text-h3 text-white bg-primary-blue border border-primary-blue rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5 hover:shadow-md ${
-                isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:bg-semantic-green'
-              }`}
+              className={`
+                px-4 py-2 text-h3 text-white rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5 hover:shadow-md
+                bg-primary-blue dark:bg-primary-blue
+                ${isSaving
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:bg-semantic.green dark:hover:bg-semantic.green'}
+              `}
             >
-              {isSaving ? (
-                <div className="flex items-center gap-2">
-                  <span className="spinner-border animate-spin inline-block w-4 h-4 border-2 rounded-full"></span>
-                  Guardando...
-                </div>
-              ) : (
-                modalType === 'add' ? 'Crear' : 'Guardar'
-              )}
+              {isSaving ? 'Guardando...' : modalType === 'add' ? 'Crear' : 'Guardar'}
             </button>
           )}
         </div>

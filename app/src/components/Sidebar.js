@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutGrid,
@@ -19,6 +20,7 @@ import IconModulos from "@/components/icons/sidebar/IconModulos";
 import IconNucleares from "@/components/icons/sidebar/IconNucleares";
 import IconFinancieros from "@/components/icons/sidebar/IconFinancieros";
 import IconAuxiliares from "@/components/icons/sidebar/IconAuxiliares";
+import { useCompany } from '@/context/CompanyContext';
 
 const SidebarItem = ({ icon: Icon, text, active = false, onClick, indent = false }) => (
   <button
@@ -97,7 +99,9 @@ const InfoItem = ({ label, value }) => (
 const Sidebar = () => {
   const [activeItem, setActiveItem] = useState("Dashboard");
   const { theme, setTheme } = useTheme();
-
+  const { selectedCompany } = useCompany();
+  const router = useRouter();
+  
   return (
     <div className="w-60 h-screen flex flex-col bg-white dark:bg-[#1c1c24] text-gray-800 dark:text-gray-100 fixed top-0 left-0 z-10 border-r border-gray-200 dark:border-gray-700">
       {/* Header */}
@@ -169,8 +173,11 @@ const Sidebar = () => {
         <SidebarItem
           icon={Newspaper}
           text="Noticias"
-          active={activeItem === "Noticias"}
-          onClick={() => setActiveItem("Noticias")}
+          active={activeItem === 'Noticias'}
+          onClick={() => {
+            setActiveItem('Noticias');
+            router.push('/admin/news');
+          }}
         />
       </div>
 
@@ -179,7 +186,7 @@ const Sidebar = () => {
         <div className="bg-white dark:bg-[#1c1c24] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 space-y-3">
           <InfoItem label="Versión de licencia" value="12345" />
           <InfoItem label="Versión de BD" value="12345" />
-          <InfoItem label="IP" value="12345" />
+          <InfoItem label="IP" value={selectedCompany?.serverErpDb || 'Desconocido'} />
         </div>
 
         {/* Theme toggle */}

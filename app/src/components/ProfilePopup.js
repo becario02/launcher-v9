@@ -14,6 +14,17 @@ const ProfilePopup = ({ isOpen, onClose }) => {
 
   const handleLogout = () => {
     Cookies.remove('auth');
+    Cookies.remove('idUser');
+    Cookies.remove('fullname');
+    Cookies.remove('companyName');
+    Cookies.remove('urlErp');
+    Cookies.remove('passwordErpDb');
+    Cookies.remove('serverErpDb');
+    Cookies.remove('nameErpDb');
+  
+    localStorage.removeItem('selectedCompany');
+    localStorage.removeItem('userData');
+    
     logout();
   };
 

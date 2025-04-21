@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import { X, Users, PlusCircle, Eye } from 'lucide-react';
@@ -16,239 +16,181 @@ export default function PermissionsModal({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   
-  // Estado para controlar la vista (agregar o ver)
-  const [viewMode, setViewMode] = useState('add'); // 'add' o 'view'
+  // Vista actual ('add' o 'view')
+  const [viewMode, setViewMode] = useState('add');
   const [loading, setLoading] = useState(true);
   
-  // Estados para datos y permisos (para la vista de agregar)
-  const [permissions, setPermissions] = useState({
-    applications: [],
-    clients: [],
-    users: []
-  });
+  // Datos de permisos y audiencia
+  const [permissions, setPermissions] = useState({ applications: [], clients: [], users: [] });
+  const [assignedAudience, setAssignedAudience] = useState({ applications: [], clients: [], users: [], rawData: [] });
   
-  // Estados para datos de audiencia asignada (para la vista de ver)
-  const [assignedAudience, setAssignedAudience] = useState({
-    applications: [],
-    clients: [],
-    users: [],
-    rawData: []
-  });
-  
-  // Estados para datos
+  // Catálogos
   const [applications, setApplications] = useState([]);
   const [clients, setClients] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [clientUserRelations, setClientUserRelations] = useState({});
   
-  // Estados para selecciones de "todos"
+  // "Seleccionar todo"
   const [allApplications, setAllApplications] = useState(false);
   const [allClients, setAllClients] = useState(false);
   const [allUsersSelected, setAllUsersSelected] = useState(false);
   
-  // Estado para controlar qué clientes están expandidos
+  // Clientes expandidos
   const [expandedClients, setExpandedClients] = useState({});
 
-  // Efecto para bloquear scroll del fondo
+  // Bloquear scroll al fondo
   useEffect(() => {
     if (isOpen) {
-      // Bloquear scroll
-      document.body.style.overflow = 'hidden';
-      
-      // Guardar la posición actual de scroll
       const scrollY = window.scrollY;
+      document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
       document.body.style.top = `-${scrollY}px`;
       document.body.style.width = '100%';
     } else {
-      // Restaurar scroll
-      const scrollY = document.body.style.top;
+      const top = document.body.style.top;
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.overflow = '';
       document.body.style.width = '';
-      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      window.scrollTo(0, parseInt(top || '0') * -1);
     }
-    
     return () => {
-      // Limpiar al desmontar
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.overflow = '';
       document.body.style.width = '';
     };
   }, [isOpen]);
-  
-  // Función para cargar los permisos asignados desde la BD
-  const loadAssignedAudience = async () => {
-    setLoading(true);
-    try {
-      const response = await newsPermissionsService.getAssignedAudience(newsId);
-      if (response) {
-        setAssignedAudience(response);
-      }
-    } catch (error) {
-      console.error('Error al cargar audiencia asignada:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Cargar datos cuando se abre el modal
+
+  // Carga inicial de datos
   useEffect(() => {
     if (isOpen && newsId) {
       setLoading(true);
-      
-      // Restablecer vista a 'agregar' por defecto
       setViewMode('add');
-      
-      // Cargar todos los datos necesarios
       Promise.all([
         newsPermissionsService.getApplications(),
         newsPermissionsService.getClients(),
         newsPermissionsService.getUsers(),
         newsPermissionsService.getNewsPermissions(newsId),
         newsPermissionsService.getClientUserRelations(),
-        // También cargamos la audiencia asignada desde el inicio
         newsPermissionsService.getAssignedAudience(newsId)
       ])
-        .then(([appData, clientData, userData, permissionsData, relationsData, audienceData]) => {
+        .then(([appData, clientData, userData, permsData, relationsData, audienceData]) => {
           setApplications(appData || []);
           setClients(clientData || []);
           setAllUsers(userData || []);
-          setPermissions(permissionsData || { applications: [], clients: [], users: [] });
+          setPermissions(permsData || { applications: [], clients: [], users: [] });
           setAssignedAudience(audienceData || { applications: [], clients: [], users: [], rawData: [] });
           setClientUserRelations(relationsData || {});
-          
-          // Actualizar estados "all" - con verificación
-          const validAppData = Array.isArray(appData) ? appData : [];
-          const validPermissionsApps = Array.isArray(permissionsData?.applications) ? permissionsData.applications : [];
-          setAllApplications(validAppData.length > 0 && validPermissionsApps.length === validAppData.length);
-          
-          const validClientData = Array.isArray(clientData) ? clientData : [];
-          const validPermissionsClients = Array.isArray(permissionsData?.clients) ? permissionsData.clients : [];
-          setAllClients(validClientData.length > 0 && validPermissionsClients.length === validClientData.length);
-          
-          // Inicializar todos los clientes como expandidos
-          const initialExpandedState = {};
-          if (Array.isArray(clientData)) {
-            clientData.forEach(client => {
-              if (client && client.id) {
-                initialExpandedState[client.id] = true;
-              }
-            });
-          }
-          setExpandedClients(initialExpandedState);
-          
-          setLoading(false);
+
+          // Lógica "seleccionar todo"
+          setAllApplications(
+            Array.isArray(appData) &&
+            Array.isArray(permsData?.applications) &&
+            appData.length > 0 &&
+            appData.length === permsData.applications.length
+          );
+          setAllClients(
+            Array.isArray(clientData) &&
+            Array.isArray(permsData?.clients) &&
+            clientData.length > 0 &&
+            clientData.length === permsData.clients.length
+          );
+
+          // Inicializar expandido
+          const initExp = {};
+          (clientData || []).forEach(c => { if (c?.id) initExp[c.id] = true; });
+          setExpandedClients(initExp);
         })
-        .catch(error => {
-          console.error('Error al cargar datos para el modal de permisos:', error);
-          setLoading(false);
-        });
+        .catch(console.error)
+        .finally(() => setLoading(false));
     }
   }, [isOpen, newsId]);
 
-  // Función para guardar los permisos
-  const onSavePermissions = async () => {
+  // Guardar permisos
+  const onSave = async () => {
     if (!newsId) return;
-    
     setLoading(true);
     try {
-      const result = await newsPermissionsService.saveNewsPermissions(newsId, permissions);
-      if (result && result.success) {
+      const res = await newsPermissionsService.saveNewsPermissions(newsId, permissions);
+      if (res?.success) {
         handleSavePermissions(newsId, permissions);
-        
-        // Actualizar la vista de audiencia asignada después de guardar
-        await loadAssignedAudience();
+        const audience = await newsPermissionsService.getAssignedAudience(newsId);
+        setAssignedAudience(audience || assignedAudience);
       }
-    } catch (error) {
-      console.error('Error al guardar permisos:', error);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
-  };
-  
-  // Cambiar entre vistas
-  const toggleViewMode = () => {
-    // Si vamos a cambiar a la vista "ver", cargamos los datos más recientes
-    if (viewMode === 'add') {
-      loadAssignedAudience();
-    }
-    
-    setViewMode(viewMode === 'add' ? 'view' : 'add');
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
+      {/* Backdrop */}
       <div className="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-sm"></div>
-      
+
+      {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
-        <div 
-          className={`${isDark ? 'bg-gray-7' : 'bg-white'} rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden transform transition-all duration-300 animate-fadeIn pointer-events-auto relative max-h-[90vh] flex flex-col`}
-          onClick={(e) => e.stopPropagation()}
+        <div
+          className="pointer-events-auto relative flex flex-col w-full max-w-5xl max-h-[90vh]
+                     bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden
+                     transition-all duration-300 animate-fadeIn"
+          onClick={e => e.stopPropagation()}
         >
-          {/* Header del modal */}
-          <div className="px-6 py-4 border-b-0 border-gray-1 flex items-center bg-primary-blue sticky top-0 z-10">
-            {/* Título a la izquierda - Visible solo en pantallas grandes */}
+          {/* Header */}
+          <div className="sticky top-0 z-10 flex items-center px-6 py-4 bg-primary-blue">
             <div className="absolute left-6 hidden lg:block">
-              <h2 className="text-h2 font-semibold text-white flex items-center">
-                <Users className="mr-2 text-white" />
-                Configurar Audiencia
+              <h2 className="flex items-center text-h2 font-semibold text-white">
+                <Users className="mr-2" /> Configurar Audiencia
               </h2>
             </div>
-            
-            {/* Ícono pequeño solo en móvil y tablet (a la izquierda) */}
             <div className="lg:hidden flex items-center">
               <Users className="text-white" size={20} />
             </div>
-            
-            {/* Switch de vistas absolutamente centrado en laptops, y centrado-izquierda en móvil/tablet */}
-            <div className="flex-grow flex justify-center">
-              <div className={`${isDark ? 'bg-gray-6' : 'bg-gray-2'} rounded-full p-1 flex items-center`}>
-                <button 
+            <div className="flex flex-grow justify-center">
+              <div className="flex items-center p-1 rounded-full bg-gray-200 dark:bg-gray-600">
+                <button
                   onClick={() => setViewMode('add')}
-                  className={`px-2 sm:px-3 py-1 sm:py-1.5 text-p-small sm:text-p font-medium rounded-full transition-colors flex items-center ${
-                    viewMode === 'add' 
-                      ? `${isDark ? 'bg-gray-7' : 'bg-white'} shadow-sm text-primary-blue` 
-                      : isDark ? 'text-gray-3 hover:text-gray-2' : 'text-gray-4 hover:text-gray-5'
-                  }`}
+                  className={`
+                    flex items-center px-3 py-1 sm:px-4 sm:py-1.5 text-p font-medium rounded-full transition-colors
+                    ${viewMode === 'add'
+                      ? 'bg-white dark:bg-gray-800 shadow-sm text-primary-blue'
+                      : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100'}
+                  `}
                 >
-                  <PlusCircle size={14} className="mr-1 sm:mr-1.5" />
-                  Agregar
+                  <PlusCircle className="mr-1" size={14} /> Agregar
                 </button>
-                <button 
+                <button
                   onClick={() => setViewMode('view')}
-                  className={`px-2 sm:px-3 py-1 sm:py-1.5 text-p-small sm:text-p font-medium rounded-full transition-colors flex items-center ${
-                    viewMode === 'view' 
-                      ? `${isDark ? 'bg-gray-7' : 'bg-white'} shadow-sm text-primary-blue` 
-                      : isDark ? 'text-gray-3 hover:text-gray-2' : 'text-gray-4 hover:text-gray-5'
-                  }`}
+                  className={`
+                    flex items-center px-3 py-1 sm:px-4 sm:py-1.5 text-p font-medium rounded-full transition-colors
+                    ${viewMode === 'view'
+                      ? 'bg-white dark:bg-gray-800 shadow-sm text-primary-blue'
+                      : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100'}
+                  `}
                 >
-                  <Eye size={14} className="mr-1 sm:mr-1.5" />
-                  Ver Asignados
+                  <Eye className="mr-1" size={14} /> Ver Asignados
                 </button>
               </div>
             </div>
-            
-            {/* Botón de cerrar a la derecha */}
-            <button 
+            <button
               onClick={handleCloseModal}
-              className={`absolute right-6 text-white ml-5 hover:text-primary-blue transition-colors p-1 rounded-full ${isDark ? 'hover:bg-gray-6' : 'hover:bg-gray-1'}`}
+              className="absolute right-6 p-1 rounded-full text-white hover:text-primary-blue hover:bg-white transition-colors"
             >
-              <X size={18} className="sm:w-5 sm:h-5" />
+              <X size={18} />
             </button>
           </div>
-          
-          {/* Contenido principal */}
+
+          {/* Content */}
           {loading ? (
-            <div className={`flex justify-center items-center h-40 flex-grow ${isDark ? 'bg-gray-7' : ''}`}>
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-blue"></div>
+            <div className="flex-grow flex items-center justify-center bg-white dark:bg-gray-800">
+              <div className="h-8 w-8 rounded-full border-b-2 border-primary-blue animate-spin"></div>
             </div>
           ) : viewMode === 'add' ? (
-            <AddPermissions 
+            <AddPermissions
               applications={applications}
               clients={clients}
               allUsers={allUsers}
@@ -263,13 +205,13 @@ export default function PermissionsModal({
               setAllUsersSelected={setAllUsersSelected}
               expandedClients={expandedClients}
               setExpandedClients={setExpandedClients}
-              onSavePermissions={onSavePermissions}
+              onSavePermissions={onSave}
               handleCloseModal={handleCloseModal}
               assignedAudience={assignedAudience}
               isDark={isDark}
             />
           ) : (
-            <ViewAudience 
+            <ViewAudience
               assignedAudience={assignedAudience}
               handleCloseModal={handleCloseModal}
               isDark={isDark}

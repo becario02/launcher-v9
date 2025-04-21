@@ -367,419 +367,343 @@ export default function AddPermissions({
 
   return (
     <>
-      {/* Content */}
-      <div className={`p-6 overflow-y-auto flex-grow ${isDark ? 'bg-gray-7' : ''}`}>
+      <div className="p-6 flex-grow overflow-y-auto bg-gray-100 dark:bg-gray-7">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Aplicaciones */}
-          <div className={`${isDark ? 'bg-gray-6 border-gray-6' : 'bg-gray-1 border-gray-2'} rounded-xl p-4 border flex flex-col`}>
+          <div className="flex flex-col p-4 bg-white border border-gray-200 rounded-xl dark:bg-gray-6 dark:border-gray-6">
             <div className="flex items-center mb-3">
-              <Layers className="text-primary-blue mr-2" size={18} />
-              <h3 className={`font-medium ${isDark ? 'text-gray-2' : 'text-gray-5'} text-h3`}>APLICACIONES</h3>
+              <Layers size={18} className="mr-2 text-primary-blue" />
+              <h3 className="text-h3 font-medium text-gray-700 dark:text-gray-2">APLICACIONES</h3>
             </div>
-            
-            {/* Buscador de aplicaciones */}
             <div className="relative mb-3">
               <input
                 type="text"
                 placeholder="Buscar aplicaciones..."
-                value={appSearchTerm || ''}
-                onChange={(e) => setAppSearchTerm(e.target.value)}
-                className={`w-full pl-9 pr-3 py-2 border ${
-                  isDark 
-                    ? 'bg-gray-7 border-gray-6 text-white placeholder:text-gray-3' 
-                    : 'border-gray-2 text-primary-blue placeholder:text-primary-blue'
-                } rounded-md text-p focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                value={appSearchTerm}
+                onChange={e => setAppSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 border rounded-md text-p bg-gray-50 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-blue dark:bg-gray-7 dark:text-white dark:placeholder-gray-3 dark:border-gray-6"
               />
-              <Search size={16} className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-3' : 'text-primary-blue'}`} />
+              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-blue dark:text-gray-3" />
               {appSearchTerm && (
                 <button
                   onClick={() => setAppSearchTerm('')}
-                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-4 hover:text-gray-2' : 'text-primary-blue hover:text-gray-5'}`}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-4 dark:hover:text-gray-2"
                 >
                   <X size={14} />
                 </button>
               )}
             </div>
-            
-            <div className="mb-2">
-              <label className={`flex items-center p-2 ${isDark ? 'hover:bg-gray-7' : 'hover:bg-white'} rounded-lg cursor-pointer`}>
-                <input 
-                  type="checkbox"
-                  className={`h-4 w-4 rounded text-primary-blue focus:ring-primary-blue ${isDark ? 'border-gray-5 bg-gray-7' : 'border-gray-2'}`}
-                  checked={allApplications}
-                  onChange={handleSelectAllApplications}
-                  disabled={!Array.isArray(filteredApplications) || filteredApplications.length === 0}
-                />
-                <span className={`ml-2 text-p font-medium ${isDark ? 'text-gray-2 hover:text-primary-blue' : 'text-gray-5 hover:text-primary-blue'}`}>
-                  {appSearchTerm 
-                    ? `Todas las aplicaciones filtradas` 
-                    : `Todas las aplicaciones`}
-                </span>
-              </label>
-            </div>
-            
-            <div className={`flex-grow overflow-y-auto max-h-[280px] px-1 py-2 ${isDark ? 'bg-gray-7 border-gray-6' : 'bg-white border-gray-2'} rounded-lg border`}>
-              {Array.isArray(filteredApplications) && filteredApplications.length > 0 ? (
-                filteredApplications.map(app => app && app.id && (
-                  <div 
-                    key={app.id} 
+            <label className="flex items-center mb-2 p-2 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-6">
+              <input
+                type="checkbox"
+                checked={allApplications}
+                onChange={handleSelectAllApplications}
+                disabled={!filteredApplications?.length}
+                className="w-4 h-4 text-primary-blue border-gray-300 rounded focus:ring-primary-blue dark:bg-gray-7 dark:border-gray-6"
+              />
+              <span className="ml-2 text-p font-medium text-gray-700 dark:text-gray-2 hover:text-primary-blue">
+                {appSearchTerm ? 'Todas las aplicaciones filtradas' : 'Todas las aplicaciones'}
+              </span>
+            </label>
+            <div className="flex-grow overflow-y-auto p-1 bg-white border border-gray-200 rounded-lg dark:bg-gray-7 dark:border-gray-6 max-h-[280px]">
+              {filteredApplications?.length ? (
+                filteredApplications.map(app => (
+                  <div
+                    key={app.id}
                     className={`flex items-center p-2 mb-1 rounded-md transition-colors ${
-                      isAlreadyAssigned('applications', app) 
-                        ? isDark ? "bg-gray-6" : "bg-gray-1" 
-                        : isDark ? "hover:bg-blue-900 hover:bg-opacity-30 cursor-pointer" : "hover:bg-semantic-blue cursor-pointer"
+                      isAlreadyAssigned('applications', app)
+                        ? 'bg-gray-50 dark:bg-gray-6'
+                        : 'hover:bg-gray-1 dark:hover:bg-gray-5 cursor-pointer'
                     }`}
-                    title={isAlreadyAssigned('applications', app) ? "Esta aplicación ya tiene asignada esta noticia" : ""}
+                    title={isAlreadyAssigned('applications', app) ? 'Ya asignada' : undefined}
                   >
-                    <input 
+                    <input
                       type="checkbox"
-                      className={`h-4 w-4 rounded focus:ring-indigo-500 ${
-                        isDark ? 'border-gray-5 bg-gray-7' : 'border-gray-300'
-                      } ${
-                        isAlreadyAssigned('applications', app) ? "text-green-500 opacity-70 cursor-not-allowed" : "text-primary-blue"
-                      }`}
-                      checked={isAlreadyAssigned('applications', app) || Array.isArray(permissions.applications) && permissions.applications.includes(app.id)}
-                      onChange={() => handlePermissionChange('applications', app.id, app)}
+                      checked={
+                        isAlreadyAssigned('applications', app) ||
+                        permissions.applications?.includes(app.id)
+                      }
                       disabled={isAlreadyAssigned('applications', app)}
+                      onChange={() => handlePermissionChange('applications', app.id, app)}
+                      className={`w-4 h-4 rounded ${
+                        isAlreadyAssigned('applications', app)
+                          ? 'text-green-500 opacity-70 cursor-not-allowed'
+                          : 'text-primary-blue'
+                      } focus:ring-primary-blue`}
                     />
-                    <span className={`ml-2 text-p ${
-                      isAlreadyAssigned('applications', app) 
-                        ? isDark ? "text-gray-4" : "text-gray-3" 
-                        : isDark ? "text-gray-2 hover:text-blue-300" : "text-gray-5 hover:text-white"
-                    }`}>
-                      {app.name || 'Sin nombre'}
+                    <span
+                      className={`ml-2 text-p truncate ${
+                        isAlreadyAssigned('applications', app)
+                          ? 'text-gray-400 dark:text-gray-3'
+                          : 'text-gray-700 dark:text-gray-2'
+                      }`}
+                    >
+                      {app.name}
                     </span>
-                    
                     {isAlreadyAssigned('applications', app) && (
-                      <div className="ml-auto flex items-center text-p-small" title="Esta aplicación ya tiene asignada esta noticia">
-                        <Info size={16} className="text-green-500" />
-                      </div>
+                      <Info size={16} className="ml-auto text-green-500" />
                     )}
                   </div>
                 ))
               ) : (
-                <p className={`text-p ${isDark ? 'text-gray-4' : 'text-gray-3'} text-center py-4`}>
-                  {appSearchTerm 
-                    ? `No se encontraron resultados para "${appSearchTerm}"` 
-                    : `No hay aplicaciones disponibles`}
+                <p className="py-4 text-center text-p text-gray-500 dark:text-gray-3">
+                  {appSearchTerm
+                    ? `No se encontraron resultados para "${appSearchTerm}"`
+                    : 'No hay aplicaciones disponibles'}
                 </p>
               )}
             </div>
           </div>
-          
+
           {/* Clientes */}
-          <div className={`${isDark ? 'bg-gray-6 border-gray-6' : 'bg-gray-1 border-gray-2'} rounded-xl p-4 border flex flex-col`}>
+          <div className="flex flex-col p-4 bg-white border border-gray-200 rounded-xl dark:bg-gray-6 dark:border-gray-6">
             <div className="flex items-center mb-3">
-              <Building2 className="text-primary-blue mr-2" size={18} />
-              <h3 className={`font-medium ${isDark ? 'text-gray-2' : 'text-gray-5'} text-h3`}>CLIENTES</h3>
+              <Building2 size={18} className="mr-2 text-primary-blue" />
+              <h3 className="text-h3 font-medium text-gray-700 dark:text-gray-2">CLIENTES</h3>
             </div>
-            
-            {/* Buscador de clientes */}
             <div className="relative mb-3">
               <input
                 type="text"
                 placeholder="Buscar clientes..."
-                value={clientSearchTerm || ''}
-                onChange={(e) => setClientSearchTerm(e.target.value)}
-                className={`w-full pl-9 pr-3 py-2 ${
-                  isDark 
-                    ? 'bg-gray-7 border-gray-6 text-white placeholder:text-gray-3' 
-                    : 'border-gray-2 text-primary-blue placeholder:text-primary-blue'
-                } border rounded-md text-p focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                value={clientSearchTerm}
+                onChange={e => setClientSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 border rounded-md text-p bg-gray-50 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-blue dark:bg-gray-7 dark:text-white dark:placeholder-gray-3 dark:border-gray-6"
               />
-              <Search size={16} className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-3' : 'text-primary-blue'}`} />
+              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-blue dark:text-gray-3" />
               {clientSearchTerm && (
                 <button
                   onClick={() => setClientSearchTerm('')}
-                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-4 hover:text-gray-2' : 'text-primary-blue hover:text-gray-4'}`}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-4 dark:hover:text-gray-2"
                 >
                   <X size={14} />
                 </button>
               )}
             </div>
-            
-            <div className="mb-2">
-              <label className={`flex items-center p-2 ${isDark ? 'hover:bg-gray-7' : 'hover:bg-white'} rounded-lg cursor-pointer`}>
-                <input 
-                  type="checkbox"
-                  className={`h-4 w-4 rounded text-primary-blue focus:ring-primary-blue ${isDark ? 'border-gray-5 bg-gray-7' : 'border-gray-5'}`}
-                  checked={allClients}
-                  onChange={handleSelectAllClients}
-                  disabled={!Array.isArray(filteredClients) || filteredClients.length === 0}
-                />
-                <span className={`ml-2 text-p font-medium ${isDark ? 'text-gray-2 hover:text-primary-blue' : 'text-gray-5 hover:text-primary-blue'}`}>
-                  {clientSearchTerm 
-                    ? `Todos los clientes filtrados` 
-                    : `Todos los clientes`}
-                </span>
-              </label>
-            </div>
-            
-            <div className={`flex-grow overflow-y-auto max-h-[280px] px-1 py-2 ${isDark ? 'bg-gray-7 border-gray-6' : 'bg-white border-gray-2'} rounded-lg border`}>
-              {Array.isArray(filteredClients) && filteredClients.length > 0 ? (
-                filteredClients.map(client => client && client.id && (
-                  <div 
-                    key={client.id} 
+            <label className="flex items-center mb-2 p-2 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-6">
+              <input
+                type="checkbox"
+                checked={allClients}
+                onChange={handleSelectAllClients}
+                disabled={!filteredClients?.length}
+                className="w-4 h-4 text-primary-blue border-gray-300 rounded focus:ring-primary-blue dark:bg-gray-7 dark:border-gray-6"
+              />
+              <span className="ml-2 text-p font-medium text-gray-700 dark:text-gray-2 hover:text-primary-blue">
+                {clientSearchTerm ? 'Todos los clientes filtrados' : 'Todos los clientes'}
+              </span>
+            </label>
+            <div className="flex-grow overflow-y-auto p-1 bg-white border border-gray-200 rounded-lg dark:bg-gray-7 dark:border-gray-6 max-h-[280px]">
+              {filteredClients?.length ? (
+                filteredClients.map(client => (
+                  <div
+                    key={client.id}
                     className={`flex items-center p-2 mb-1 rounded-md transition-colors ${
-                      isAlreadyAssigned('clients', client) 
-                        ? isDark ? "bg-gray-6" : "bg-gray-1" 
-                        : isDark ? "hover:bg-gray-6 cursor-pointer" : "hover:bg-gray-1 cursor-pointer"
+                      isAlreadyAssigned('clients', client)
+                        ? 'bg-gray-50 dark:bg-gray-6'
+                        : 'hover:bg-gray-50 dark:hover:bg-gray-6 cursor-pointer'
                     }`}
-                    title={isAlreadyAssigned('clients', client) ? "Este cliente ya tiene asignada esta noticia" : ""}
+                    title={isAlreadyAssigned('clients', client) ? 'Ya asignado' : undefined}
                   >
-                    <input 
+                    <input
                       type="checkbox"
-                      className={`h-4 w-4 rounded focus:ring-primary-blue ${
-                        isDark ? 'border-gray-5 bg-gray-7' : 'border-gray-2'
-                      } ${
-                        isAlreadyAssigned('clients', client) ? "text-green-500 opacity-70 cursor-not-allowed" : "text-primary-blue"
-                      }`}
-                      checked={isAlreadyAssigned('clients', client) || Array.isArray(permissions.clients) && permissions.clients.includes(client.id)}
-                      onChange={() => handlePermissionChange('clients', client.id, client)}
+                      checked={
+                        isAlreadyAssigned('clients', client) ||
+                        permissions.clients?.includes(client.id)
+                      }
                       disabled={isAlreadyAssigned('clients', client)}
+                      onChange={() => handlePermissionChange('clients', client.id, client)}
+                      className={`w-4 h-4 rounded ${
+                        isAlreadyAssigned('clients', client)
+                          ? 'text-green-500 opacity-70 cursor-not-allowed'
+                          : 'text-primary-blue'
+                      } focus:ring-primary-blue`}
                     />
-                    <span className={`ml-2 text-p ${
-                      isAlreadyAssigned('clients', client) 
-                        ? isDark ? "text-gray-4" : "text-gray-3" 
-                        : isDark ? "text-gray-2" : "text-gray-5"
-                    }`}>
-                      {client.name || 'Cliente sin nombre'}
+                    <span
+                      className={`ml-2 text-p truncate ${
+                        isAlreadyAssigned('clients', client)
+                          ? 'text-gray-400 dark:text-gray-3'
+                          : 'text-gray-700 dark:text-gray-2'
+                      }`}
+                    >
+                      {client.name}
                     </span>
-                    
                     {isAlreadyAssigned('clients', client) && (
-                      <div className="ml-auto flex items-center" title="Este cliente ya tiene asignada esta noticia">
-                        <Info size={16} className="text-green-500" />
-                      </div>
+                      <Info size={16} className="ml-auto text-green-500" />
                     )}
                   </div>
                 ))
               ) : (
-                <p className={`text-p ${isDark ? 'text-gray-4' : 'text-gray-3'} text-center py-4`}>
-                  {clientSearchTerm 
-                    ? `No se encontraron resultados para "${clientSearchTerm}"` 
-                    : `No hay clientes disponibles`}
+                <p className="py-4 text-center text-p text-gray-500 dark:text-gray-3">
+                  {clientSearchTerm
+                    ? `No se encontraron resultados para "${clientSearchTerm}"`
+                    : 'No hay clientes disponibles'}
                 </p>
               )}
             </div>
           </div>
-          
+
           {/* Usuarios */}
-          <div className={`${isDark ? 'bg-gray-6 border-gray-6' : 'bg-gray-1 border-gray-2'} rounded-xl p-4 border flex flex-col`}>
+          <div className="flex flex-col p-4 bg-white border border-gray-200 rounded-xl dark:bg-gray-6 dark:border-gray-6">
             <div className="flex items-center mb-3">
-              <Users className="text-primary-blue mr-2" size={18} />
-              <h3 className={`font-medium ${isDark ? 'text-gray-2' : 'text-gray-5'} text-h3`}>USUARIOS</h3>
+              <Users size={18} className="mr-2 text-primary-blue" />
+              <h3 className="text-h3 font-medium text-gray-700 dark:text-gray-2">USUARIOS</h3>
             </div>
-            
-            {Array.isArray(permissions.clients) && permissions.clients.length > 0 ? (
+            {permissions.clients?.length ? (
               <>
-                {/* Buscador de usuarios */}
                 <div className="relative mb-3">
                   <input
                     type="text"
                     placeholder="Buscar usuarios..."
-                    value={userSearchTerm || ''}
-                    onChange={(e) => setUserSearchTerm(e.target.value)}
-                    className={`w-full pl-9 pr-3 py-2 ${
-                      isDark 
-                        ? 'bg-gray-7 border-gray-6 text-white placeholder:text-gray-3' 
-                        : 'border-gray-200 text-primary-blue placeholder:text-primary-blue'
-                    } border rounded-md text-p focus:outline-none focus:ring-2 focus:ring-primary-blue`}
+                    value={userSearchTerm}
+                    onChange={e => setUserSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 border rounded-md text-p bg-gray-50 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-blue dark:bg-gray-7 dark:text-white dark:placeholder-gray-3 dark:border-gray-6"
                   />
-                  <Search size={16} className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-3' : 'text-primary-blue'}`} />
+                  <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-blue dark:text-gray-3" />
                   {userSearchTerm && (
                     <button
                       onClick={() => setUserSearchTerm('')}
-                      className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-4 hover:text-gray-2' : 'text-primary-blue hover:text-gray-600'}`}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-4 dark:hover:text-gray-2"
                     >
                       <X size={14} />
                     </button>
                   )}
                 </div>
-                
-                <div className="mb-2">
-                  <label className={`flex items-center p-2 ${isDark ? 'hover:bg-gray-7' : 'hover:bg-white'} rounded-lg cursor-pointer`}>
-                    <input 
-                      type="checkbox"
-                      className={`h-4 w-4 rounded text-primary-blue focus:ring-primary-blue ${isDark ? 'border-gray-5 bg-gray-7' : 'border-gray-3'}`}
-                      checked={allUsersSelected}
-                      onChange={handleSelectAllUsers}
-                    />
-                    <span className={`ml-2 text-p font-medium ${isDark ? 'text-gray-2 hover:text-primary-blue' : 'text-gray-5 hover:text-primary-blue'}`}>
-                      {userSearchTerm 
-                        ? `Todos los usuarios filtrados` 
-                        : `Todos los usuarios`}
-                    </span>
-                  </label>
-                </div>
-                
-                <div className={`flex-grow overflow-y-auto max-h-[280px] px-1 py-2 ${isDark ? 'bg-gray-7 border-gray-6' : 'bg-white border-gray-1'} rounded-lg border`}>
+                <label className="flex items-center mb-2 p-2 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-6">
+                  <input
+                    type="checkbox"
+                    checked={allUsersSelected}
+                    onChange={handleSelectAllUsers}
+                    className="w-4 h-4 text-primary-blue border-gray-300 rounded focus:ring-primary-blue dark:bg-gray-7 dark:border-gray-6"
+                  />
+                  <span className="ml-2 text-p font-medium text-gray-700 dark:text-gray-2 hover:text-primary-blue">
+                    {userSearchTerm ? 'Todos los usuarios filtrados' : 'Todos los usuarios'}
+                  </span>
+                </label>
+                <div className="flex-grow overflow-y-auto p-1 bg-white border border-gray-200 rounded-lg dark:bg-gray-7 dark:border-gray-6 max-h-[280px]">
                   {permissions.clients.map(clientId => {
-                    if (!clientId) return null;
-                    
                     const clientUsers = getClientUsers(clientId);
-                    
-                    if (!Array.isArray(clientUsers) || clientUsers.length === 0) return null;
-                    
-                    const client = clients.find(c => c && c.id === clientId);
-                    const clientName = client ? (client.name || 'Cliente sin nombre') : (clientId || 'Cliente sin ID');
-                    
-                    // Estado para controlar si este grupo está expandido o colapsado
+                    if (!clientUsers?.length) return null;
+                    const client = clients.find(c => c?.id === clientId);
                     const isExpanded = expandedClients[clientId] !== false;
-                    
-                    // Verificar si todos los usuarios de este cliente están seleccionados (excluyendo los ya asignados)
-                    const selectableUsers = clientUsers.filter(user => !isAlreadyAssigned('users', user));
-                    const allClientUsersSelected = selectableUsers.length > 0 && 
-                      selectableUsers.every(user => 
-                        user && user.id && Array.isArray(permissions.users) && permissions.users.includes(user.id)
-                      );
-                    
+                    const selectableUsers = clientUsers.filter(u => !isAlreadyAssigned('users', u));
+                    const allClientUsersSelected =
+                      selectableUsers.length &&
+                      selectableUsers.every(u => permissions.users?.includes(u.id));
+
                     return (
                       <div key={clientId} className="mb-3">
-                        {/* Encabezado del grupo de cliente con botón para colapsar/expandir */}
-                        <div className={`w-full ${isDark ? 'bg-gray-6' : 'bg-gray-1'} rounded-md mb-1 flex flex-col`}>
-                          <button 
+                        <div className="mb-1 rounded-md border
+                                      bg-gray-50 border-gray-200
+                                      dark:bg-gray-6 dark:border-gray-6">
+                          <button
                             onClick={() => toggleClientExpanded(clientId)}
-                            className={`w-full px-3 py-1.5 text-p font-medium ${
-                              isDark ? 'text-gray-2 hover:bg-gray-5' : 'text-gray-5 hover:bg-gray-2'
-                            } flex items-center justify-between transition-colors`}
+                            className="flex w-full items-center justify-between px-3 py-1.5 text-p font-medium text-gray-700 dark:text-gray-2 hover:bg-gray-100 dark:hover:bg-gray-5 transition-colors"
                           >
                             <div className="flex items-center">
                               <Building2 size={14} className="mr-1.5 text-primary-blue" />
-                              <span>{clientName}</span>
-                              <span className={`ml-2 text-xs ${isDark ? 'text-gray-4' : 'text-gray-500'}`}>
-                                ({clientUsers.length} {clientUsers.length === 1 ? 'usuario' : 'usuarios'})
+                              <span>{client?.name}</span>
+                              <span className="ml-2 text-xs text-gray-500 dark:text-gray-3">
+                                ({clientUsers.length})
                               </span>
                             </div>
-                            
-                            <div className="flex items-center">
-                              {/* Icono para indicar expandido/colapsado */}
-                              <div className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
-                                <ChevronDown size={16} className="text-primary-blue" />
-                              </div>
-                            </div>
+                            <ChevronDown size={16} className={`text-primary-blue transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
                           </button>
-                          
-                          {/* Checkbox para seleccionar todos los usuarios de este cliente */}
-                          <div className="px-3 pb-1.5 flex justify-end">
-                            <label 
-                              className="flex items-center text-p-small"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <span className={`mr-1 ${isDark ? 'text-gray-3' : 'text-gray-4'}`}>Seleccionar todos</span>
-                              <input 
+                          <div className="flex justify-end px-3 pb-1.5">
+                            <label className="flex items-center text-p-small">
+                              <span className="mr-1 text-gray-500 dark:text-gray-3">Seleccionar todos</span>
+                              <input
                                 type="checkbox"
-                                className={`h-3.5 w-3.5 rounded text-primary-blue focus:ring-primary-blue ${
-                                  isDark ? 'border-gray-5 bg-gray-7' : 'border-gray-300'
-                                }`}
                                 checked={allClientUsersSelected}
                                 onChange={() => handleSelectClientUsers(clientId, clientUsers)}
-                                disabled={selectableUsers.length === 0}
+                                disabled={!selectableUsers.length}
+                                className="w-3.5 h-3.5 text-primary-blue border-gray-300 rounded focus:ring-primary-blue dark:bg-gray-7 dark:border-gray-6"
                               />
                             </label>
                           </div>
                         </div>
-                        
-                        {/* Lista de usuarios de este cliente (mostrar solo si está expandido) */}
-                        <div 
-                          className={`pl-2 overflow-hidden transition-all duration-200 ${
-                            isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
-                          }`}
-                        >
-                          {clientUsers.map(user => user && user.id && (
-                            <div 
-                              key={user.id} 
+                        <div className={`pl-2 transition-all duration-200 overflow-hidden ${isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                          {clientUsers.map(user => (
+                            <div
+                              key={user.id}
                               className={`flex items-center p-2 mb-1 rounded-md transition-colors ${
-                                isAlreadyAssigned('users', user) 
-                                  ? isDark ? "bg-gray-6" : "bg-gray-50" 
-                                  : isDark ? "hover:bg-gray-6 cursor-pointer" : "hover:bg-gray-50 cursor-pointer"
+                                isAlreadyAssigned('users', user)
+                                  ? 'bg-gray-50 dark:bg-gray-6'
+                                  : 'hover:bg-gray-100 dark:hover:bg-gray-5 cursor-pointer'
                               }`}
-                              title={isAlreadyAssigned('users', user) ? "Este usuario ya tiene asignada esta noticia" : ""}
+                              title={isAlreadyAssigned('users', user) ? 'Ya asignado' : undefined}
                             >
-                              <input 
+                              <input
                                 type="checkbox"
-                                className={`h-4 w-4 rounded focus:ring-primary-blue ${
-                                  isDark ? 'border-gray-5 bg-gray-7' : 'border-gray-3'
-                                } ${
-                                  isAlreadyAssigned('users', user) ? "text-green-500 opacity-70 cursor-not-allowed" : "text-primary-blue"
-                                }`}
-                                checked={isAlreadyAssigned('users', user) || Array.isArray(permissions.users) && permissions.users.includes(user.id)}
-                                onChange={() => handlePermissionChange('users', user.id, user)}
+                                checked={
+                                  isAlreadyAssigned('users', user) ||
+                                  permissions.users?.includes(user.id)
+                                }
                                 disabled={isAlreadyAssigned('users', user)}
+                                onChange={() => handlePermissionChange('users', user.id, user)}
+                                className={`w-4 h-4 rounded focus:ring-primary-blue ${
+                                  isAlreadyAssigned('users', user)
+                                    ? 'text-green-500 opacity-70 cursor-not-allowed'
+                                    : 'text-primary-blue'
+                                }`}
                               />
-                              <span className={`ml-2 text-p truncate ${
-                                isAlreadyAssigned('users', user) 
-                                  ? isDark ? "text-gray-4" : "text-gray-3" 
-                                  : isDark ? "text-gray-2" : "text-gray-5"
-                              }`}>
-                                {user.email || user.name || 'Usuario sin nombre'}
+                              <span
+                                className={`ml-2 text-p truncate ${
+                                  isAlreadyAssigned('users', user)
+                                    ? 'text-gray-400 dark:text-gray-3'
+                                    : 'text-gray-700 dark:text-gray-2'
+                                }`}
+                              >
+                                {user.email || user.name}
                               </span>
-                              
                               {isAlreadyAssigned('users', user) && (
-                                <div className="ml-auto flex items-center" title="Este usuario ya tiene asignada esta noticia">
-                                  <Info size={16} className="text-green-500" />
-                                </div>
+                                <Info size={16} className="ml-auto text-green-500" />
                               )}
                             </div>
                           ))}
+                          {!clientUsers.some(u => !isAlreadyAssigned('users', u)) && (
+                            <p className="py-4 text-center text-p text-gray-500 dark:text-gray-3">
+                              {userSearchTerm
+                                ? `No se encontraron resultados para "${userSearchTerm}"`
+                                : 'No hay usuarios disponibles para este cliente'}
+                            </p>
+                          )}
                         </div>
                       </div>
                     );
                   })}
-                  
-                  {/* Mensaje cuando no hay resultados */}
-                  {permissions.clients.every(clientId => 
-                    !clientId || 
-                    !getClientUsers(clientId) || 
-                    !Array.isArray(getClientUsers(clientId)) || 
-                    getClientUsers(clientId).length === 0
-                  ) && (
-                    <p className={`text-sm ${isDark ? 'text-gray-4' : 'text-gray-3'} text-center py-4`}>
-                      {userSearchTerm 
-                        ? `No se encontraron resultados para "${userSearchTerm}"` 
-                        : `No hay usuarios disponibles para los clientes seleccionados`}
-                    </p>
-                  )}
                 </div>
               </>
             ) : (
-              <div className={`flex-grow ${isDark ? 'bg-gray-7' : 'bg-gray-1'} rounded-lg p-4 text-center flex items-center justify-center`}>
-                <p className={`text-p ${isDark ? 'text-gray-3' : 'text-gray-4'}`}>
-                  Selecciona al menos un cliente para ver los usuarios disponibles
+              <div className="flex items-center justify-center flex-grow p-4 bg-gray-50 dark:bg-gray-6 rounded-lg">
+                <p className="text-p text-gray-500 dark:text-gray-3 text-center">
+                  Selecciona al menos un cliente para ver usuarios
                 </p>
               </div>
             )}
           </div>
         </div>
       </div>
-      
+
       {/* Footer */}
-      <div className={`px-6 py-4 ${isDark ? 'bg-gray-8 border-gray-6' : 'bg-gray-1 border-gray-2'} border-t flex justify-end gap-3 sticky bottom-0 z-10`}>
-        <button 
+      <div className="sticky bottom-0 z-10 flex justify-end gap-3 px-6 py-4 bg-gray-100 border-t border-gray-200 dark:bg-gray-7 dark:border-gray-6">
+        <button
           onClick={handleCloseModal}
-          className={`px-4 py-2 text-p ${
-            isDark 
-              ? 'text-semantic-red bg-gray-7 border-semantic-red hover:bg-gray-6' 
-              : 'text-semantic.red bg-white border-semantic.red hover:bg-semantic-r'
-          } border rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5`}
+          className="px-4 py-2 text-p border rounded-full text-semantic.red bg-white border-semantic.red hover:bg-gray-50 transition-all duration-200 shadow-sm transform hover:-translate-y-0.5 dark:bg-gray-6 dark:text-semantic.red dark:border-semantic.red dark:hover:bg-gray-5"
         >
           Cancelar
         </button>
-        
-        <button 
-          onClick={handleSave}
+        <button
+          onClick={async () => { setSaving(true); await onSavePermissions(); setSaving(false); }}
           disabled={saving}
-          className={`px-4 py-2 text-p text-white bg-primary-blue ${
-            isDark ? 'hover:bg-blue-600' : 'hover:from-primary-blue'
-          } rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5 hover:shadow-md flex items-center disabled:opacity-70 disabled:cursor-not-allowed`}
+          className="flex items-center px-4 py-2 text-p text-white bg-primary-blue rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-70 dark:bg-primary-blue"
         >
           {saving ? (
             <>
-              <span className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin mr-2" />
+              <span className="w-3 h-3 mr-2 border-2 border-white rounded-full border-t-transparent animate-spin" />
               Guardando...
             </>
           ) : (
             <>
-              <Check size={16} className="mr-1" />
-              Guardar Permisos
+              <Check size={16} className="mr-1" /> Guardar Permisos
             </>
           )}
         </button>

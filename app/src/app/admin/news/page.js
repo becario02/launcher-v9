@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import NewsHeader from '@/components/admin/news/NewsHeader';
+import Navbar from '@/components/Navbar';
+import Sidebar from '@/components/Sidebar';
 import NewsFilters from '@/components/admin/news/NewsFilters';
 import NewsGrid from '@/components/admin/news/NewsGrid';
 import NewsPagination from '@/components/admin/news/NewsPagination';
@@ -14,37 +15,28 @@ import { initialNewsData } from '@/services/newsService';
 import { newsService } from '@/services/api/newsService';
 import { useTheme } from '@/context/ThemeContext';
 
-export default function NewsAdminDashboard() {
+export default function AdminNewsPage() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
+  // Estados principales
   const [news, setNews] = useState([]);
-  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState('');
   const [currentNews, setCurrentNews] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
-  
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
-
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
   const [currentNewsForPermissions, setCurrentNewsForPermissions] = useState(null);
   const [newsPermissions, setNewsPermissions] = useState({});
-  
-  const [notification, setNotification] = useState({ 
-    visible: false, 
-    type: 'info', 
-    message: '', 
-    style: 'inline'
-  });
+  const [notification, setNotification] = useState({ visible: false, type: 'info', message: '', style: 'inline' });
   const [isLoading, setIsLoading] = useState(true);
-  
   const [formData, setFormData] = useState({
     title: '',
     category: 'NEWS',
@@ -55,83 +47,55 @@ export default function NewsAdminDashboard() {
     dateExpiration: ''
   });
 
-
+  // Carga inicial
   useEffect(() => {
     const loadNews = async () => {
       setIsLoading(true);
       try {
-        const response = await initialNewsData();
-        
-        if (response && response.data && Array.isArray(response.data)) {
-          const transformedData = response.data.map(item => ({
-            id: item.idNews,
-            title: item.title,
-            category: item.newsType,
-            status: item.status,
-            date: item.creationDate,
-            newsLink: item.referenceUrl || '',
-            imageUrl: item.imageContent || '',
-            dateExpiration: item.expirationDate
-          }));
-          
-          setNews(transformedData);
-        } else {
-          console.warn("No se pudieron obtener datos válidos:", response);
-          setNews([]);
+        const resp = await initialNewsData();
+        if (resp?.data?.length) {
+          setNews(
+            resp.data.map(item => ({
+              id: item.idNews,
+              title: item.title,
+              category: item.newsType,
+              status: item.status,
+              date: item.creationDate,
+              newsLink: item.referenceUrl || '',
+              imageUrl: item.imageContent || '',
+              dateExpiration: item.expirationDate
+            }))
+          );
         }
-      } catch (error) {
-        console.error("Error al cargar noticias:", error);
-        setNews([]);
+      } catch (e) {
+        console.error('Error loading news:', e);
       } finally {
         setIsLoading(false);
       }
     };
-    
     loadNews();
   }, []);
-  
-  
+
+  // Notificaciones
   const showNotification = (type, message, style = 'inline') => {
-    setNotification({
-      visible: false,
-      type: 'info',
-      message: '',
-      style: 'inline'
-    });
-    
-    setTimeout(() => {
-      setNotification({
-        visible: true,
-        type,
-        message,
-        style
-      });
-      
-      if (style === 'toast') {
-        setTimeout(() => {
-          setNotification(prev => ({ ...prev, visible: false }));
-        }, 4000);
-      }
-    }, 50);
+    setNotification({ visible: false, type: 'info', message: '', style: 'inline' });
+    setTimeout(() => setNotification({ visible: true, type, message, style }), 50);
   };
-  
-  const closeNotification = () => {
-    setNotification(prev => ({ ...prev, visible: false }));
-  };
-  
+  const closeNotification = () => setNotification(n => ({ ...n, visible: false }));
+
+  // Handlers de modal
   const handleOpenModal = (type, newsItem = null) => {
     setModalType(type);
     setCurrentNews(newsItem);
-    
     if (newsItem) {
       setFormData({
-        title: newsItem.title || '',
-        category: mapCategoryToEnum(newsItem.category),
-        date: newsItem.date || '',
-        dateExpiration: newsItem.dateExpiration || '',
-        newsLink: newsItem.newsLink || '',
-        status: newsItem.status ? newsItem.status.toUpperCase() : 'ACTIVE',
-        imageUrl: newsItem.imageUrl || ''
+        title: newsItem.title,
+        category: newsItem.category,
+        date: newsItem.date,
+        dateExpiration: newsItem.dateExpiration,
+        newsLink: newsItem.newsLink,
+        status: newsItem.status,
+        imageUrl: newsItem.imageUrl
       });
     } else {
       setFormData({
@@ -144,405 +108,204 @@ export default function NewsAdminDashboard() {
         imageUrl: ''
       });
     }
-    
     setIsModalOpen(true);
   };
+  const handleCloseModal = () => setIsModalOpen(false);
 
-  const mapCategoryToEnum = (category) => {
-    const categoryMap = {
-      'Tecnología': 'NEWS',
-      'NOTIFICATION': 'NOTIFICATION',
-      'Mantenimiento': 'ADVICE',
-      'Características': 'NEWS',
-      'Eventos': 'NEWS'
-    };
-    
-    return categoryMap[category] || 'NEWS';
-  };
-  
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setCurrentNews(null);
-    setFormData({
-      title: '',
-      category: 'NEWS',
-      date: '',
-      newsLink: '',
-      status: 'ACTIVE',
-      imageUrl: ''
+  // Toggle estado activo/inactivo
+  const handleConfirmStatusToggle = id => {
+    const item = news.find(n => n.id === id);
+    if (!item) return;
+    setCurrentNews(item);
+    setConfirmAction(() => async () => {
+      const newStatus = item.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+      if (newStatus === 'ACTIVE') await newsService.activarNoticia({ idNews: id, status: newStatus });
+      else await newsService.desactivarNoticia({ idNews: id, status: newStatus });
+      setNews(prev => prev.map(n => n.id === id ? { ...n, status: newStatus } : n));
+      setIsConfirmModalOpen(false);
+      showNotification('success', 'Estado actualizado', 'toast');
     });
+    setIsConfirmModalOpen(true);
   };
-  
-  const handleConfirmStatusToggle = async (id) => {
-    const newsItem = news.find(item => item.id === id);
-    if (newsItem) {
-        setCurrentNews(newsItem);
-        setConfirmAction(() => async () => {
-            const newStatus = newsItem.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-            
-            const data = { 
-                idNews: id,
-                status: newStatus
-            };
-            
-            if (newStatus === 'ACTIVE') {
-                await newsService.activarNoticia(data);
-            } else {
-                await newsService.desactivarNoticia(data);
-            }
-            
-            setNews(news.map(item =>
-                item.id === id ? { ...item, status: newStatus } : item
-            ));
-            
-            setIsConfirmModalOpen(false);
-            showNotification('success', 'Estado de la noticia actualizado correctamente', 'toast');
-        });
-        setIsConfirmModalOpen(true);
-    }
+  const handleCloseConfirmModal = () => setIsConfirmModalOpen(false);
+
+  // Manejo de formulario
+  const handleFormChange = e => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
-  const handleCloseConfirmModal = () => {
-    setIsConfirmModalOpen(false);
-    setConfirmAction(null);
-  };
-  
-  const handleFormChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    
-    if (name === 'date') {
-      setFormData({
-        ...formData,
-        dateExpiration: value,
-        [name]: value
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: type === 'checkbox' ? (checked ? 'active' : 'inactive') : value
-      });
-    }
-  };
-  
+
+  // Guardar noticia
   const handleSaveNews = async () => {
+    setIsLoading(true);
     try {
-      if (!formData.title || !formData.category) {
-        showNotification('error', 'Por favor completa todos los campos obligatorios');
-        return;
-      }
-  
-      if (!formData.newsLink) {
-        showNotification('error', 'Por favor ingresa el enlace de la noticia');
-        return;
-      }
-  
-      const dateValue = formData.dateExpiration || formData.date;
-      
-      if (!dateValue) {
-        showNotification('error', 'Por favor selecciona una fecha de expiración');
-        return;
-      }
-  
-      let isoDate;
-      try {
-        const dateValue = formData.dateExpiration || formData.date;
-        console.log('Valor de fecha original:', dateValue);
-        
-        let normalizedDate;
-        
-        if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
-          normalizedDate = `${dateValue}T00:00:00.000Z`;
-        } 
-        else if (dateValue.includes('T') && !dateValue.includes('Z')) {
-          normalizedDate = `${dateValue}.000Z`;
-        }
-        else if (dateValue.includes('T') && dateValue.includes('Z')) {
-          normalizedDate = dateValue;
-        } 
-        else {
-          throw new Error('Formato de fecha no reconocido');
-        }
-        
-        const dateObj = new Date(normalizedDate);
-        if (isNaN(dateObj.getTime())) {
-          throw new Error('Fecha inválida después de normalización');
-        }
-        
-        isoDate = dateObj.toISOString();
-        console.log('Fecha normalizada:', normalizedDate);
-        console.log('Fecha ISO final:', isoDate);
-      } catch (error) {
-        console.error('Error al procesar fecha:', error);
-        showNotification('error', 'Formato de fecha inválido');
-        return;
-      }
-  
-      const newsData = {
+      const isoDate = new Date(formData.dateExpiration || formData.date).toISOString();
+      const data = {
         newsType: formData.category,
         expirationDate: isoDate,
         title: formData.title,
-        referenceUrl: formData.newsLink || '',
-        status: 'ACTIVE',
-        imageContent: formData.imageUrl ? formData.imageUrl.substring(0, 100000) : null
+        referenceUrl: formData.newsLink,
+        status: formData.status,
+        imageContent: formData.imageUrl
       };
-
-      setIsLoading(true);
-      
-      if (modalType === 'add') {
-        try {
-          console.log('Adding news:', newsData);
-          setIsLoading(true);
-          
-          await newsService.agregarNoticia(newsData);
-          
-          const response = await initialNewsData();
-          
-          if (response && response.data && Array.isArray(response.data)) {
-            const transformedData = response.data.map(item => ({
-              id: item.idNews,
-              title: item.title,
-              category: item.newsType,
-              status: item.status,
-              date: item.creationDate,
-              newsLink: item.referenceUrl || '',
-              imageUrl: item.imageContent || '',
-            }));
-            
-            setNews(transformedData);
-            
-            handleCloseModal();
-            showNotification('success', 'Noticia creada exitosamente', 'toast');
-          }
-        } catch (error) {
-          console.error('Error al crear la noticia:', error);
-          
-          let errorMessage = 'Error al crear la noticia';
-          try {
-            if (error.json && typeof error.json === 'function') {
-              const errorData = await error.json();
-              errorMessage = errorData.message || errorMessage;
-            } else if (error.message) {
-              errorMessage = error.message;
-            }
-          } catch (e) {
-            // Ignorar error de parseo
-          }
-          
-          showNotification('error', errorMessage, 'toast');
-        }
-
-      } else if (modalType === 'edit' && currentNews) {
-        try {
-          const data = {
-            ...newsData,
-            idNews: currentNews.id,
-            imageContent: formData.imageUrl ? formData.imageUrl.substring(0, 100000) : null
-          };
-          
-          delete data.id;
-          
-          const updatedNews = await newsService.actualizarNoticia(data);
-          
-          setNews(prevNews => prevNews.map(item => 
-            item.id === currentNews.id ? {
-              ...item,
-              title: data.title,
-              category: data.newsType,
-              status: data.status,
-              newsLink: data.referenceUrl || '',
-              imageUrl: data.imageContent || item.imageUrl,
-              dateExpiration: data.expirationDate
-            } : item
-          ));
-          
-          handleCloseModal();
-          showNotification('success', 'Noticia actualizada exitosamente', 'toast');
-        } catch (error) {
-          console.error('Error al actualizar la noticia:', error);
-          let errorMessage = 'Error al actualizar la noticia';
-          try {
-            if (error.json && typeof error.json === 'function') {
-              const errorData = await error.json();
-              errorMessage = errorData.message || errorMessage;
-            } else if (error.message) {
-              errorMessage = error.message;
-            }
-          } catch (e) {
-            // Ignorar error de parseo
-          }
-          showNotification('error', errorMessage, 'toast');
-        }
-      }
-      
-    } catch (error) {
-      console.error('Error al guardar la noticia:', error);
-      showNotification('error', error.message || 'Ha ocurrido un error al guardar la noticia');
+      if (modalType === 'add') await newsService.agregarNoticia(data);
+      else if (modalType === 'edit' && currentNews) await newsService.actualizarNoticia({ ...data, idNews: currentNews.id });
+      const resp = await initialNewsData();
+      setNews(resp.data.map(item => ({
+        id: item.idNews,
+        title: item.title,
+        category: item.newsType,
+        status: item.status,
+        date: item.creationDate,
+        newsLink: item.referenceUrl,
+        imageUrl: item.imageContent,
+        dateExpiration: item.expirationDate
+      })));
+      handleCloseModal();
+      showNotification('success', `Noticia ${modalType === 'add' ? 'creada' : 'actualizada'} con éxito`, 'toast');
+    } catch (e) {
+      console.error(e);
+      showNotification('error', e.message || 'Error al guardar', 'toast');
     } finally {
       setIsLoading(false);
     }
   };
-  
-  const filteredNews = isLoading 
-  ? [] 
-  : (Array.isArray(news) 
-      ? news.filter(item => {
-          const matchesSearch = searchTerm === '' || 
-                          item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          item.category.toLowerCase().includes(searchTerm.toLowerCase());
-          const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
-          const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-          return matchesSearch && matchesStatus && matchesCategory;
-        })
-      : []);
-  
+
+  // Filtros y paginación
+  const filteredNews = isLoading ? [] : news.filter(item => {
+    const matchSearch = !searchTerm || item.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchStatus = statusFilter === 'all' || item.status === statusFilter;
+    const matchCategory = categoryFilter === 'all' || item.category === categoryFilter;
+    return matchSearch && matchStatus && matchCategory;
+  });
   const totalPages = Math.ceil(filteredNews.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredNews.slice(indexOfFirstItem, indexOfLastItem);
-  
-  const nextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-  
-  const prevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-  
-  const categories = ['all', ...new Set(Array.isArray(news) 
-    ? news.map(item => item.category)
-    : [])];
-  
-  const handleOpenPermissionsModal = (newsId) => {
-    setCurrentNewsForPermissions(newsId);
-    
-    setNewsPermissions(prevPermissions => ({
-      ...prevPermissions,
-      [newsId]: prevPermissions[newsId] || {
-        applications: [],
-        clients: [],
-        users: []
-      }
-    }));
-    
+  const indexOfLast = currentPage * itemsPerPage;
+  const indexOfFirst = indexOfLast - itemsPerPage;
+  const currentItems = filteredNews.slice(indexOfFirst, indexOfLast);
+
+  // Categorías dinámicas
+  const categories = ['all', ...new Set(news.map(n => n.category))];
+
+  // Permisos
+  const handleOpenPermissionsModal = id => {
+    setCurrentNewsForPermissions(id);
     setIsPermissionsModalOpen(true);
   };
-  
-  const handleClosePermissionsModal = () => {
+  const handleSavePermissions = (id, perms) => {
+    setNewsPermissions(prev => ({ ...prev, [id]: perms }));
     setIsPermissionsModalOpen(false);
-    setCurrentNewsForPermissions(null);
+    showNotification('success', 'Permisos guardados', 'toast');
   };
-  
-  const handleSavePermissions = async (newsId, permissions) => {
-    try {
-      setIsLoading(true);
-      
-      setNewsPermissions(prevPermissions => ({
-        ...prevPermissions,
-        [newsId]: permissions
-      }));
-      
-      setIsPermissionsModalOpen(false);
-      showNotification('success', 'Permisos actualizados correctamente', 'toast');
-    } catch (error) {
-      console.error('Error al guardar permisos:', error);
-      showNotification('error', 'Error al guardar los permisos', 'toast');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Clases para el modo oscuro
-  const bgClass = isDark ? 'bg-gray-8 text-white' : 'bg-gray-50 text-gray-900';
+  const handleClosePermissionsModal = () => setIsPermissionsModalOpen(false);
 
   return (
-    <div className={`min-h-screen ${bgClass} flex flex-col relative transition-colors duration-300`} style={{ width: '100%' }}>
-      <NewsHeader />
-      
-      {notification.visible && notification.style === 'toast' && (
-        <div className="fixed top-4 right-4 z-[9999] w-auto">
-          <Notification 
-            visible={true}
-            type={notification.type}
-            message={notification.message}
-            style="toast" 
-            onClose={closeNotification}
-          />
+    <div className="flex h-screen">
+      {/* Sidebar Desktop */}
+      <div className="hidden md:block">
+        <Sidebar />
+      </div>
+
+      {/* Sidebar Mobile Overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 flex md:hidden">
+          <div className="relative z-50 w-60 h-full bg-white dark:bg-[#1c1c24] shadow-lg">
+            <Sidebar onClose={() => setSidebarOpen(false)} />
+          </div>
+          <div className="fixed inset-0 bg-black/30" onClick={() => setSidebarOpen(false)} />
         </div>
       )}
-      
-      <div className="max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 min-h-[calc(100vh-64px)]">
-        {notification.visible && notification.style === 'inline' && (
-          <div className="relative z-[9999]">
-            <Notification 
-              visible={true}
-              type={notification.type}
-              message={notification.message}
-              style="inline"
-              onClose={closeNotification}
+
+      {/* Main Content */}
+      <div className="flex flex-col flex-1 md:ml-60">
+        <Navbar onMenuClick={() => setSidebarOpen(true)} />
+
+        <main className="flex-1 overflow-auto bg-[#F2F6FD] dark:bg-[#13131a] pt-0">
+          <div
+            className="max-w-7xl w-full mx-auto px-4 lg:px-8 py-6
+                       bg-white text-gray-900
+                       dark:bg-[#1c1c24] dark:text-white"
+          >
+            {/* Notificaciones */}
+            {notification.visible && notification.style === 'toast' && (
+              <div className="fixed top-4 right-4 z-[9999]">
+                <Notification
+                  visible
+                  type={notification.type}
+                  message={notification.message}
+                  style="toast"
+                  onClose={closeNotification}
+                />
+              </div>
+            )}
+            {notification.visible && notification.style === 'inline' && (
+              <Notification
+                visible
+                type={notification.type}
+                message={notification.message}
+                style="inline"
+                onClose={closeNotification}
+              />
+            )}
+
+            {/* Filtros y acciones */}
+            <NewsFilters
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              categoryFilter={categoryFilter}
+              setCategoryFilter={setCategoryFilter}
+              categories={categories}
+              handleOpenModal={handleOpenModal}
+              setCurrentPage={setCurrentPage}
+            />
+
+            {/* Grid de noticias */}
+            <NewsGrid
+              currentItems={currentItems}
+              handleOpenModal={handleOpenModal}
+              handleConfirmStatusToggle={handleConfirmStatusToggle}
+              handleOpenPermissionsModal={handleOpenPermissionsModal}
+              getCategoryColor={getCategoryColor}
+              isLoading={isLoading}
+            />
+
+            {/* Paginación */}
+            <NewsPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              indexOfFirstItem={indexOfFirst}
+              indexOfLastItem={indexOfLast}
+              filteredNewsLength={filteredNews.length}
+              prevPage={() => setCurrentPage(p => Math.max(p - 1, 1))}
+              nextPage={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+            />
+
+            {/* Modales */}
+            <NewsModal
+              isOpen={isModalOpen}
+              modalType={modalType}
+              formData={formData}
+              handleFormChange={handleFormChange}
+              handleCloseModal={handleCloseModal}
+              handleSaveNews={handleSaveNews}
+            />
+            <ConfirmModal
+              isOpen={isConfirmModalOpen}
+              currentNews={currentNews}
+              confirmAction={confirmAction}
+              handleCloseConfirmModal={handleCloseConfirmModal}
+            />
+            <PermissionsModal
+              isOpen={isPermissionsModalOpen}
+              newsId={currentNewsForPermissions}
+              initialPermissions={newsPermissions[currentNewsForPermissions]}
+              handleCloseModal={handleClosePermissionsModal}
+              handleSavePermissions={handleSavePermissions}
             />
           </div>
-        )}
-        
-        <NewsFilters 
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          categoryFilter={categoryFilter}
-          setCategoryFilter={setCategoryFilter}
-          categories={categories}
-          handleOpenModal={handleOpenModal}
-          setCurrentPage={setCurrentPage}
-        />
-        
-        <NewsGrid 
-          currentItems={currentItems}
-          handleOpenModal={handleOpenModal}
-          handleConfirmStatusToggle={handleConfirmStatusToggle}
-          handleOpenPermissionsModal={handleOpenPermissionsModal}
-          getCategoryColor={getCategoryColor}
-          isLoading={isLoading}
-          searchTerm={searchTerm}
-        />
-        
-        <NewsPagination 
-          currentPage={currentPage}
-          totalPages={totalPages}
-          indexOfFirstItem={indexOfFirstItem}
-          indexOfLastItem={indexOfLastItem}
-          filteredNewsLength={filteredNews.length}
-          prevPage={prevPage}
-          nextPage={nextPage}
-        />
+        </main>
       </div>
-      
-      <NewsModal 
-        isOpen={isModalOpen}
-        modalType={modalType}
-        formData={formData}
-        handleFormChange={handleFormChange}
-        handleCloseModal={handleCloseModal}
-        handleSaveNews={handleSaveNews}
-      />
-      
-      <ConfirmModal 
-        isOpen={isConfirmModalOpen}
-        currentNews={currentNews}
-        confirmAction={confirmAction}
-        handleCloseConfirmModal={handleCloseConfirmModal}
-      />
-
-      <PermissionsModal
-        isOpen={isPermissionsModalOpen}
-        newsId={currentNewsForPermissions}
-        initialPermissions={currentNewsForPermissions ? newsPermissions[currentNewsForPermissions] : null}
-        handleCloseModal={handleClosePermissionsModal}
-        handleSavePermissions={handleSavePermissions}
-      />
     </div>
   );
 }

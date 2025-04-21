@@ -4,6 +4,8 @@ import { AuthProvider } from "@/context/auth";
 import { TabsProvider } from "@/context/tabs";
 import { ThemeProvider } from "@/context/theme";
 import { PrimaryColorProvider } from "@/context/primaryColor";
+import { CompanyProvider } from "@/context/CompanyContext";
+import CompanySelectModal from "@/components/companyConection/CompanySelectModal";
 import ChatContainer from '@/components/chat/ChatContainer';
 import "./globals.css";
 
@@ -30,15 +32,18 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="es" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased`}>
         <ThemeProvider>
           <PrimaryColorProvider>
             <AuthProvider>
-              <TabsProvider>
-                {children}
-              </TabsProvider>
-              <ChatContainer />
+              <CompanyProvider>
+                <TabsProvider>
+                  {children}
+                </TabsProvider>
+                <CompanySelectModal />
+                <ChatContainer />
+              </CompanyProvider>
             </AuthProvider>
           </PrimaryColorProvider>
         </ThemeProvider>

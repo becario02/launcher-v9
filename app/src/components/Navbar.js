@@ -8,6 +8,7 @@ import NotificationsPopup from './NotificationsPopup';
 import { useTabs } from '@/context/tabs';
 import CompanySelector from './CompanySelector';
 import { useTheme } from '@/context/theme';
+import { useCompany } from '@/context/CompanyContext';
 import Cookies from 'js-cookie';
 
 const Navbar = ({ onMenuClick }) => {
@@ -15,6 +16,7 @@ const Navbar = ({ onMenuClick }) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { tabs } = useTabs();
   const { theme, setTheme } = useTheme();
+  const { showCompanyModal, setShowCompanyModal } = useCompany();
   const showTabs = tabs.length > 0;
 
   // Obtener nombre + primer apellido directamente de la cookie

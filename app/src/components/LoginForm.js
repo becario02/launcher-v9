@@ -78,6 +78,7 @@ const LoginForm = () => {
       } else if (message === 'Inicio de sesión exitoso' || message === 'Login successful') {
         const userData = response.data?.data?.[0];
 
+        // Guardar cookies
         Cookies.set('auth', 'dummy-token', { expires: 7 });
         Cookies.set('idUser', userData.idUser, { expires: 7 });
         Cookies.set('fullname', userData.fullname, { expires: 7 });
@@ -87,6 +88,11 @@ const LoginForm = () => {
         Cookies.set('serverErpDb', userData.serverErpDb, { expires: 7 });
         Cookies.set('nameErpDb', userData.nameErpDb, { expires: 7 });
 
+        // Guardar empresas en localStorage para que el contexto las lea
+        localStorage.setItem('userData', JSON.stringify({ data: response.data.data }));
+        localStorage.removeItem('selectedCompany'); // asegurarse de que se abra el modal
+
+        // Ejecutar login (de tu contexto)
         login({
           username: formData.username,
           idUser: userData.idUser,
@@ -97,6 +103,13 @@ const LoginForm = () => {
           serverErpDb: userData.serverErpDb,
           nameErpDb: userData.nameErpDb
         });
+
+        // 🔁 Forzar recarga para que el CompanyContext detecte la info
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+
+        return; // opcional, si quieres evitar que el flujo continúe después de iniciar sesión exitosamente
       } else {
         setError(message);
       }
@@ -140,6 +153,7 @@ const LoginForm = () => {
       } else if (message === 'Inicio de sesión exitoso' || message === 'Login successful') {
         const userData = response.data?.data?.[0];
 
+        // Guardar cookies
         Cookies.set('auth', 'dummy-token', { expires: 7 });
         Cookies.set('idUser', userData.idUser, { expires: 7 });
         Cookies.set('fullname', userData.fullname, { expires: 7 });
@@ -149,6 +163,11 @@ const LoginForm = () => {
         Cookies.set('serverErpDb', userData.serverErpDb, { expires: 7 });
         Cookies.set('nameErpDb', userData.nameErpDb, { expires: 7 });
 
+        // Guardar empresas en localStorage para que el contexto las lea
+        localStorage.setItem('userData', JSON.stringify({ data: response.data.data }));
+        localStorage.removeItem('selectedCompany'); // asegurarse de que se abra el modal
+
+        // Ejecutar login (de tu contexto)
         login({
           username: formData.username,
           idUser: userData.idUser,
@@ -159,6 +178,13 @@ const LoginForm = () => {
           serverErpDb: userData.serverErpDb,
           nameErpDb: userData.nameErpDb
         });
+
+        // 🔁 Forzar recarga para que el CompanyContext detecte la info
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+
+        return; // opcional, si quieres evitar que el flujo continúe después
       } else {
         setError(message);
       }
