@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import WelcomeSection from '@/components/WelcomeSection';
 import LastSessionCard from '@/components/LastSessionCard';
 import { useCompany } from '@/context/CompanyContext';
-
 const DirectAccessSection = dynamic(() => import('@/components/DirectAccessSection'), { ssr: false });
 import ModuleGridSection from '@/components/ModuleGridSection';
 import NotificationsPanel from '@/components/NotificationsPanel';
@@ -42,9 +41,9 @@ export default function Home() {
       <div className="flex-1 md:ml-60">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
-        <main className="min-h-screen bg-[#acb2bb] dark:bg-[#13131a] pt-14 pb-14">
+        <main className="min-h-screen bg-[#F2F6FD] dark:bg-[#13131a] pt-14 pb-14">
           <div className="max-w-5xl mx-auto px-6 space-y-6">
-            <div className="flex items-start flex-wrap sm:gap-6 md:gap-4 lg:gap-12 gap-4">
+            <div className="flex items-start  flex-wrap  sm:gap-6 md:gap-4 lg:gap-12 gap-4">
               <WelcomeSection />
               <LastSessionCard />
             </div>

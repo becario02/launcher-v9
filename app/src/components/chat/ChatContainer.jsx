@@ -41,7 +41,7 @@ const ChatContainer = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFNRVJJQ0FOT1MiLCJleHAiOjE3NDQ5OTE2MzB9._rnVk1YArqfyd96H9maJ9_XoBoA-SnEKcuztcWnxw6k',
+          Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFNRVJJQ0FOT1MiLCJleHAiOjE3NDU4NTUxNjN9.qRkaQARgF7k_14CYo2DQnmPhcQfLm7KZlhNpzdo64ro',
         },
         body: JSON.stringify({ message: text, session_id: sessionId, is_support: true }),
       });
