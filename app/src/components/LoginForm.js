@@ -76,26 +76,30 @@ const LoginForm = () => {
       } else if (message.startsWith('Se ha detectado') || message.startsWith('New device detected')) {
         setStep('method');
       } else if (message === 'Inicio de sesión exitoso' || message === 'Login successful') {
-        const userData = response.data?.data?.[0];
+        const userData = response.data?.data;
 
         Cookies.set('auth', 'dummy-token', { expires: 7 });
         Cookies.set('idUser', userData.idUser, { expires: 7 });
         Cookies.set('fullname', userData.fullname, { expires: 7 });
-        Cookies.set('companyName', userData.name, { expires: 7 });
-        Cookies.set('urlErp', userData.urlErp, { expires: 7 });
-        Cookies.set('passwordErpDb', userData.passwordErpDb, { expires: 7 });
-        Cookies.set('serverErpDb', userData.serverErpDb, { expires: 7 });
-        Cookies.set('nameErpDb', userData.nameErpDb, { expires: 7 });
+
+        // Si hay al menos una conexión, usa la primera para info adicional
+        const firstConnection = userData.connections?.[0] || {};
+
+        Cookies.set('companyName', firstConnection.name || '', { expires: 7 });
+        Cookies.set('urlErp', firstConnection.urlErp || '', { expires: 7 });
+        Cookies.set('passwordErpDb', firstConnection.passwordErpDb || '', { expires: 7 });
+        Cookies.set('serverErpDb', firstConnection.serverErpDb || '', { expires: 7 });
+        Cookies.set('nameErpDb', firstConnection.nameErpDb || '', { expires: 7 });
 
         login({
           username: formData.username,
           idUser: userData.idUser,
           fullname: userData.fullname,
-          companyName: userData.name,
-          urlErp: userData.urlErp,
-          passwordErpDb: userData.passwordErpDb,
-          serverErpDb: userData.serverErpDb,
-          nameErpDb: userData.nameErpDb
+          companyName: firstConnection.name || '',
+          urlErp: firstConnection.urlErp || '',
+          passwordErpDb: firstConnection.passwordErpDb || '',
+          serverErpDb: firstConnection.serverErpDb || '',
+          nameErpDb: firstConnection.nameErpDb || ''
         });
       } else {
         setError(message);
@@ -138,26 +142,30 @@ const LoginForm = () => {
       if (message === 'El código ingresado es incorrecto' || message === 'The verification code is incorrect') {
         setError(message);
       } else if (message === 'Inicio de sesión exitoso' || message === 'Login successful') {
-        const userData = response.data?.data?.[0];
+        const userData = response.data?.data;
 
         Cookies.set('auth', 'dummy-token', { expires: 7 });
         Cookies.set('idUser', userData.idUser, { expires: 7 });
         Cookies.set('fullname', userData.fullname, { expires: 7 });
-        Cookies.set('companyName', userData.name, { expires: 7 });
-        Cookies.set('urlErp', userData.urlErp, { expires: 7 });
-        Cookies.set('passwordErpDb', userData.passwordErpDb, { expires: 7 });
-        Cookies.set('serverErpDb', userData.serverErpDb, { expires: 7 });
-        Cookies.set('nameErpDb', userData.nameErpDb, { expires: 7 });
+
+        // Si hay al menos una conexión, usa la primera para info adicional
+        const firstConnection = userData.connections?.[0] || {};
+
+        Cookies.set('companyName', firstConnection.name || '', { expires: 7 });
+        Cookies.set('urlErp', firstConnection.urlErp || '', { expires: 7 });
+        Cookies.set('passwordErpDb', firstConnection.passwordErpDb || '', { expires: 7 });
+        Cookies.set('serverErpDb', firstConnection.serverErpDb || '', { expires: 7 });
+        Cookies.set('nameErpDb', firstConnection.nameErpDb || '', { expires: 7 });
 
         login({
           username: formData.username,
           idUser: userData.idUser,
           fullname: userData.fullname,
-          companyName: userData.name,
-          urlErp: userData.urlErp,
-          passwordErpDb: userData.passwordErpDb,
-          serverErpDb: userData.serverErpDb,
-          nameErpDb: userData.nameErpDb
+          companyName: firstConnection.name || '',
+          urlErp: firstConnection.urlErp || '',
+          passwordErpDb: firstConnection.passwordErpDb || '',
+          serverErpDb: firstConnection.serverErpDb || '',
+          nameErpDb: firstConnection.nameErpDb || ''
         });
       } else {
         setError(message);
