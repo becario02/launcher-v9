@@ -58,7 +58,7 @@ export function TabsProvider({ children }) {
 
   useEffect(() => {
     // Lista de rutas que no deben ser afectadas por la redirección de pestañas
-    const exemptRoutes = ['/login', '/recuperarPassword', '/admin/news', '/settings', '/admin/users'];
+    const exemptRoutes = ['/login', '/recuperarPassword', '/admin/news', '/settings', '/admin/users', '/admin/menus'];
     const isExemptRoute = exemptRoutes.some(route => pathname === route || pathname.startsWith(route + '/'));
     
     // Solo aplicar lógica de redirección si no estamos en una ruta exenta

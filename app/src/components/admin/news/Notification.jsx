@@ -2,103 +2,182 @@
 
 import { useState, useEffect } from 'react';
 import { X, AlertCircle, CheckCircle, Info } from 'lucide-react';
-import { useTheme } from '@/context/ThemeContext';
 
 export default function Notification({
   type = 'error',    // 'error', 'success', 'info', 'warning'
   message = '',
   visible = false,
-  style = 'inline',  // 'inline', 'toast'
+  style = 'toast',   // 'inline', 'toast'
   position = 'top-right', // 'top-right', 'top-left', 'bottom-right', 'bottom-left'
-  duration = 4000,   // ms, 0 = stay visible
+  duration = 3000,   // ms, 0 = stay visible
   onClose = () => {}
 }) {
-  const [isVisible, setIsVisible] = useState(visible);
+  const [isVisible, setIsVisible] = useState(false);
+  const [shouldRender, setShouldRender] = useState(visible);
 
   useEffect(() => {
-    setIsVisible(visible);
-    let timer;
-    if (visible && duration > 0) {
-      timer = setTimeout(() => {
-        setIsVisible(false);
-        onClose();
-      }, duration);
+    if (visible) {
+      setShouldRender(true);
+      // Pequeño retraso para permitir que el componente se monte antes de mostrarlo
+      requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+
+      // Configurar temporizador para cerrar automáticamente
+      let timer;
+      if (duration > 0) {
+        timer = setTimeout(() => {
+          handleClose();
+        }, duration);
+      }
+      return () => {
+        if (timer) clearTimeout(timer);
+      };
+    } else {
+      handleClose();
     }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [visible, duration, onClose]);
-
-  if (!isVisible) return null;
-
-  // color mapping with dark variants
-  const colors = {
-    error: {
-      bg: 'bg-red-50 dark:bg-red-900',
-      border: 'border-red-300 dark:border-red-700',
-      text: 'text-red-700 dark:text-red-300',
-      icon: <AlertCircle className="text-red-500 dark:text-red-400" size={20} />
-    },
-    success: {
-      bg: 'bg-green-50 dark:bg-green-900',
-      border: 'border-green-300 dark:border-green-700',
-      text: 'text-green-700 dark:text-green-300',
-      icon: <CheckCircle className="text-green-500 dark:text-green-400" size={20} />
-    },
-    info: {
-      bg: 'bg-blue-50 dark:bg-blue-900',
-      border: 'border-blue-300 dark:border-blue-700',
-      text: 'text-blue-700 dark:text-blue-300',
-      icon: <Info className="text-blue-500 dark:text-blue-400" size={20} />
-    },
-    warning: {
-      bg: 'bg-yellow-50 dark:bg-yellow-900',
-      border: 'border-yellow-300 dark:border-yellow-700',
-      text: 'text-yellow-700 dark:text-yellow-300',
-      icon: <AlertCircle className="text-yellow-500 dark:text-yellow-400" size={20} />
-    }
-  };
-
-  const { bg, border, text, icon } = colors[type] || colors.error;
-
-  // adjust toast vertical offset to sit lower
-  const positionClasses = {
-    'top-right': 'fixed top-20 right-4',
-    'top-left':  'fixed top-20 left-4',
-    'bottom-right': 'fixed bottom-4 right-4',
-    'bottom-left':  'fixed bottom-4 left-4'
-  };
+  }, [visible, duration]);
 
   const handleClose = () => {
     setIsVisible(false);
-    onClose();
+    setTimeout(() => {
+      setShouldRender(false);
+      onClose();
+    }, 300);
   };
 
+  if (!shouldRender) return null;
+
+  // Obtenemos el icono según el tipo
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <CheckCircle className="w-6 h-6" />;
+      case 'info':
+        return <Info className="w-6 h-6" />;
+      case 'warning':
+        return <AlertCircle className="w-6 h-6" />;
+      case 'error':
+      default:
+        return <AlertCircle className="w-6 h-6" />;
+    }
+  };
+
+  // Estilos según el tipo
+  const styles = {
+    success: {
+      container: 'bg-white border-l-4 border-green-500',
+      icon: 'text-green-500',
+      progress: 'bg-green-500',
+      title: 'Éxito'
+    },
+    error: {
+      container: 'bg-white border-l-4 border-red-500',
+      icon: 'text-red-500',
+      progress: 'bg-red-500',
+      title: 'Error'
+    },
+    info: {
+      container: 'bg-white border-l-4 border-blue-500',
+      icon: 'text-blue-500',
+      progress: 'bg-blue-500',
+      title: 'Información'
+    },
+    warning: {
+      container: 'bg-white border-l-4 border-yellow-500',
+      icon: 'text-yellow-500',
+      progress: 'bg-yellow-500',
+      title: 'Advertencia'
+    }
+  };
+
+  const currentStyle = styles[type] || styles.error;
+
+  // Clases para la posición
+  const positionClasses = {
+    'top-right': 'top-28 right-12',
+    'top-left': 'top-28 left-12',
+    'bottom-right': 'bottom-4 right-4',
+    'bottom-left': 'bottom-4 left-4'
+  };
+  
+  const positionClass = positionClasses[position] || positionClasses['top-right'];
+
   if (style === 'inline') {
+    // Estilo inline para usar dentro de formularios o secciones
     return (
-      <div className={`${border} ${bg} p-4 my-3 w-full border-l-4 flex items-center justify-between animate-fadeIn relative z-[9999]`}>
-        <div className="flex items-center gap-2">
-          {icon}
-          <span className={text}>{message}</span>
+      <div 
+        className={`flex items-start gap-3 p-4 rounded-lg my-3 w-full shadow-sm
+          ${currentStyle.container}
+          transition-all duration-300 ease-in-out transform
+          ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+      >
+        <div className={`flex-shrink-0 ${currentStyle.icon}`}>
+          {getIcon()}
         </div>
-        <button onClick={handleClose} className={`${text} hover:text-gray-900 focus:outline-none`}>
-          <X size={16} />
+        
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-900">
+            {currentStyle.title}
+          </p>
+          <p className="mt-1 text-sm text-gray-500 break-words">
+            {message}
+          </p>
+        </div>
+
+        <button 
+          onClick={handleClose}
+          className="flex-shrink-0 ml-2 hover:opacity-70 transition-opacity text-gray-400 hover:text-gray-500"
+        >
+          <X className="w-5 h-5" />
         </button>
       </div>
     );
   }
 
-  // toast style
+  // Estilo toast para notificaciones flotantes
   return (
-    <div className={`${positionClasses[position]} z-[9999] animate-slideIn`}>
-      <div className={`shadow-lg rounded-lg p-4 min-w-[300px] max-w-md flex items-center justify-between ${border} ${bg}`}>
-        <div className="flex items-center gap-2">
-          {icon}
-          <span className={text}>{message}</span>
-        </div>
-        <button onClick={handleClose} className={`${text} hover:text-gray-900 focus:outline-none ml-3`}>
-          <X size={16} />
-        </button>
+    <div 
+      className={`fixed ${positionClass} flex items-start gap-3 p-4 rounded-lg shadow-lg
+        transition-all duration-300 ease-in-out transform max-w-sm w-full z-[70]
+        ${currentStyle.container}
+        ${isVisible 
+          ? 'translate-x-0 opacity-100' 
+          : position.includes('right') 
+            ? 'translate-x-full opacity-0' 
+            : 'translate-x-[-100%] opacity-0'
+        }`}
+    >
+      <div className={`flex-shrink-0 ${currentStyle.icon}`}>
+        {getIcon()}
+      </div>
+      
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-gray-900">
+          {currentStyle.title}
+        </p>
+        <p className="mt-1 text-sm text-gray-500 break-words">
+          {message}
+        </p>
+      </div>
+
+      <button 
+        onClick={handleClose}
+        className="flex-shrink-0 ml-2 hover:opacity-70 transition-opacity text-gray-400 hover:text-gray-500"
+      >
+        <X className="w-5 h-5" />
+      </button>
+
+      {/* Progress bar */}
+      <div className="absolute bottom-0 left-0 right-0 h-1 overflow-hidden rounded-b-lg">
+        <div 
+          className={`h-full ${currentStyle.progress} transition-all duration-300`}
+          style={{
+            width: isVisible ? '0%' : '100%',
+            transitionDuration: `${duration}ms`,
+            transitionTimingFunction: 'linear'
+          }}
+        />
       </div>
     </div>
   );

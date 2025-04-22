@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import { usePrimaryColor } from '@/context/primaryColor';
 import UserFormModal from '@/components/UserFormModal';
+import Toast from '@/components/Toast'; // Importamos el componente Toast
 
 export default function AdminUsersPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -26,6 +27,13 @@ export default function AdminUsersPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  
+  // Estado para manejar el toast
+  const [toast, setToast] = useState({
+    visible: false,
+    message: '',
+    type: 'success'
+  });
 
   const fetchUsers = () => {
     setIsLoading(true);
@@ -53,16 +61,75 @@ export default function AdminUsersPage() {
     try {
       if (editingUser) {
         // Update
-        await axios.put(`http://localhost:5173/mslauncher/api/v1/users/${editingUser.idUser}`, data);
+        const response = await axios.put(`http://localhost:5173/mslauncher/api/v1/users/${editingUser.idUser}`, data);
+        
+        // Verificar si hay un código de error en la respuesta
+        if (response.data && response.data.statusCode === "409") {
+          setToast({
+            visible: true,
+            message: response.data.message || 'El nombre de usuario ya está en uso',
+            type: 'error'
+          });
+          // No cerramos el modal para que el usuario pueda corregir
+          return;
+        }
+        
+        // Si no hay error, mostrar éxito
+        setToast({
+          visible: true,
+          message: 'Usuario actualizado exitosamente',
+          type: 'success'
+        });
+        setModalOpen(false);
+        setEditingUser(null);
       } else {
         // Create
-        await axios.post('http://localhost:5173/mslauncher/api/v1/users/admin', data);
+        const response = await axios.post('http://localhost:5173/mslauncher/api/v1/users/admin', data);
+        
+        // Verificar si hay un código de error en la respuesta
+        if (response.data && response.data.statusCode === "409") {
+          setToast({
+            visible: true,
+            message: response.data.message || 'El nombre de usuario ya está en uso',
+            type: 'error'
+          });
+          // No cerramos el modal para que el usuario pueda corregir
+          return;
+        }
+        
+        // Si no hay error, mostrar éxito
+        setToast({
+          visible: true,
+          message: 'Usuario creado exitosamente',
+          type: 'success'
+        });
+        setModalOpen(false);
       }
       fetchUsers();
-      setModalOpen(false);
-      setEditingUser(null);
     } catch (err) {
       console.error('Error al guardar usuario:', err);
+      
+      // Verificar si es un error de usuario duplicado
+      if (err.response) {
+        if (err.response.status === 409 || (err.response.data && err.response.data.statusCode === "409")) {
+          // No cerramos el modal para que el usuario pueda corregir
+          setToast({
+            visible: true,
+            message: err.response.data?.message || 'El nombre de usuario ya está en uso',
+            type: 'error'
+          });
+          return;
+        }
+      }
+      
+      // Otro tipo de error
+      setToast({
+        visible: true,
+        message: 'Error al guardar el usuario. Inténtalo de nuevo.',
+        type: 'error'
+      });
+      setModalOpen(false);
+      setEditingUser(null);
     }
   };
 
@@ -87,6 +154,11 @@ export default function AdminUsersPage() {
   const isCompanyExpanded = (userId, companyIndex) => {
     const key = `${userId}-${companyIndex}`;
     return !!expandedCompanies[key];
+  };
+
+  // Manejar el cierre del toast
+  const handleCloseToast = () => {
+    setToast(prev => ({ ...prev, visible: false }));
   };
 
   // Componente de Skeleton para una fila de la tabla
@@ -371,6 +443,15 @@ export default function AdminUsersPage() {
           onSubmit={handleUserSubmit}
           initialData={editingUser}
         />
+
+        {/* Toast */}
+        {toast.visible && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={handleCloseToast}
+          />
+        )}
       </div>
     </div>
   );

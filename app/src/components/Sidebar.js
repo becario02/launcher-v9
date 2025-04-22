@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from "react";
+import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutGrid,
@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Copy,
   Newspaper,
+  Menu,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,6 +22,25 @@ import IconNucleares from "@/components/icons/sidebar/IconNucleares";
 import IconFinancieros from "@/components/icons/sidebar/IconFinancieros";
 import IconAuxiliares from "@/components/icons/sidebar/IconAuxiliares";
 import { useCompany } from '@/context/CompanyContext';
+
+// Función para determinar el elemento activo basado en la ruta
+function getActiveItemFromPath(pathname) {
+  if (pathname === '/' || pathname === '') {
+    return 'Dashboard';
+  } else if (pathname.includes('/admin/news')) {
+    return 'Noticias';
+  } else if (pathname.includes('/admin/menus')) {
+    return 'AdminMenus';
+  } else if (pathname.includes('/nucleares')) {
+    return 'Nucleares';
+  } else if (pathname.includes('/financieros')) {
+    return 'Financieros';
+  } else if (pathname.includes('/auxiliares')) {
+    return 'Auxiliares';
+  }
+  // Default fallback
+  return 'Dashboard';
+}
 
 const SidebarItem = ({ icon: Icon, text, active = false, onClick, indent = false }) => (
   <button
@@ -38,8 +58,15 @@ const SidebarItem = ({ icon: Icon, text, active = false, onClick, indent = false
   </button>
 );
 
-const ExpandableItem = ({ icon: Icon, text, children, defaultOpen = false }) => {
-  const [open, setOpen] = useState(defaultOpen);
+const ExpandableItem = ({ icon: Icon, text, children, defaultOpen = false, isChildActive = false }) => {
+  const [open, setOpen] = useState(defaultOpen || isChildActive);
+
+  // Si algún hijo está activo, asegurarse de que este grupo esté abierto
+  useEffect(() => {
+    if (isChildActive && !open) {
+      setOpen(true);
+    }
+  }, [isChildActive, open]);
 
   return (
     <div>
@@ -47,15 +74,15 @@ const ExpandableItem = ({ icon: Icon, text, children, defaultOpen = false }) => 
         onClick={() => setOpen(!open)}
         className={`font-[Poppins] w-full px-5 py-2 flex items-center justify-between text-[12px] font-medium rounded-md transition-colors duration-150
           text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#31313e]
-          ${open ? 'bg-[#F2F6FD] dark:bg-[#31313e] text-[#007BFF]' : ''}`}
+          ${open || isChildActive ? 'bg-[#F2F6FD] dark:bg-[#31313e] text-[#007BFF]' : ''}`}
       >
         <div
           className={clsx(
             'flex items-center gap-3',
-            open ? 'text-[var(--primary-color)] dark:text-[#f5f7fa]' : 'text-gray-700 dark:text-gray-300'
+            open || isChildActive ? 'text-[var(--primary-color)] dark:text-[#f5f7fa]' : 'text-gray-700 dark:text-gray-300'
           )}
         >
-          <Icon className={clsx(open ? 'text-[var(--primary-color)]' : 'text-gray-500 dark:text-gray-400')} size={16} />
+          <Icon className={clsx(open || isChildActive ? 'text-[var(--primary-color)]' : 'text-gray-500 dark:text-gray-400')} size={16} />
           <span className="font-medium">{text}</span>
         </div>
         {open ? (
@@ -96,17 +123,37 @@ const InfoItem = ({ label, value }) => (
   </div>
 );
 
-const Sidebar = () => {
-  const [activeItem, setActiveItem] = useState("Dashboard");
+const Sidebar = ({ onClose }) => {
+  const pathname = usePathname();
+  // Inicializar activeItem basado en la ruta actual para evitar parpadeo
+  const [activeItem, setActiveItem] = useState(() => getActiveItemFromPath(pathname));
   const { theme, setTheme } = useTheme();
   const { selectedCompany } = useCompany();
   const router = useRouter();
+  
+  // Actualizar el activeItem cuando cambia la ruta
+  useEffect(() => {
+    const currentActiveItem = getActiveItemFromPath(pathname);
+    if (activeItem !== currentActiveItem) {
+      setActiveItem(currentActiveItem);
+    }
+  }, [pathname, activeItem]);
+  
+  // Determinar si algún elemento de divisiones está activo
+  const isDivisionActive = ['Nucleares', 'Financieros', 'Auxiliares'].includes(activeItem);
+  
+  // Función para navegar y cerrar sidebar en móvil si es necesario
+  const navigateTo = (route, itemName) => {
+    setActiveItem(itemName);
+    router.push(route);
+    if (onClose) onClose();
+  };
   
   return (
     <div className="w-60 h-screen flex flex-col bg-white dark:bg-[#1c1c24] text-gray-800 dark:text-gray-100 fixed top-0 left-0 z-10 border-r border-gray-200 dark:border-gray-700">
       {/* Header */}
       <div className="h-24 w-60 flex items-center justify-center border-b border-gray-100 dark:border-gray-700">
-        <Link href="/">
+        <Link href="/" onClick={() => setActiveItem('Dashboard')}>
           <Image
             src="/logoAdvan.svg"
             alt="Advan Logo"
@@ -126,10 +173,15 @@ const Sidebar = () => {
           icon={LayoutGrid}
           text="Dashboard"
           active={activeItem === "Dashboard"}
-          onClick={() => setActiveItem("Dashboard")}
+          onClick={() => navigateTo('/', 'Dashboard')}
         />
 
-        <ExpandableItem icon={IconModulos} text="Divisiones" defaultOpen>
+        <ExpandableItem 
+          icon={IconModulos} 
+          text="Divisiones" 
+          defaultOpen={true}
+          isChildActive={isDivisionActive}
+        >
           <SidebarItem
             icon={({ size }) => (
               <IconNucleares
@@ -140,7 +192,7 @@ const Sidebar = () => {
             text="Nucleares"
             indent
             active={activeItem === "Nucleares"}
-            onClick={() => setActiveItem("Nucleares")}
+            onClick={() => navigateTo('/nucleares', 'Nucleares')}
           />
 
           <SidebarItem
@@ -153,7 +205,7 @@ const Sidebar = () => {
             text="Financieros"
             indent
             active={activeItem === "Financieros"}
-            onClick={() => setActiveItem("Financieros")}
+            onClick={() => navigateTo('/financieros', 'Financieros')}
           />
 
           <SidebarItem
@@ -166,7 +218,7 @@ const Sidebar = () => {
             text="Auxiliares"
             indent
             active={activeItem === "Auxiliares"}
-            onClick={() => setActiveItem("Auxiliares")}
+            onClick={() => navigateTo('/auxiliares', 'Auxiliares')}
           />
         </ExpandableItem>
 
@@ -174,10 +226,15 @@ const Sidebar = () => {
           icon={Newspaper}
           text="Noticias"
           active={activeItem === 'Noticias'}
-          onClick={() => {
-            setActiveItem('Noticias');
-            router.push('/admin/news');
-          }}
+          onClick={() => navigateTo('/admin/news', 'Noticias')}
+        />
+
+        {/* Nueva opción para el Administrador de Menús */}
+        <SidebarItem
+          icon={Menu}
+          text="Admin Menús"
+          active={activeItem === 'AdminMenus'}
+          onClick={() => navigateTo('/admin/menus', 'AdminMenus')}
         />
       </div>
 
