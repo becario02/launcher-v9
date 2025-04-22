@@ -65,6 +65,7 @@ export default function LoginForm() {
       username: formData.username,
       idUser: userData.idUser,
       fullname: userData.fullname,
+      idCompany : companies[0]?.idCompany || '',
       companyName: companies[0]?.name || '',
       urlErp: companies[0]?.urlErp || '',
       passwordErpDb: userData.passwordErpDb,
