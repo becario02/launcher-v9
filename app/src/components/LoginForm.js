@@ -55,6 +55,8 @@ export default function LoginForm() {
     Cookies.set('passwordErpDb', userData.passwordErpDb, { expires: 7 });
     Cookies.set('serverErpDb', userData.serverErpDb, { expires: 7 });
     Cookies.set('nameErpDb', userData.nameErpDb, { expires: 7 });
+    Cookies.set('profileName', userData.profileName, { expires: 7 });
+    
     localStorage.setItem(
       'userData',
       JSON.stringify({ data: companies })
@@ -70,7 +72,8 @@ export default function LoginForm() {
       urlErp: companies[0]?.urlErp || '',
       passwordErpDb: userData.passwordErpDb,
       serverErpDb: userData.serverErpDb,
-      nameErpDb: userData.nameErpDb
+      nameErpDb: userData.nameErpDb,
+      profileName: userData.profileName,
     });
 
     setTimeout(() => window.location.reload(), 100);

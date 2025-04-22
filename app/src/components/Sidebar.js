@@ -16,6 +16,7 @@ import Link from "next/link";
 import clsx from 'clsx';
 
 import { useTheme } from "@/context/theme";
+import { useAuth } from "@/context/auth"; // Import useAuth hook
 
 import IconModulos from "@/components/icons/sidebar/IconModulos";
 import IconNucleares from "@/components/icons/sidebar/IconNucleares";
@@ -27,7 +28,7 @@ import { useCompany } from '@/context/CompanyContext';
 function getActiveItemFromPath(pathname) {
   if (pathname === '/' || pathname === '') {
     return 'Dashboard';
-  } else if (pathname.includes('/admin/news')) {
+  } else if (pathname.includes('/admin/news') || pathname.includes('/news')) {
     return 'Noticias';
   } else if (pathname.includes('/admin/menus')) {
     return 'AdminMenus';
@@ -129,6 +130,7 @@ const Sidebar = ({ onClose }) => {
   const [activeItem, setActiveItem] = useState(() => getActiveItemFromPath(pathname));
   const { theme, setTheme } = useTheme();
   const { selectedCompany } = useCompany();
+  const { user, isAdmin } = useAuth(); // Get user and isAdmin from auth context
   const router = useRouter();
   
   // Actualizar el activeItem cuando cambia la ruta
@@ -222,20 +224,23 @@ const Sidebar = ({ onClose }) => {
           />
         </ExpandableItem>
 
+        {/* Show Noticias for all users, but with different routes */}
         <SidebarItem
           icon={Newspaper}
           text="Noticias"
           active={activeItem === 'Noticias'}
-          onClick={() => navigateTo('/admin/news', 'Noticias')}
+          onClick={() => navigateTo(isAdmin ? '/admin/news' : '/news', 'Noticias')}
         />
-
-        {/* Nueva opción para el Administrador de Menús */}
-        <SidebarItem
-          icon={Menu}
-          text="Admin Menús"
-          active={activeItem === 'AdminMenus'}
-          onClick={() => navigateTo('/admin/menus', 'AdminMenus')}
-        />
+        
+        {/* Only show admin-specific menu items if user is an admin */}
+        {isAdmin && (
+          <SidebarItem
+            icon={Menu}
+            text="Admin Menús"
+            active={activeItem === 'AdminMenus'}
+            onClick={() => navigateTo('/admin/menus', 'AdminMenus')}
+          />
+        )}
       </div>
 
       {/* Footer info */}
@@ -244,6 +249,10 @@ const Sidebar = ({ onClose }) => {
           <InfoItem label="Versión de licencia" value="12345" />
           <InfoItem label="Versión de BD" value="12345" />
           <InfoItem label="IP" value={selectedCompany?.serverErpDb || 'Desconocido'} />
+          {/* Display user profile if available */}
+          {user && user.profileName && (
+            <InfoItem label="Perfil" value={user.profileName} />
+          )}
         </div>
 
         {/* Theme toggle */}
