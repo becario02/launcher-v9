@@ -154,16 +154,6 @@ const InfoItem = ({ label, value }) => (
   </div>
 );
 
-const Sidebar = ({ onClose }) => {
-  const pathname = usePathname();
-  // Inicializar activeItem basado en la ruta actual para evitar parpadeo
-  const [activeItem, setActiveItem] = useState(() => getActiveItemFromPath(pathname));
-  const { theme, setTheme } = useTheme();
-  const { selectedCompany } = useCompany();
-  const { user, isAdmin } = useAuth(); // Get user and isAdmin from auth context
-  const router = useRouter();
-  
-  // Actualizar el activeItem cuando cambia la ruta
 export default function Sidebar({ onClose }) {
   const pathname        = usePathname();
   const router          = useRouter();
