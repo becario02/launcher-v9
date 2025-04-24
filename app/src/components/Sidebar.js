@@ -16,6 +16,7 @@ import Link from "next/link";
 import clsx from 'clsx';
 
 import { useTheme } from "@/context/theme";
+import { useAuth } from "@/context/auth"; // Import useAuth hook
 import { useCompany } from '@/context/CompanyContext';
 
 import IconModulos     from "@/components/icons/sidebar/IconModulos";
@@ -153,6 +154,16 @@ const InfoItem = ({ label, value }) => (
   </div>
 );
 
+const Sidebar = ({ onClose }) => {
+  const pathname = usePathname();
+  // Inicializar activeItem basado en la ruta actual para evitar parpadeo
+  const [activeItem, setActiveItem] = useState(() => getActiveItemFromPath(pathname));
+  const { theme, setTheme } = useTheme();
+  const { selectedCompany } = useCompany();
+  const { user, isAdmin } = useAuth(); // Get user and isAdmin from auth context
+  const router = useRouter();
+  
+  // Actualizar el activeItem cuando cambia la ruta
 export default function Sidebar({ onClose }) {
   const pathname        = usePathname();
   const router          = useRouter();
@@ -248,12 +259,23 @@ export default function Sidebar({ onClose }) {
           })}
         </ExpandableItem>
 
+        {/* Show Noticias for all users, but with different routes */}
         <SidebarItem
           icon={Newspaper}
           text="Noticias"
           active={activeItem === 'Noticias'}
-          onClick={() => navigateTo('/admin/news', 'Noticias')}
+          onClick={() => navigateTo(isAdmin ? '/admin/news' : '/news', 'Noticias')}
         />
+        
+        {/* Only show admin-specific menu items if user is an admin */}
+        {isAdmin && (
+          <SidebarItem
+            icon={Menu}
+            text="Admin Menús"
+            active={activeItem === 'AdminMenus'}
+            onClick={() => navigateTo('/admin/menus', 'AdminMenus')}
+          />
+        )}
 
         <SidebarItem
           icon={Menu}
@@ -280,6 +302,10 @@ export default function Sidebar({ onClose }) {
           <InfoItem label="Versión de licencia" value="12345" />
           <InfoItem label="Versión de BD" value="12345" />
           <InfoItem label="IP" value={selectedCompany?.serverErpDb || 'Desconocido'} />
+          {/* Display user profile if available */}
+          {user && user.profileName && (
+            <InfoItem label="Perfil" value={user.profileName} />
+          )}
         </div>
         <div className="mt-4 bg-gray-100 dark:bg-gray-800 rounded-full p-1 flex items-center justify-between text-[11px] font-medium text-gray-600 dark:text-gray-300">
           <button
