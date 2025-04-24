@@ -159,7 +159,7 @@ export default function Sidebar({ onClose }) {
   const router          = useRouter();
   const { theme, setTheme }     = useTheme();
   const { selectedCompany }     = useCompany();
-
+  const { user, isAdmin } = useAuth();
   const [divisions, setDivisions]         = useState([]);
   const [customParents, setCustomParents] = useState([]);
   const [activeItem, setActiveItem]       = useState(() => getActiveItemFromPath(pathname));
@@ -266,13 +266,6 @@ export default function Sidebar({ onClose }) {
             onClick={() => navigateTo('/admin/menus', 'AdminMenus')}
           />
         )}
-
-        <SidebarItem
-          icon={Menu}
-          text="Admin Menús"
-          active={activeItem === 'AdminMenus'}
-          onClick={() => navigateTo('/admin/menus', 'AdminMenus')}
-        />
 
         {/* CUSTOM PARENTS al final */}
         {customParents.map(p => (
