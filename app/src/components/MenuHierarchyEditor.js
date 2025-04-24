@@ -1,335 +1,306 @@
-// Guarda este archivo como: components/MenuHierarchyEditor.js
-import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronRight, Save, Plus, Trash2, ArrowUp, ArrowDown, MoveVertical } from 'lucide-react';
+'use client';
 
-// Función para organizar los datos en jerarquías
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  ChevronDown,
+  ChevronRight,
+  Save,
+  Plus,
+  ArrowUp,
+  ArrowDown,
+  MoveVertical,
+  X
+} from 'lucide-react';
+import { useCompany } from '@/context/CompanyContext';
+import Notification from '@/components/admin/news/Notification';
+
+// Organiza un array plano en jerarquía
 const organizeMenuHierarchy = (items) => {
-  // Clone the items to avoid mutation
-  const itemsCopy = JSON.parse(JSON.stringify(items));
-  
-  // First, create a map for quick lookups
-  const itemMap = {};
-  itemsCopy.forEach(item => {
-    itemMap[item.keyValue] = {...item, children: []};
+  const copy = JSON.parse(JSON.stringify(items));
+  const map = {};
+  copy.forEach(item => {
+    const parent = item.pKey || null;
+    map[item.keyValue] = { ...item, pKey: parent, children: [] };
   });
-  
-  // Then, create the hierarchy
-  const rootItems = [];
-  
-  itemsCopy.forEach(item => {
-    if (!item.pKey) {
-      // This is a root item
-      rootItems.push(itemMap[item.keyValue]);
-    } else {
-      // This is a child item, add it to its parent
-      if (itemMap[item.pKey]) {
-        itemMap[item.pKey].children.push(itemMap[item.keyValue]);
-      }
-    }
+  const roots = [];
+  copy.forEach(item => {
+    const parent = item.pKey || null;
+    if (!parent) roots.push(map[item.keyValue]);
+    else if (map[parent]) map[parent].children.push(map[item.keyValue]);
   });
-  
-  return rootItems;
+  return roots;
 };
 
-// Función para convertir la jerarquía de vuelta a una lista plana (para guardar)
-const flattenHierarchy = (hierarchy) => {
-  const result = [];
-  
-  const flatten = (items, parentKey = null) => {
-    items.forEach(item => {
-      const flatItem = { ...item };
-      delete flatItem.children;
-      flatItem.pKey = parentKey;
-      result.push(flatItem);
-      
-      if (item.children && item.children.length > 0) {
-        flatten(item.children, item.keyValue);
-      }
+// Aplana la jerarquía para guardar
+const flattenHierarchy = (hier) => {
+  const out = [];
+  const dfs = (nodes, parent = null) => {
+    nodes.forEach(n => {
+      const { children, ...flat } = n;
+      flat.pKey = parent;
+      out.push(flat);
+      if (children) dfs(children, n.keyValue);
     });
   };
-  
-  flatten(hierarchy);
-  return result;
+  dfs(hier);
+  return out;
 };
 
-const MenuHierarchyEditor = () => {
+export default function MenuHierarchyEditor() {
+  const { selectedCompany } = useCompany();
   const [hierarchyData, setHierarchyData] = useState([]);
   const [expandedItems, setExpandedItems] = useState({});
   const [isLoading, setIsLoading] = useState(true);
-  const [saveStatus, setSaveStatus] = useState('');
-  const [dragItem, setDragItem] = useState(null);
-  const [dropTarget, setDropTarget] = useState(null);
 
+  const [inlineAdd, setInlineAdd] = useState(false);
+  const [newMenuText, setNewMenuText] = useState('');
+  const [newResourceUrl, setNewResourceUrl] = useState('');
+  const [newParentId, setNewParentId] = useState('');
+  const [dragItem, setDragItem] = useState(null);
+
+  // guarda referencia para resetear
+  const originalDataRef = useRef([]);
+
+  // track de ítems cambiados
+  const [changedItems, setChangedItems] = useState(new Set());
+
+  // ** NUEVO: rutas Next.js **
+  const [availableRoutes, setAvailableRoutes] = useState([]);
+
+  // Notificación
+  const [notification, setNotification] = useState({
+    visible: false,
+    type: 'info',
+    message: '',
+    style: 'inline'
+  });
+  const showNotification = (type, message, style = 'inline') => {
+    setNotification({ visible: false, type: 'info', message: '', style });
+    setTimeout(() => setNotification({ visible: true, type, message, style }), 50);
+  };
+  const closeNotification = () => setNotification(n => ({ ...n, visible: false }));
+
+  // Modal de confirmación
+  const [confirmModal, setConfirmModal] = useState({ open: false, type: '' });
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState('');
+
+  const openConfirm = (type) => {
+    setConfirmModal({ open: true, type });
+    setConfirmMessage(type === 'save' ? 'Guardando cambios…' : 'Creando opción…');
+  };
+  const closeConfirm = () => {
+    if (confirmLoading) return;
+    setConfirmModal({ open: false, type: '' });
+  };
+
+  // Carga inicial de rutas Next.js
   useEffect(() => {
-    // Función para cargar los datos del menú desde la API
-    const loadMenuData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // En producción, descomentar esto y eliminar los datos de ejemplo
-        // const response = await fetch('/api/menu-hierarchy');
-        // const data = await response.json();
-        
-        // Datos de ejemplo (solo para desarrollo)
-        const initialMenuData = [
-          { idMenu: 1, idModule: 1, moduleGroup: 'FINANCIAL', moduleName: 'CONTABILIDAD', idName: 'mnuModulos', keyValue: '1000', pKey: null },
-          { idMenu: 2, idModule: 2, moduleGroup: 'FINANCIAL', moduleName: 'CONTABILIDAD', idName: 'mnuConvenios', keyValue: '1001', pKey: '1000' },
-          { idMenu: 3, idModule: 3, moduleGroup: 'FINANCIAL', moduleName: 'CONTABILIDAD', idName: 'mnuCatTabulador', keyValue: '1002', pKey: '1000' },
-          { idMenu: 4, idModule: 4, moduleGroup: 'FINANCIAL', moduleName: 'CONTABILIDAD', idName: 'mnuCatAdminProyectos', keyValue: '1003', pKey: '1000' },
-          { idMenu: 5, idModule: 5, moduleGroup: 'AUXILIARES', moduleName: 'ALMACENES', idName: 'mnuConsultas', keyValue: '2000', pKey: null },
-          { idMenu: 6, idModule: 6, moduleGroup: 'AUXILIARES', moduleName: 'ALMACENES', idName: 'mnuStatus', keyValue: '2001', pKey: '2000' },
-        ];
-        
-        const hierarchy = organizeMenuHierarchy(initialMenuData);
-        setHierarchyData(hierarchy);
-        
-        // Expandir todos los nodos por defecto
-        const expanded = {};
-        initialMenuData.forEach(item => {
-          expanded[item.keyValue] = true;
-        });
-        setExpandedItems(expanded);
-        
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error al cargar datos de menú:', error);
-        setIsLoading(false);
-      }
-    };
-    
-    loadMenuData();
+    fetch('/api/routes')
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(setAvailableRoutes)
+      .catch(err => {
+        console.error('Error cargando rutas:', err);
+        showNotification('error', 'No se pudieron cargar rutas', 'toast');
+      });
   }, []);
 
-  const toggleExpand = (itemId) => {
-    setExpandedItems(prev => ({
-      ...prev,
-      [itemId]: !prev[itemId]
-    }));
-  };
-
-  const moveItemUp = (item, parentPath = []) => {
-    const newHierarchy = JSON.parse(JSON.stringify(hierarchyData));
-    let currentLevel = newHierarchy;
-    
-    // Navigate to the parent level
-    for (const pathIndex of parentPath) {
-      currentLevel = currentLevel[pathIndex].children;
-    }
-    
-    // Find the item's index
-    const itemIndex = currentLevel.findIndex(i => i.idMenu === item.idMenu);
-    if (itemIndex > 0) {
-      // Swap with the previous item
-      [currentLevel[itemIndex], currentLevel[itemIndex - 1]] = 
-      [currentLevel[itemIndex - 1], currentLevel[itemIndex]];
-      
-      setHierarchyData(newHierarchy);
-      setSaveStatus('Cambios pendientes de guardar');
-    }
-  };
-  
-  const moveItemDown = (item, parentPath = []) => {
-    const newHierarchy = JSON.parse(JSON.stringify(hierarchyData));
-    let currentLevel = newHierarchy;
-    
-    // Navigate to the parent level
-    for (const pathIndex of parentPath) {
-      currentLevel = currentLevel[pathIndex].children;
-    }
-    
-    // Find the item's index
-    const itemIndex = currentLevel.findIndex(i => i.idMenu === item.idMenu);
-    if (itemIndex < currentLevel.length - 1) {
-      // Swap with the next item
-      [currentLevel[itemIndex], currentLevel[itemIndex + 1]] = 
-      [currentLevel[itemIndex + 1], currentLevel[itemIndex]];
-      
-      setHierarchyData(newHierarchy);
-      setSaveStatus('Cambios pendientes de guardar');
-    }
-  };
-
-  const handleDragStart = (e, item) => {
-    setDragItem(item);
-    e.currentTarget.classList.add('bg-blue-50', 'border-blue-300');
-  };
-
-  const handleDragOver = (e, targetItem) => {
-    e.preventDefault();
-    setDropTarget(targetItem);
-    e.currentTarget.classList.add('bg-yellow-50', 'border-yellow-300');
-  };
-
-  const handleDragLeave = (e) => {
-    e.currentTarget.classList.remove('bg-yellow-50', 'border-yellow-300');
-  };
-
-  const handleDrop = (e, targetItem) => {
-    e.preventDefault();
-    e.currentTarget.classList.remove('bg-yellow-50', 'border-yellow-300');
-    
-    if (!dragItem || !targetItem || dragItem.idMenu === targetItem.idMenu) {
-      return;
-    }
-    
-    // Recreate the hierarchy with the item moved
-    const flatData = flattenHierarchy(hierarchyData);
-    
-    // Find the dragged item in the flat data
-    const draggedItem = flatData.find(item => item.idMenu === dragItem.idMenu);
-    if (!draggedItem) return;
-    
-    // Update the parent key to move it under the target
-    draggedItem.pKey = targetItem.keyValue;
-    
-    // Rebuild the hierarchy
-    const newHierarchy = organizeMenuHierarchy(flatData);
-    setHierarchyData(newHierarchy);
-    setSaveStatus('Cambios pendientes de guardar');
-    
-    // Reset drag state
-    setDragItem(null);
-    setDropTarget(null);
-  };
-
-  const handleDragEnd = (e) => {
-    e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
-    // Reset drag state if not already reset by drop
-    if (dragItem) {
-      setDragItem(null);
-      setDropTarget(null);
-    }
-  };
-
-  const makeItemParent = (item) => {
-    const flatData = flattenHierarchy(hierarchyData);
-    const itemToUpdate = flatData.find(i => i.idMenu === item.idMenu);
-    
-    if (itemToUpdate) {
-      itemToUpdate.pKey = null;
-      const newHierarchy = organizeMenuHierarchy(flatData);
-      setHierarchyData(newHierarchy);
-      setSaveStatus('Cambios pendientes de guardar');
-    }
-  };
-
-  const saveChanges = async () => {
-    setSaveStatus('Guardando...');
-    
-    // Convertir la jerarquía a formato plano para guardar
-    const flatData = flattenHierarchy(hierarchyData);
-    
+  // Carga inicial de menú
+  const loadMenuData = useCallback(async () => {
+    setIsLoading(true);
     try {
-      // En producción, descomentar esto:
-      // await fetch('/api/menu-hierarchy', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(flatData),
-      // });
-      
-      // Simulación de guardado para desarrollo
-      console.log('Datos a guardar:', flatData);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setSaveStatus('Cambios guardados correctamente');
-      
-      // Resetear el mensaje después de unos segundos
-      setTimeout(() => {
-        setSaveStatus('');
-      }, 3000);
-    } catch (error) {
-      console.error('Error al guardar cambios:', error);
-      setSaveStatus('Error al guardar los cambios');
+      const res = await fetch('http://localhost:5173/mslauncher/api/v1/MenuCustomOption', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idCompany: selectedCompany.idCompany })
+      });
+      const { data } = await res.json();
+      const builtIn = data.options.builtIn || [];
+      const custom  = data.options.custom  || [];
+
+      const allOptions = [...builtIn];
+      const menuIdMap = {};
+      builtIn.forEach(i => menuIdMap[i.idMenu] = i.keyValue);
+
+      custom.forEach(c => {
+        const key = `custom-${c.idCustomOption}`;
+        const p = c.idMenuParent !== null
+          ? (menuIdMap[c.idMenuParent] || `custom-${c.idMenuParent}`)
+          : null;
+        allOptions.push({
+          idMenu: c.idCustomOption,
+          moduleGroup: 'CUSTOM',
+          moduleName: '',
+          idName: c.textOption,
+          keyValue: key,
+          pKey: p,
+          resourceUrl: c.resourceUrl
+        });
+      });
+
+      const organized = organizeMenuHierarchy(allOptions);
+      setHierarchyData(organized);
+      originalDataRef.current = organized;
+      setChangedItems(new Set());
+      const exp = {};
+      allOptions.forEach(i => exp[i.keyValue] = true);
+      setExpandedItems(exp);
+    } catch (e) {
+      console.error(e);
+      showNotification('error', 'Error cargando menú', 'toast');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedCompany]);
+
+  useEffect(() => {
+    if (selectedCompany?.idCompany) loadMenuData();
+  }, [selectedCompany, loadMenuData]);
+
+  const markChanged = (key) => setChangedItems(prev => new Set(prev).add(key));
+  const clearChanges = () => {
+    setHierarchyData(originalDataRef.current);
+    setChangedItems(new Set());
+  };
+
+  // Guarda cambios sólo de CUSTOM modificados
+  const saveChanges = async () => {
+    const flat = flattenHierarchy(hierarchyData);
+    const toSave = flat.filter(i => i.moduleGroup === 'CUSTOM' && changedItems.has(i.keyValue));
+    for (const i of toSave) {
+      const p = flat.find(x => x.keyValue === i.pKey);
+      await fetch('http://localhost:5173/mslauncher/api/v1/UpdateMenuCustomOption', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idCustomOption: i.idMenu,
+          idMenuParent: p ? p.idMenu : null
+        })
+      });
+    }
+    showNotification('success', 'Cambios guardados', 'toast');
+    setChangedItems(new Set());
+  };
+
+  // Agrega nuevo CUSTOM
+  const handleAdd = async () => {
+    await fetch('http://localhost:5173/mslauncher/api/v1/AddMenuOption', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idMenuParent: newParentId ? Number(newParentId) : null,
+        textOption: newMenuText,
+        resourceUrl: newResourceUrl
+      })
+    });
+    setInlineAdd(false);
+    setNewMenuText('');
+    setNewResourceUrl('');
+    setNewParentId('');
+    await loadMenuData();
+    showNotification('success', 'Opción agregada', 'toast');
+  };
+
+  // Al confirmar en el modal
+  const handleConfirm = async () => {
+    setConfirmLoading(true);
+    try {
+      if (confirmModal.type === 'save') await saveChanges();
+      else await handleAdd();
+      closeConfirm();
+    } catch {
+      showNotification('error', 'Operación fallida', 'toast');
+    } finally {
+      setConfirmLoading(false);
     }
   };
 
-  const renderItem = (item, index, parentPath = []) => {
-    const isExpanded = expandedItems[item.keyValue];
-    const hasChildren = item.children && item.children.length > 0;
-    
+  // Mutadores de jerarquía
+  const toggleExpand = k => setExpandedItems(e => ({ ...e, [k]: !e[k] }));
+  const moveUp = (it, path = []) => {
+    const h = JSON.parse(JSON.stringify(hierarchyData));
+    let lvl = h; path.forEach(i => lvl = lvl[i].children);
+    const idx = lvl.findIndex(x => x.idMenu === it.idMenu);
+    if (idx > 0) {
+      [lvl[idx - 1], lvl[idx]] = [lvl[idx], lvl[idx - 1]];
+      setHierarchyData(h);
+      markChanged(it.keyValue);
+    }
+  };
+  const moveDown = (it, path = []) => {
+    const h = JSON.parse(JSON.stringify(hierarchyData));
+    let lvl = h; path.forEach(i => lvl = lvl[i].children);
+    const idx = lvl.findIndex(x => x.idMenu === it.idMenu);
+    if (idx < lvl.length - 1) {
+      [lvl[idx + 1], lvl[idx]] = [lvl[idx], lvl[idx + 1]];
+      setHierarchyData(h);
+      markChanged(it.keyValue);
+    }
+  };
+  const onDragStart = (e, it) => {
+    if (it.moduleGroup === 'CUSTOM') {
+      setDragItem(it);
+      e.currentTarget.classList.add('bg-blue-50','border-blue-300');
+    }
+  };
+  const onDragOver = e => { if (dragItem?.moduleGroup === 'CUSTOM') e.preventDefault(); };
+  const onDrop = (e, target) => {
+    if (!dragItem) return;
+    e.preventDefault();
+    const flat = flattenHierarchy(hierarchyData);
+    flat.find(x => x.keyValue === dragItem.keyValue).pKey = target.keyValue;
+    setHierarchyData(organizeMenuHierarchy(flat));
+    markChanged(dragItem.keyValue);
+    setDragItem(null);
+  };
+  const makeRoot = it => {
+    const flat = flattenHierarchy(hierarchyData);
+    const u = flat.find(x => x.keyValue === it.keyValue);
+    if (u) {
+      u.pKey = null;
+      setHierarchyData(organizeMenuHierarchy(flat));
+      markChanged(it.keyValue);
+    }
+  };
+
+  const renderItem = (item, idx, path = []) => {
+    const exp = expandedItems[item.keyValue];
+    const has = !!item.children?.length;
+    const custom = item.moduleGroup === 'CUSTOM';
     return (
-      <div key={item.idMenu} className="menu-item">
-        <div 
-          draggable
-          onDragStart={(e) => handleDragStart(e, item)}
-          onDragOver={(e) => handleDragOver(e, item)}
-          onDragLeave={handleDragLeave}
-          onDrop={(e) => handleDrop(e, item)}
-          onDragEnd={handleDragEnd}
-          className="flex items-center py-2 px-2 border border-transparent hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+      <div key={item.keyValue} className="menu-item">
+        <div
+          draggable={custom}
+          onDragStart={e => onDragStart(e, item)}
+          onDragOver={onDragOver}
+          onDrop={e => onDrop(e, item)}
+          onDragEnd={() => setDragItem(null)}
+          className="flex items-center py-2 px-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition border-b border-gray-100 dark:border-gray-800 last:border-b-0"
         >
-          <div className="flex items-center w-full group">
-            <div style={{ width: `${parentPath.length * 24}px` }} className="flex-shrink-0" />
-            
-            {hasChildren ? (
-              <button 
-                onClick={() => toggleExpand(item.keyValue)}
-                className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-              >
-                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          <div style={{ width: path.length * 24 }} />
+          {has
+            ? <button onClick={() => toggleExpand(item.keyValue)}>
+                {exp ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}
               </button>
-            ) : (
-              <div className="flex-shrink-0 w-6 h-6" />
-            )}
-            
-            <div className="flex-grow px-2 flex items-center">
-              <span className="font-medium text-gray-700 dark:text-gray-300">
-                {/* Extraer el nombre del menú de idName si tiene formato "mnuNombre" */}
-                {item.idName.startsWith('mnu') 
-                  ? item.idName.substring(3) 
-                  : item.idName}
-              </span>
-              <div className="ml-2 flex items-center">
-                <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded">
-                  {item.moduleGroup}
-                </span>
-                <span className="mx-1 text-sm text-gray-500 dark:text-gray-400">→</span>
-                <span className="text-sm text-gray-500 dark:text-gray-400">{item.moduleName}</span>
-              </div>
-              <span className="ml-auto mr-2 text-xs text-gray-400 dark:text-gray-500">ID: {item.idMenu}</span>
-            </div>
-            
-            <div className="flex-shrink-0 flex items-center space-x-1">
-              <button
-                onClick={() => moveItemUp(item, parentPath)}
-                className="p-1 text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
-                title="Mover arriba"
-              >
-                <ArrowUp size={16} />
-              </button>
-              <button
-                onClick={() => moveItemDown(item, parentPath)}
-                className="p-1 text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
-                title="Mover abajo"
-              >
-                <ArrowDown size={16} />
-              </button>
-              <button
-                onClick={() => makeItemParent(item)}
-                className="p-1 text-gray-500 hover:text-green-500 dark:text-gray-400 dark:hover:text-green-400 transition-colors"
-                title="Convertir en elemento principal"
-              >
-                <MoveVertical size={16} />
-              </button>
-              <button
-                className="p-1 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
-                title="Eliminar elemento"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
+            : <div style={{ width: 16 }} />
+          }
+          {changedItems.has(item.keyValue) && <span className="inline-block h-2 w-2 bg-red-500 rounded-full mr-1"/>}
+          <span className="ml-1 font-medium text-gray-700 dark:text-gray-300">{item.idName}</span>
+          <div className="ml-4 flex items-center">
+            <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded">{item.moduleGroup}</span>
+            <span className="mx-1 text-sm text-gray-500 dark:text-gray-400">→</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">{item.moduleName}</span>
+          </div>
+          <div className="ml-auto flex items-center space-x-2">
+            <button onClick={() => moveUp(item, path)} title="Arriba"><ArrowUp size={16}/></button>
+            <button onClick={() => moveDown(item, path)} title="Abajo"><ArrowDown size={16}/></button>
+            <button onClick={() => makeRoot(item)} title="Hacer raíz"><MoveVertical size={16}/></button>
           </div>
         </div>
-        
-        {hasChildren && isExpanded && (
-          <div className="pl-6">
-            {item.children.map((child, childIndex) => 
-              renderItem(child, childIndex, [...parentPath, index])
-            )}
-          </div>
-        )}
+        {has && exp && <div className="pl-6">{item.children.map((c,i) => renderItem(c,i,[...path,idx]))}</div>}
       </div>
     );
   };
@@ -344,41 +315,140 @@ const MenuHierarchyEditor = () => {
 
   return (
     <div className="p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white">Organizar Jerarquía</h2>
-        <div className="flex items-center gap-2">
-          {saveStatus && (
-            <span className={`text-sm ${saveStatus.includes('Error') ? 'text-red-500' : 'text-green-500'}`}>
-              {saveStatus}
-            </span>
-          )}
+      {/* Toast */}
+      {notification.visible && notification.style === 'toast' && (
+        <div className="fixed top-4 right-4 z-[9999]">
+          <Notification visible type={notification.type} message={notification.message} style="toast" onClose={closeNotification}/>
+        </div>
+      )}
+
+      {/* Confirm Modal */}
+      {confirmModal.open && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-[#1c1c24] rounded-lg w-80 shadow-lg overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+              <span className="font-medium text-gray-800 dark:text-gray-200">
+                {confirmModal.type === 'save' ? 'Confirmar actualización' : 'Confirmar creación'}
+              </span>
+              <button onClick={closeConfirm} disabled={confirmLoading}><X size={20} className="text-gray-500 dark:text-gray-400"/></button>
+            </div>
+            {confirmLoading ? (
+              <div className="px-4 py-6 flex flex-col items-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500 mb-3"></div>
+                <span className="text-gray-700 dark:text-gray-300">{confirmMessage}</span>
+              </div>
+            ) : (
+              <>
+                <div className="px-4 py-4 text-gray-600 dark:text-gray-300 text-sm">
+                  {confirmModal.type === 'save'
+                    ? '¿Deseas guardar los cambios realizados en la jerarquía?'
+                    : '¿Deseas agregar esta nueva opción al menú?'}
+                </div>
+                <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-2">
+                  <button onClick={closeConfirm} className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400">
+                    Cancelar
+                  </button>
+                  <button onClick={handleConfirm} className="px-4 py-2 bg-blue-500 text-white rounded flex items-center gap-2 hover:bg-blue-600">
+                    <Save size={16}/> Guardar
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-h2 font-bold text-gray-800 dark:text-white">Organizar Jerarquía</h2>
+        <div className="flex items-center space-x-2 text-p">
           <button
-            onClick={saveChanges}
-            className="flex items-center gap-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+            onClick={clearChanges}
+            disabled={!changedItems.size}
+            className={`p-2 rounded ${changedItems.size ? 'bg-yellow-500 text-white hover:bg-yellow-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+            title="Limpiar cambios"
           >
-            <Save size={16} />
-            <span>Guardar</span>
+            <span className="text-p">🧹</span>
           </button>
-          <button className="flex items-center gap-1 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition">
-            <Plus size={16} />
-            <span>Nuevo</span>
+          <button
+            onClick={() => openConfirm('save')}
+            disabled={!changedItems.size}
+            className={`px-4 py-2 rounded  flex items-center gap-2 ${changedItems.size ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+          >
+            <Save size={16}/> Guardar
+          </button>
+          <button onClick={() => setInlineAdd(true)} className="px-4 py-2 bg-green-500 text-white rounded flex items-center gap-2 hover:bg-green-600">
+            <Plus size={16}/> Nuevo
           </button>
         </div>
       </div>
-      
-      <div className="bg-white dark:bg-[#1c1c24] rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="flex font-medium text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 px-4 py-2">
-          <div className="w-1/3">Nombre del Menú</div>
-          <div className="w-1/3">Grupo / Módulo</div>
-          <div className="w-1/3">Acciones</div>
+
+      {/* Inline Add */}
+      {inlineAdd && (
+        <div className="mb-4 bg-white dark:bg-[#1c1c24] rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="flex bg-gray-100 dark:bg-gray-800 px-4 py-2 text-h3 text-gray-500 dark:text-gray-400	border-b border-gray-200 dark:border-gray-700">
+            <span className="font-medium">Nueva Opción</span>
+            <button onClick={() => setInlineAdd(false)} className="ml-auto">
+              <X size={18} className="text-gray-500 dark:text-gray-400"/>
+            </button>
+          </div>
+          <div className="p-4 text-p grid grid-cols-3 gap-4">
+            <input
+              type="text"
+              placeholder="Nombre del menú"
+              value={newMenuText}
+              onChange={e => setNewMenuText(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900	border border-gray-300 dark:border-gray-600 rounded"
+            />
+            <select
+              value={newParentId}
+              onChange={e => setNewParentId(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900	border border-gray-300 dark:border-gray-600 rounded"
+            >
+              <option value="">-- raíz --</option>
+              {flattenHierarchy(hierarchyData).map(opt => (
+                <option key={opt.keyValue} value={opt.idMenu}>{opt.idName}</option>
+              ))}
+            </select>
+            <input
+              list="route-list"
+              placeholder="URL recurso"
+              value={newResourceUrl}
+              onChange={e => setNewResourceUrl(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900	border border-gray-300 dark:border-gray-600 rounded"
+            />
+            <datalist id="route-list">
+              {availableRoutes.map(rt => {
+                const url = rt.url.startsWith('/') ? rt.url : `/${rt.url}`;
+                return <option key={url} value={url} />;
+              })}
+            </datalist>
+          </div>
+          <div className="px-4 py-2 flex text-p justify-end space-x-2	border-t border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => setInlineAdd(false)}
+              className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 flex items-center gap-1"
+            >
+              <X size={16}/> Cancelar
+            </button>
+            <button onClick={() => openConfirm('add')} className="px-4 py-2 bg-blue-500 text-white rounded flex items-center gap-2 hover:bg-blue-600">
+              <Save size={16}/> Guardar
+            </button>
+          </div>
         </div>
-        
-        <div className="p-2">
-          {hierarchyData.map((item, index) => renderItem(item, index))}
+      )}
+
+      {/* Lista jerárquica */}
+      <div className="bg-white dark:bg-[#1c1c24] rounded-lg overflow-hidden	border border-gray-200 dark:border-gray-700">
+        <div className="flex bg-gray-100 dark:bg-gray-800 px-4 py-2 text-h3 text-gray-500	dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+          <div className="w-1/3 font-medium">Nombre del Menú</div>
+          <div className="w-1/3 font-medium">Grupo / Módulo</div>
+          <div className="w-1/3 flex justify-end font-medium">Acciones</div>
+        </div>
+        <div className="p-2 text-p">
+          {hierarchyData.map((it, i) => renderItem(it, i))}
         </div>
       </div>
     </div>
   );
-};
-
-export default MenuHierarchyEditor;
+}

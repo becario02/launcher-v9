@@ -37,8 +37,8 @@ export default function MenusAdminPage() {
           <div className="max-w-5xl mx-auto px-6">
             {/* Encabezado de la página */}
             <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Administración de Menús</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <h1 className="text-h1 font-bold text-gray-800 dark:text-white">Administración de Menús</h1>
+              <p className="text-p text-gray-500 dark:text-gray-400 mt-1">
                 Gestiona y organiza la estructura de menús para tus usuarios
               </p>
             </div>
@@ -50,8 +50,8 @@ export default function MenusAdminPage() {
             
             {/* Sección de instrucciones */}
             <div className="mt-6 bg-white dark:bg-[#1c1c24] rounded-lg shadow p-4">
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">Instrucciones de uso</h2>
-              <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600 dark:text-gray-300">
+              <h2 className="text-h3 font-semibold text-gray-800 dark:text-white mb-2">Instrucciones de uso</h2>
+              <ul className="list-disc pl-5 space-y-1 text-p text-gray-600 dark:text-gray-300">
                 <li>Arrastra y suelta elementos para reorganizar la jerarquía</li>
                 <li>Usa las flechas para mover elementos arriba o abajo dentro de su nivel</li>
                 <li>Para hacer que un elemento sea principal, haz clic en el icono de movimiento vertical</li>
