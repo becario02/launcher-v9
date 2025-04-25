@@ -95,10 +95,23 @@ const ChatWindow = ({ messages, onSendMessage, onClose, loading, isClosing }) =>
 
       {/* Mensajes */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-white scrollbar-custom">
-        {messages.map((msg, idx) => (
-          <ChatMessage key={idx} text={msg.text} from={msg.from} />
-        ))}
+        {messages.map((msg, idx) => {
+          const userQuery = messages
+            .slice(0, idx)
+            .reverse()
+            .find((m) => m.from === 'user')?.text || 'No disponible';
 
+          return (
+            <ChatMessage
+              key={idx}
+              text={msg.text}
+              from={msg.from}
+              userQuery={msg.from === 'bot' ? userQuery : undefined}
+              initial={msg.initial}
+            />
+          );
+        })}
+        
         {/* Indicador de escritura */}
         {loading && (
           <div className="flex items-end gap-2 mb-4">
@@ -136,9 +149,8 @@ const ChatWindow = ({ messages, onSendMessage, onClose, loading, isClosing }) =>
         <button
           onClick={startRecording}
           title="Dictar por voz"
-          className={`p-2 rounded-md transition ${
-            isRecording ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-          }`}
+          className={`p-2 rounded-md transition ${isRecording ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+            }`}
         >
           <Mic size={18} />
         </button>
