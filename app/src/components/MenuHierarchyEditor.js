@@ -58,16 +58,12 @@ export default function MenuHierarchyEditor() {
   const [newParentId, setNewParentId] = useState('');
   const [dragItem, setDragItem] = useState(null);
 
-  // guarda referencia para resetear
   const originalDataRef = useRef([]);
 
-  // track de ítems cambiados
   const [changedItems, setChangedItems] = useState(new Set());
 
-  // ** NUEVO: rutas Next.js **
   const [availableRoutes, setAvailableRoutes] = useState([]);
 
-  // Notificación
   const [notification, setNotification] = useState({
     visible: false,
     type: 'info',
@@ -80,7 +76,6 @@ export default function MenuHierarchyEditor() {
   };
   const closeNotification = () => setNotification(n => ({ ...n, visible: false }));
 
-  // Modal de confirmación
   const [confirmModal, setConfirmModal] = useState({ open: false, type: '' });
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState('');
@@ -94,7 +89,6 @@ export default function MenuHierarchyEditor() {
     setConfirmModal({ open: false, type: '' });
   };
 
-  // Carga inicial de rutas Next.js
   useEffect(() => {
     fetch('/api/routes')
       .then(res => {
@@ -108,7 +102,6 @@ export default function MenuHierarchyEditor() {
       });
   }, []);
 
-  // Carga inicial de menú
   const loadMenuData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -166,7 +159,6 @@ export default function MenuHierarchyEditor() {
     setChangedItems(new Set());
   };
 
-  // Guarda cambios sólo de CUSTOM modificados
   const saveChanges = async () => {
     const flat = flattenHierarchy(hierarchyData);
     const toSave = flat.filter(i => i.moduleGroup === 'CUSTOM' && changedItems.has(i.keyValue));
@@ -185,7 +177,6 @@ export default function MenuHierarchyEditor() {
     setChangedItems(new Set());
   };
 
-  // Agrega nuevo CUSTOM
   const handleAdd = async () => {
     await fetch('http://localhost:5173/mslauncher/api/v1/AddMenuOption', {
       method: 'POST',
@@ -204,7 +195,6 @@ export default function MenuHierarchyEditor() {
     showNotification('success', 'Opción agregada', 'toast');
   };
 
-  // Al confirmar en el modal
   const handleConfirm = async () => {
     setConfirmLoading(true);
     try {
@@ -218,7 +208,6 @@ export default function MenuHierarchyEditor() {
     }
   };
 
-  // Mutadores de jerarquía
   const toggleExpand = k => setExpandedItems(e => ({ ...e, [k]: !e[k] }));
   const moveUp = (it, path = []) => {
     const h = JSON.parse(JSON.stringify(hierarchyData));
@@ -290,7 +279,7 @@ export default function MenuHierarchyEditor() {
           {changedItems.has(item.keyValue) && <span className="inline-block h-2 w-2 bg-red-500 rounded-full mr-1"/>}
           <span className="ml-1 font-medium text-gray-700 dark:text-gray-300">{item.idName}</span>
           <div className="ml-4 flex items-center">
-            <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded">{item.moduleGroup}</span>
+            <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-semantic.blue dark:bg-primary-blue dark:text-white rounded">{item.moduleGroup}</span>
             <span className="mx-1 text-sm text-gray-500 dark:text-gray-400">→</span>
             <span className="text-sm text-gray-500 dark:text-gray-400">{item.moduleName}</span>
           </div>
@@ -327,7 +316,7 @@ export default function MenuHierarchyEditor() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-[#1c1c24] rounded-lg w-80 shadow-lg overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-              <span className="font-medium text-gray-800 dark:text-gray-200">
+              <span className="font-medium text-gray-800 dark:text-gray-200 text-h3">
                 {confirmModal.type === 'save' ? 'Confirmar actualización' : 'Confirmar creación'}
               </span>
               <button onClick={closeConfirm} disabled={confirmLoading}><X size={20} className="text-gray-500 dark:text-gray-400"/></button>
@@ -339,16 +328,16 @@ export default function MenuHierarchyEditor() {
               </div>
             ) : (
               <>
-                <div className="px-4 py-4 text-gray-600 dark:text-gray-300 text-sm">
+                <div className="px-4 py-4 text-gray-600 dark:text-gray-300 text-p">
                   {confirmModal.type === 'save'
                     ? '¿Deseas guardar los cambios realizados en la jerarquía?'
                     : '¿Deseas agregar esta nueva opción al menú?'}
                 </div>
-                <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-2">
+                <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-2 text-p">
                   <button onClick={closeConfirm} className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400">
                     Cancelar
                   </button>
-                  <button onClick={handleConfirm} className="px-4 py-2 bg-blue-500 text-white rounded flex items-center gap-2 hover:bg-blue-600">
+                  <button onClick={handleConfirm} className="px-4 py-2 bg-primary-blue text-white rounded flex items-center gap-2 hover:bg-blue-600">
                     <Save size={16}/> Guardar
                   </button>
                 </div>
@@ -377,7 +366,7 @@ export default function MenuHierarchyEditor() {
           >
             <Save size={16}/> Guardar
           </button>
-          <button onClick={() => setInlineAdd(true)} className="px-4 py-2 bg-green-500 text-white rounded flex items-center gap-2 hover:bg-green-600">
+          <button onClick={() => setInlineAdd(true)} className="px-4 py-2 bg-primary text-white rounded flex items-center gap-2 hover:bg-semantic.green">
             <Plus size={16}/> Nuevo
           </button>
         </div>
