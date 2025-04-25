@@ -1,9 +1,15 @@
+import { useState } from 'react';
 import Linkify from 'linkify-react';
+import { ThumbsUp, ThumbsDown } from 'lucide-react';
 
-const ChatMessage = ({ text, from }) => {
+const ChatMessage = ({ text, from, userQuery, initial }) => {
   const isUser = from === 'user';
+  const [feedback, setFeedback] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedReason, setSelectedReason] = useState('');
+  const [comment, setComment] = useState('');
+  const [sending, setSending] = useState(false);
 
-  // Función para abrir PDF en pestaña nueva usando Blob
   const handleOpenPdf = async (url) => {
     try {
       const res = await fetch(url);
@@ -17,15 +23,8 @@ const ChatMessage = ({ text, from }) => {
     }
   };
 
-  // Configuración de linkify
   const linkOptions = {
-    format: (value, type) => {
-      if (type === 'url') {
-        if (value.endsWith('.pdf')) return 'Ver documento PDF';
-        return 'Abrir enlace';
-      }
-      return value;
-    },
+    format: (value, type) => (type === 'url' && value.endsWith('.pdf') ? 'Ver documento PDF' : 'Abrir enlace'),
     render: ({ attributes, content }) => {
       const url = attributes.href;
       const isPdf = url.endsWith('.pdf');
@@ -46,39 +45,133 @@ const ChatMessage = ({ text, from }) => {
           rel={isPdf ? undefined : 'noopener noreferrer'}
         >
           {content}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-4 h-4 ml-1"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 3h7m0 0v7m0-7L10 14" />
-          </svg>
         </a>
       );
     },
   };
 
+  const handleFeedbackSubmit = async () => {
+    if (!selectedReason) return;
+
+    try {
+      setSending(true);
+      const res = await fetch('https://quikbot.ddnsking.com/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userQuery,
+          botResponse: text,
+          reason: selectedReason,
+          comment: comment || null,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Error al enviar feedback');
+      alert('✅ ¡Gracias por tus comentarios!');
+    } catch (err) {
+      console.error(err);
+      alert('❌ Error al enviar feedback. Intenta de nuevo.');
+    } finally {
+      setShowModal(false);
+      setSending(false);
+    }
+  };
+
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start items-end gap-2'}`}>
-      {!isUser && (
-        <div className="w-[30px] h-[30px] flex-shrink-0">
-          <img
-            src="/assets/chatbot/bot-avatar.svg"
-            alt="Bot Avatar"
-            className="w-full h-full"
-          />
+    <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
+      {isUser ? (
+        <div className="w-full flex justify-end">
+          <div className="bg-[#0080ff] text-white rounded-xl rounded-br-none px-4 py-3 text-sm max-w-[90%] whitespace-pre-wrap break-words">
+            {text}
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-end gap-2">
+          <div className="w-[30px] h-[30px] flex-shrink-0">
+            <img src="/assets/chatbot/bot-avatar.svg" alt="Bot Avatar" className="w-full h-full" />
+          </div>
+          <div className="bg-[#f0f4f8] text-gray-800 rounded-xl rounded-bl-none px-4 py-3 text-sm max-w-[100%] whitespace-pre-wrap break-words">
+            <Linkify options={linkOptions}>{text}</Linkify>
+          </div>
         </div>
       )}
 
-      <div
-        className={`px-4 py-3 rounded-xl max-w-[80%] text-sm ${
-          isUser ? 'bg-[#0080ff] text-white rounded-br-none' : 'bg-[#f0f4f8] text-gray-800 rounded-bl-none'
-        } whitespace-pre-wrap break-words overflow-hidden`}
-      >
-        {isUser ? text : <Linkify options={linkOptions}>{text}</Linkify>}
-      </div>
+      {!isUser && !initial && (
+        <div className="pl-[40px] mt-2 flex items-center justify-between gap-4 text-xs text-gray-500">
+          <span>Generada por IA. Verifica que la información sea correcta.</span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFeedback('like')}
+              className={`p-1 rounded-md transition ${feedback === 'like' ? 'bg-green-100 text-green-600' : 'hover:bg-gray-100 text-gray-500'
+                }`}
+              title="Útil"
+            >
+              <ThumbsUp size={16} />
+            </button>
+            <button
+              onClick={() => {
+                setFeedback('dislike');
+                setShowModal(true);
+              }}
+              className={`p-1 rounded-md transition ${feedback === 'dislike' ? 'bg-red-100 text-red-600' : 'hover:bg-gray-100 text-gray-500'
+                }`}
+              title="No útil"
+            >
+              <ThumbsDown size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl w-full max-w-md p-6 space-y-4 shadow-lg">
+            <h2 className="text-lg font-semibold">¿Qué podemos mejorar?</h2>
+            <p className="text-sm text-gray-600">Selecciona una razón:</p>
+            <div className="space-y-2">
+              {['No respondió a mi pregunta', 'Fue confuso o poco claro', 'Otra razón'].map((reason) => (
+                <button
+                  key={reason}
+                  className={`w-full border rounded-md px-4 py-2 text-left ${selectedReason === reason ? 'bg-blue-100 border-blue-400' : 'hover:bg-gray-100'
+                    }`}
+                  onClick={() => setSelectedReason(reason)}
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Comentario (opcional):</label>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="w-full border rounded-md px-3 py-2 text-sm"
+                rows={3}
+                placeholder="Describe cómo podríamos mejorar..."
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-sm text-gray-600 hover:underline"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleFeedbackSubmit}
+                disabled={sending || !selectedReason}
+                className="bg-[#0080ff] text-white px-4 py-2 rounded-md text-sm hover:bg-blue-600 disabled:opacity-50"
+              >
+                {sending ? 'Enviando...' : 'Enviar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
