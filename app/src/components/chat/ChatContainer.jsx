@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { getFirstNameFromCookie } from '@/utils/getFirstName';
 import { v4 as uuidv4 } from 'uuid';
 import { usePathname } from 'next/navigation';
 import ChatWindow from './ChatWindow';
 import ChatBotButton from './ChatBotButton';
 
 const ChatContainer = () => {
-  const pathname = usePathname(); // ✅ Hook fuera de condicional
+  const pathname = usePathname();
 
   const [open, setOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -22,7 +23,9 @@ const ChatContainer = () => {
   const handleOpen = () => {
     setOpen(true);
     if (messages.length === 0) {
-      setMessages([{ from: 'bot', text: '¡Hola! 👋 ¿En qué puedo ayudarte hoy?' }]);
+      const name = getFirstNameFromCookie() || '';
+      const greeting = `Hola ${name} 👋, soy Nova 🌟, tu asistente virtual. Puedo ayudarte con módulos, tickets o documentos del sistema. ¿En qué te puedo asistir hoy?`;
+      setMessages([{ from: 'bot', text: greeting, initial: true }]);
     }
   };
 
