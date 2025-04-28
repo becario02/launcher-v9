@@ -41,14 +41,16 @@ const getGroupIcon = (group) => {
 };
 
 const getGroupRoute = (group) => {
+  const base = '/divisiones';
+
   switch (group.toUpperCase()) {
     case 'NUCLEARES':
-      return '/nucleares';
+      return `${base}/nucleares`;
     case 'FINANCIAL':
-      return '/financieros';
+      return `${base}/financieros`;
     case 'AUXILIARES':
     case 'AUXILIARIES':
-      return '/auxiliares';
+      return `${base}/auxiliares`;
     default:
       return '/';
   }
