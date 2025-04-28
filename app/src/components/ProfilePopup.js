@@ -21,10 +21,10 @@ const ProfilePopup = ({ isOpen, onClose }) => {
     Cookies.remove('passwordErpDb');
     Cookies.remove('serverErpDb');
     Cookies.remove('nameErpDb');
-  
+
     localStorage.removeItem('selectedCompany');
     localStorage.removeItem('userData');
-    
+
     logout();
   };
 
@@ -53,6 +53,10 @@ const ProfilePopup = ({ isOpen, onClose }) => {
       >
         <div className="p-4 space-y-2">
           <button
+            onClick={() => {
+              router.push('/profile');
+              onClose();
+            }}
             className="w-full flex items-center gap-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#2C2C38] px-3 py-2 rounded-lg transition"
           >
             <User className="w-4 h-4" />
@@ -61,7 +65,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
 
           <button
             onClick={() => {
-              router.push('/settings');
+              router.push('/profile/settings');
               onClose();
             }}
             className="w-full flex items-center gap-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#2C2C38] px-3 py-2 rounded-lg transition"
