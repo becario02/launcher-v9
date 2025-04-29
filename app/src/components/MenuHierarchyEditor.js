@@ -127,7 +127,7 @@ export default function MenuHierarchyEditor() {
           idMenu: c.idCustomOption,
           moduleGroup: 'CUSTOM',
           moduleName: '',
-          idName: c.textOption,
+          textOption: c.textOption,
           keyValue: key,
           pKey: p,
           resourceUrl: c.resourceUrl
@@ -277,7 +277,7 @@ export default function MenuHierarchyEditor() {
             : <div style={{ width: 16 }} />
           }
           {changedItems.has(item.keyValue) && <span className="inline-block h-2 w-2 bg-red-500 rounded-full mr-1"/>}
-          <span className="ml-1 font-medium text-gray-700 dark:text-gray-300">{item.idName}</span>
+          <span className="ml-1 font-medium text-gray-700 dark:text-gray-300">{item.textOption}</span>
           <div className="ml-4 flex items-center">
             <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-semantic.blue dark:bg-primary-blue dark:text-white rounded">{item.moduleGroup}</span>
             <span className="mx-1 text-sm text-gray-500 dark:text-gray-400">→</span>
