@@ -5,6 +5,7 @@ import { ChevronDown, Menu } from 'lucide-react';
 import ModuleTabs from './ModuleTabs';
 import ProfilePopup from './ProfilePopup';
 import NotificationsPopup from './NotificationsPopup';
+import HelpCenterModal from './HelpCenterModal';
 import { useTabs } from '@/context/tabs';
 import CompanySelector from './CompanySelector';
 import { useTheme } from '@/context/theme';
@@ -14,6 +15,7 @@ import Cookies from 'js-cookie';
 const Navbar = ({ onMenuClick }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isHelpCenterOpen, setIsHelpCenterOpen] = useState(false);
   const { tabs } = useTabs();
   const { theme, setTheme } = useTheme();
   const { showCompanyModal, setShowCompanyModal } = useCompany();
@@ -51,14 +53,20 @@ const Navbar = ({ onMenuClick }) => {
             <div className="flex items-center gap-6 lg:gap-12 pr-4">
               {/* Centro de ayuda */}
               <div className="flex items-center gap-2 text-[13px] font-normal">
-                <button className="w-9 h-9 border border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center hover:bg-gray-50 dark:hover:bg-[#2c2c38]">
+                <button 
+                  onClick={() => setIsHelpCenterOpen(true)}
+                  className="w-9 h-9 border border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center hover:bg-gray-50 dark:hover:bg-[#2c2c38]"
+                >
                   <img
                     src="/assets/navbar/icon-frame.svg"
                     alt="Centro de ayuda"
                     className="w-5 h-5"
                   />
                 </button>
-                <span className="hidden lg:inline font-[Poppins] font-semibold text-sm tracking-[0.1px] text-gray-600 dark:text-gray-300">
+                <span 
+                  onClick={() => setIsHelpCenterOpen(true)}
+                  className="hidden lg:inline font-[Poppins] font-semibold text-sm tracking-[0.1px] text-gray-600 dark:text-gray-300 cursor-pointer"
+                >
                   Centro de ayuda
                 </span>
               </div>
@@ -130,6 +138,10 @@ const Navbar = ({ onMenuClick }) => {
         <NotificationsPopup
           isOpen={isNotificationsOpen}
           onClose={() => setIsNotificationsOpen(false)}
+        />
+        <HelpCenterModal
+          isOpen={isHelpCenterOpen}
+          onClose={() => setIsHelpCenterOpen(false)}
         />
       </nav>
     </>
