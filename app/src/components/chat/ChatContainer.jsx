@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { usePathname } from 'next/navigation';
 import ChatWindow from './ChatWindow';
 import ChatBotButton from './ChatBotButton';
+import Cookies from 'js-cookie';
 
 const ChatContainer = () => {
   const pathname = usePathname();
@@ -47,10 +48,14 @@ const ChatContainer = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFNRVJJQ0FOT1MiLCJleHAiOjE3NDY1NDE0NDV9.Z5tLS1Fof8sVwW5msYEwP6MXtGnRkJbcVXPRJ9TeMdA',
         },
-        body: JSON.stringify({ message: text, session_id: sessionId, is_support: true }),
-      });
+        body: JSON.stringify({
+          message: text,
+          session_id: sessionId,
+          username: Cookies.get('companyName'),
+          profile_name: Cookies.get('profileName'),
+        }),
+      });      
 
       const data = await response.json();
       setMessages((prev) => [...prev, { from: 'bot', text: data.response }]);
