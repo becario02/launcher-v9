@@ -1,7 +1,6 @@
-// app/division/[division]/page.js
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Sidebar from '@/components/Sidebar'
@@ -17,105 +16,12 @@ import {
   Settings
 } from 'lucide-react'
 import { usePrimaryColor } from '@/context/primaryColor'
+import { useCompany } from '@/context/CompanyContext'
 
-const divisionModules = {
-  nucleares: [
-    {
-      title: 'Llantas',
-      description:
-        'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-      icon: Circle,
-      slug: 'llantas'
-    },
-    {
-      title: 'Tráfico',
-      description:
-        'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-      icon: Flag,
-      slug: 'trafico'
-    },
-    {
-      title: 'Liquidaciones',
-      description:
-        'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-      icon: Settings,
-      slug: 'liquidaciones'
-    },
-    {
-      title: 'Compras',
-      description:
-        'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-      icon: ShoppingCart,
-      slug: 'compras'
-    },
-    {
-      title: 'Cotizador',
-      description:
-        'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-      icon: Calculator,
-      slug: 'cotizador'
-    },
-    {
-      title: 'Vigilancia',
-      description:
-        'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-      icon: Monitor,
-      slug: 'vigilancia'
-    },
-    {
-      title: 'Mantenimiento',
-      description:
-        'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-      icon: Tool,
-      slug: 'mantenimiento'
-    }
-  ],
-  financieros: [
-    {
-      title: 'Contabilidad',
-      description:
-        'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-      icon: BarChart2,
-      slug: 'contabilidad'
-    },
-    {
-      title: 'Facturación',
-      description:
-        'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-      icon: Calculator,
-      slug: 'facturacion'
-    },
-    {
-      title: 'Presupuestos',
-      description:
-        'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-      icon: Calculator,
-      slug: 'presupuestos'
-    }
-  ],
-  auxiliares: [
-    {
-      title: 'RRHH',
-      description:
-        'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-      icon: Circle,
-      slug: 'rrhh'
-    },
-    {
-      title: 'Legal',
-      description:
-        'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-      icon: Circle,
-      slug: 'legal'
-    },
-    {
-      title: 'IT',
-      description:
-        'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
-      icon: Settings,
-      slug: 'it'
-    }
-  ]
+const moduleGroupTranslations = {
+  OPERATIVES: 'nucleares',
+  FINANCIAL: 'financieros',
+  AUXILIARIES: 'auxiliares'
 }
 
 const divisionNames = {
@@ -124,22 +30,76 @@ const divisionNames = {
   auxiliares: 'Auxiliares'
 }
 
+const iconMap = {
+  ALMACENES: Tool,
+  CONTABILIDAD: BarChart2,
+  FACTURACIÓN: Calculator,
+  PRESUPUESTOS: Calculator,
+  COMPRAS: ShoppingCart,
+  COTIZADOR: Calculator,
+  VIGILANCIA: Monitor,
+  LIQUIDACIONES: Settings,
+  TRÁFICO: Flag,
+  LLANTAS: Circle,
+  RRHH: Circle,
+  LEGAL: Circle,
+  IT: Settings
+}
+
 export default function DivisionPage() {
   const { division } = useParams()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { primaryColor } = usePrimaryColor()
+  const { selectedCompany } = useCompany()
+  const [modulesByDivision, setModulesByDivision] = useState({})
 
-  const modules = divisionModules[division] || []
   const divisionName = divisionNames[division] || division
+
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        const res = await fetch('http://localhost:5173/mslauncher/api/v1/GetModulosCompany', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idCompany: selectedCompany?.idCompany })
+        })
+
+        const data = await res.json()
+
+        const grouped = {}
+        data.data.forEach(mod => {
+          const translatedGroup = moduleGroupTranslations[mod.moduleGroup]
+          if (!translatedGroup) return
+
+          if (!grouped[translatedGroup]) grouped[translatedGroup] = []
+
+          grouped[translatedGroup].push({
+            title: mod.moduleName,
+            slug: mod.moduleName.toLowerCase().replace(/\s+/g, '-'),
+            description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
+            icon: iconMap[mod.moduleName.toUpperCase()] || Settings
+          })
+        })
+
+        setModulesByDivision(grouped)
+      } catch (err) {
+        console.error('Error fetching modules:', err)
+      }
+    }
+
+    if (selectedCompany?.idCompany) {
+      fetchModules()
+    }
+  }, [selectedCompany])
+
+  const modules = modulesByDivision[division] || []
 
   return (
     <div className="flex">
-      {/* Sidebar para pantallas md+ */}
       <div className="hidden md:block">
         <Sidebar />
       </div>
 
-      {/* Sidebar slide-over en móvil */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 flex md:hidden">
           <div className="relative z-50 w-60 h-full bg-white dark:bg-[#1C1C24] shadow-lg">
@@ -152,12 +112,10 @@ export default function DivisionPage() {
         </div>
       )}
 
-      {/* Área principal */}
       <div className="flex-1 md:ml-60">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
         <main className="min-h-screen bg-[#F2F6FD] dark:bg-[#13131a] pt-14 pb-14 overflow-x-hidden">
-          {/* Banner de la división */}
           <div
             className="rounded-xl mx-4 sm:mx-6 md:mx-12 lg:mx-[60px] xl:mx-[100px] relative overflow-hidden"
             style={{ backgroundColor: primaryColor }}
@@ -193,7 +151,6 @@ export default function DivisionPage() {
             </div>
           </div>
 
-          {/* Grid de módulos */}
           <div className="px-4 sm:px-6 md:px-12 lg:px-[60px] xl:px-[100px] mt-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {modules.map(mod => (

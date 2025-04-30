@@ -20,6 +20,16 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '@/context/CompanyContext';
 
+const translateModuleGroup = (moduleGroup) => {
+  const translations = {
+    'OPERATIVES': 'NUCLEARES',
+    'FINANCIAL': 'FINANCIEROS',
+    'AUXILIARIES': 'AUXILIARES',
+  };
+  
+  return translations[moduleGroup] || moduleGroup;
+};
+
 const SortableItem = ({ item, onDelete }) => {
   const {
     attributes,
@@ -35,6 +45,9 @@ const SortableItem = ({ item, onDelete }) => {
     transition,
     opacity: isDragging ? 0 : 1,
   };
+
+  // Traducir el moduleGroup
+  const translatedCategory = translateModuleGroup(item.category);
 
   return (
     <motion.div
@@ -52,7 +65,7 @@ const SortableItem = ({ item, onDelete }) => {
           <GripVertical className="w-4 h-4 cursor-grab" />
         </div>
         <div className="flex items-center gap-4">
-          <span>{item.category}</span>
+          <span>{translatedCategory}</span>
           <span className="text-gray-300 dark:text-gray-500">{'>'}</span>
           <span>{item.subcategory}</span>
           <span className="text-gray-300 dark:text-gray-500">{'>'}</span>
@@ -185,7 +198,13 @@ const DirectAccessSection = () => {
 
   const visibleItems = expanded ? items : items.slice(0, 3);
   const hasMore = items.length > 3;
-  const activeItem = items.find((item) => item.id === activeId);
+  
+  // Aseguramos que también se traduzca el grupo de módulos para el elemento activo
+  const activeItem = activeId ? items.find((item) => item.id === activeId) : null;
+  const translatedActiveItem = activeItem ? {
+    ...activeItem,
+    category: translateModuleGroup(activeItem.category)
+  } : null;
 
   return (
     <section className="font-[Poppins] bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-xl px-5 py-4 shadow-sm">
@@ -240,16 +259,16 @@ const DirectAccessSection = () => {
           </SortableContext>
 
           <DragOverlay>
-            {activeItem ? (
+            {translatedActiveItem ? (
               <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-[#1C1C24] rounded-md border border-primary dark:border-primary shadow-lg">
                 <div className="flex items-center gap-3 text-[13px] text-gray-700 dark:text-gray-200">
                   <GripVertical className="w-4 h-4" />
                   <div className="flex items-center gap-4">
-                    <span>{activeItem.category}</span>
+                    <span>{translatedActiveItem.category}</span>
                     <span className="text-gray-400">{'>'}</span>
-                    <span>{activeItem.subcategory}</span>
+                    <span>{translatedActiveItem.subcategory}</span>
                     <span className="text-gray-400">{'>'}</span>
-                    <span className="font-semibold">{activeItem.name}</span>
+                    <span className="font-semibold">{translatedActiveItem.name}</span>
                   </div>
                 </div>
               </div>

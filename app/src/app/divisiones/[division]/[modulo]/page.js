@@ -43,6 +43,8 @@ export default function ModulePage() {
   const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [subMenuItems, setSubMenuItems] = useState({});
+  const menuOrdenado = ['Transacciones', 'Consultas', 'Reportes', 'Catálogo', 'Administración']
+
   // Estado para las notificaciones
   const [notification, setNotification] = useState({ 
     visible: false, 
@@ -461,16 +463,23 @@ export default function ModulePage() {
           {/* Contenedor principal con dos columnas */}
           <div className="flex h-[calc(100vh-15rem)] mt-4">
             {/* Menú lateral interno */}
-            <div className="w-56 border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1C1C24] rounded-l-md overflow-y-auto">
-              {isLoading ? (
-                <div className="flex justify-center items-center h-20">
-                  <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
-                </div>
-              ) : (
-                menuData.map(item => (
+            <div className="w-56 border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1C1C24] rounded-l-md overflow-y-auto py-4">
+              {menuOrdenado.map(menuName => {
+                // Find existing menu item if it exists in menuData
+                const existingItem = menuData.find(item => item.name === menuName);
+                
+                // If the menu item exists in data, use its properties
+                // If not, create a default menu item
+                const item = existingItem || {
+                  id: `default-${menuName}`,
+                  name: menuName,
+                  icon: getIconForMenu(menuName)
+                };
+                
+                return (
                   <div
                     key={item.id}
-                    onClick={() => handleMenuItemClick(item.id)}
+                    onClick={() => setSelectedMenuItem(item.id)}
                     className={`
                       flex items-center px-4 py-3 text-sm cursor-pointer border-l-4
                       ${selectedMenuItem === item.id
@@ -497,10 +506,9 @@ export default function ModulePage() {
                     />
                     {item.name}
                   </div>
-                ))
-              )}
+                );
+              })}
             </div>
-
             {/* Panel principal con submenús */}
             <div className="flex-1 border border-t border-r border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1C1C24] rounded-r-md overflow-y-auto">
               <div className="p-3">

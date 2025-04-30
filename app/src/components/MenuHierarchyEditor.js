@@ -125,7 +125,7 @@ export default function MenuHierarchyEditor() {
           : null;
         allOptions.push({
           idMenu: c.idCustomOption,
-          moduleGroup: 'CUSTOM',
+          moduleGroup: 'PERSONALIZADOS',
           moduleName: '',
           textOption: c.textOption,
           keyValue: key,
@@ -161,7 +161,7 @@ export default function MenuHierarchyEditor() {
 
   const saveChanges = async () => {
     const flat = flattenHierarchy(hierarchyData);
-    const toSave = flat.filter(i => i.moduleGroup === 'CUSTOM' && changedItems.has(i.keyValue));
+    const toSave = flat.filter(i => i.moduleGroup === 'PERSONALIZADOS' && changedItems.has(i.keyValue));
     for (const i of toSave) {
       const p = flat.find(x => x.keyValue === i.pKey);
       await fetch('http://localhost:5173/mslauncher/api/v1/UpdateMenuCustomOption', {
@@ -230,12 +230,12 @@ export default function MenuHierarchyEditor() {
     }
   };
   const onDragStart = (e, it) => {
-    if (it.moduleGroup === 'CUSTOM') {
+    if (it.moduleGroup === 'PERSONALIZADOS') {
       setDragItem(it);
       e.currentTarget.classList.add('bg-blue-50','border-blue-300');
     }
   };
-  const onDragOver = e => { if (dragItem?.moduleGroup === 'CUSTOM') e.preventDefault(); };
+  const onDragOver = e => { if (dragItem?.moduleGroup === 'PERSONALIZADOS') e.preventDefault(); };
   const onDrop = (e, target) => {
     if (!dragItem) return;
     e.preventDefault();
@@ -255,10 +255,21 @@ export default function MenuHierarchyEditor() {
     }
   };
 
+  // Función de traducción de los nombres de grupos
+  const translateModuleGroup = (group) => {
+    const translations = {
+      'AUXILIARIES': 'AUXILIARES',
+      'FINANCIAL': 'FINANCIEROS',
+      'OPERATIVES': 'NUCLEARES',
+      'CUSTOM': 'PERSONALIZADOS'
+    };
+    return translations[group] || group;
+  };
+
   const renderItem = (item, idx, path = []) => {
     const exp = expandedItems[item.keyValue];
     const has = !!item.children?.length;
-    const custom = item.moduleGroup === 'CUSTOM';
+    const custom = item.moduleGroup === 'PERSONALIZADOS';
     return (
       <div key={item.keyValue} className="menu-item">
         <div
@@ -279,7 +290,7 @@ export default function MenuHierarchyEditor() {
           {changedItems.has(item.keyValue) && <span className="inline-block h-2 w-2 bg-red-500 rounded-full mr-1"/>}
           <span className="ml-1 font-medium text-gray-700 dark:text-gray-300">{item.textOption}</span>
           <div className="ml-4 flex items-center">
-            <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-semantic.blue dark:bg-primary-blue dark:text-white rounded">{item.moduleGroup}</span>
+            <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-semantic.blue dark:bg-primary-blue dark:text-white rounded">{translateModuleGroup(item.moduleGroup)}</span>
             <span className="mx-1 text-sm text-gray-500 dark:text-gray-400">→</span>
             <span className="text-sm text-gray-500 dark:text-gray-400">{item.moduleName}</span>
           </div>
