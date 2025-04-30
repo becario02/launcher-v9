@@ -99,11 +99,11 @@ export default function ModulePage() {
     setIsLoading(true);
     try {
       const res = await fetch(
-        'http://localhost:5173/mslauncher/api/v1/MenuCustomOption',
+        'http://localhost:5173/mslauncher/api/v1/MenuByUser',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idCompany: selectedCompany.idCompany }),
+          body: JSON.stringify({ idUser: selectedCompany.idUser }),
         }
       );
       const { data } = await res.json();

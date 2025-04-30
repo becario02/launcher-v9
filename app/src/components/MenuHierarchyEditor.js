@@ -295,8 +295,6 @@ export default function MenuHierarchyEditor() {
             <span className="text-sm text-gray-500 dark:text-gray-400">{item.moduleName}</span>
           </div>
           <div className="ml-auto flex items-center space-x-2">
-            <button onClick={() => moveUp(item, path)} title="Arriba"><ArrowUp size={16}/></button>
-            <button onClick={() => moveDown(item, path)} title="Abajo"><ArrowDown size={16}/></button>
             <button onClick={() => makeRoot(item)} title="Hacer raíz"><MoveVertical size={16}/></button>
           </div>
         </div>
