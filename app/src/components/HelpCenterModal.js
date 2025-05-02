@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { X, Bookmark, PlayCircle, FileText, HelpCircle } from 'lucide-react';
 
 // Estilos personalizados para scrollbar
@@ -115,6 +116,39 @@ const YouTubeVideoCard = ({ videoUrl, title }) => {
 
 const HelpCenterModal = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState('videos');
+  const [videos, setVideos] = useState([]);
+  const [isLoadingVideos, setIsLoadingVideos] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Función para obtener videos activos de la API
+  const fetchActiveVideos = async () => {
+    setIsLoadingVideos(true);
+    setError(null);
+    try {
+      const response = await axios.get('http://localhost:5173/mslauncher/api/v1/videos', {
+        params: {
+          status: 'ACTIVE',
+          page: 1,
+          pageSize: 100 // Obtener una gran cantidad de videos activos
+        }
+      });
+      
+      const responseData = response.data;
+      setVideos(responseData.data || []);
+    } catch (err) {
+      console.error('Error al cargar videos:', err);
+      setError('No se pudieron cargar los videos.');
+    } finally {
+      setIsLoadingVideos(false);
+    }
+  };
+
+  // Cargar videos cuando el modal se abre
+  useEffect(() => {
+    if (isOpen && activeTab === 'videos') {
+      fetchActiveVideos();
+    }
+  }, [isOpen, activeTab]);
   
   // Cierra el modal con la tecla Escape
   useEffect(() => {
@@ -146,40 +180,6 @@ const HelpCenterModal = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  // Datos de ejemplo para los videos tutoriales con URLs reales de YouTube
-  const tutorialVideos = [
-    {
-      id: 1,
-      title: 'Introducción a la plataforma - Primeros pasos',
-      url: 'https://www.youtube.com/watch?v=8ocMcgUfFT8',
-    },
-    {
-      id: 2,
-      title: 'Cómo usar el panel de administración',
-      url: 'https://www.youtube.com/watch?v=8SDBDEpRgYI',
-    },
-    {
-      id: 3,
-      title: 'Tutorial de generación de reportes',
-      url: 'https://www.youtube.com/watch?v=kg5KflKIzPk',
-    },
-    {
-      id: 4,
-      title: 'Configuración de perfiles de usuario',
-      url: 'https://www.youtube.com/watch?v=8ocMcgUfFT8',
-    },
-    {
-      id: 5,
-      title: 'Optimización de flujos de trabajo',
-      url: 'https://www.youtube.com/watch?v=kg5KflKIzPk',
-    },
-    {
-      id: 6,
-      title: 'Integración con herramientas externas',
-      url: 'https://www.youtube.com/watch?v=8SDBDEpRgYI',
-    },
-  ];
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'videos':
@@ -189,15 +189,49 @@ const HelpCenterModal = ({ isOpen, onClose }) => {
               <PlayCircle className="text-blue-500" size={24} />
               <h2 className="text-2xl font-medium text-gray-800 dark:text-gray-100">Video tutoriales</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {tutorialVideos.map(video => (
-                <YouTubeVideoCard 
-                  key={video.id} 
-                  videoUrl={video.url} 
-                  title={video.title} 
-                />
-              ))}
-            </div>
+            
+            {isLoadingVideos ? (
+              // Estado de carga
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, index) => (
+                  <div key={index} className="flex flex-col rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 animate-pulse">
+                    <div className="w-full h-40 bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="p-4">
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : error ? (
+              // Estado de error
+              <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+                <p className="mb-4">{error}</p>
+                <button 
+                  onClick={fetchActiveVideos}
+                  className="text-blue-500 hover:text-blue-600"
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : videos.length === 0 ? (
+              // Estado sin videos
+              <div className="flex justify-center items-center h-64">
+                <p className="text-gray-500 dark:text-gray-400">
+                  No hay videos tutoriales disponibles.
+                </p>
+              </div>
+            ) : (
+              // Estado con videos
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {videos.map(video => (
+                  <YouTubeVideoCard 
+                    key={video.idVideo} 
+                    videoUrl={video.url} 
+                    title={video.title} 
+                  />
+                ))}
+              </div>
+            )}
           </>
         );
       case 'saved':
@@ -220,11 +254,6 @@ const HelpCenterModal = ({ isOpen, onClose }) => {
       id: 'saved',
       label: 'Elementos guardados',
       icon: <Bookmark size={18} className="mr-3" />
-    },
-    {
-      id: 'faq',
-      label: 'Preguntas frecuentes',
-      icon: <HelpCircle size={18} className="mr-3" />
     },
     {
       id: 'videos',
