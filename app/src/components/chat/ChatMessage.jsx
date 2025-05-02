@@ -40,7 +40,7 @@ const ChatMessage = ({ text, from, userQuery, initial }) => {
         <a
           {...attributes}
           onClick={handleClick}
-          className="inline-flex items-center gap-1 text-[#0080ff] hover:underline break-all"
+          className="inline-flex items-center gap-1 text-[var(--primary-color)] hover:underline break-all"
           target={isPdf ? undefined : '_blank'}
           rel={isPdf ? undefined : 'noopener noreferrer'}
         >
@@ -83,7 +83,7 @@ const ChatMessage = ({ text, from, userQuery, initial }) => {
     <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
       {isUser ? (
         <div className="w-full flex justify-end">
-          <div className="bg-[#0080ff] text-white rounded-xl rounded-br-none px-4 py-3 text-sm max-w-[90%] whitespace-pre-wrap break-words">
+          <div className="bg-[var(--primary-color)] text-white rounded-xl rounded-br-none px-4 py-3 text-sm max-w-[90%] whitespace-pre-wrap break-words">
             {text}
           </div>
         </div>
@@ -92,19 +92,19 @@ const ChatMessage = ({ text, from, userQuery, initial }) => {
           <div className="w-[30px] h-[30px] flex-shrink-0">
             <img src="/assets/chatbot/bot-avatar.svg" alt="Bot Avatar" className="w-full h-full" />
           </div>
-          <div className="bg-[#f0f4f8] text-gray-800 rounded-xl rounded-bl-none px-4 py-3 text-sm max-w-[100%] whitespace-pre-wrap break-words">
+          <div className="bg-[#f0f4f8] dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-xl rounded-bl-none px-4 py-3 text-sm max-w-[100%] whitespace-pre-wrap break-words">
             <Linkify options={linkOptions}>{text}</Linkify>
           </div>
         </div>
       )}
 
       {!isUser && !initial && (
-        <div className="pl-[40px] mt-2 flex items-center justify-between gap-4 text-xs text-gray-500">
+        <div className="pl-[40px] mt-2 flex items-center justify-between gap-4 text-xs text-gray-500 dark:text-gray-400">
           <span>Generada por IA. Verifica que la información sea correcta.</span>
           <div className="flex gap-2">
             <button
               onClick={() => setFeedback('like')}
-              className={`p-1 rounded-md transition ${feedback === 'like' ? 'bg-green-100 text-green-600' : 'hover:bg-gray-100 text-gray-500'
+              className={`p-1 rounded-md transition ${feedback === 'like' ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400'
                 }`}
               title="Útil"
             >
@@ -115,7 +115,7 @@ const ChatMessage = ({ text, from, userQuery, initial }) => {
                 setFeedback('dislike');
                 setShowModal(true);
               }}
-              className={`p-1 rounded-md transition ${feedback === 'dislike' ? 'bg-red-100 text-red-600' : 'hover:bg-gray-100 text-gray-500'
+              className={`p-1 rounded-md transition ${feedback === 'dislike' ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400'
                 }`}
               title="No útil"
             >
@@ -127,14 +127,14 @@ const ChatMessage = ({ text, from, userQuery, initial }) => {
 
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl w-full max-w-md p-6 space-y-4 shadow-lg">
-            <h2 className="text-lg font-semibold">¿Qué podemos mejorar?</h2>
-            <p className="text-sm text-gray-600">Selecciona una razón:</p>
+          <div className="bg-white dark:bg-[#1c1c24] rounded-xl w-full max-w-md p-6 space-y-4 shadow-lg">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">¿Qué podemos mejorar?</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Selecciona una razón:</p>
             <div className="space-y-2">
               {['No respondió a mi pregunta', 'Fue confuso o poco claro', 'Otra razón'].map((reason) => (
                 <button
                   key={reason}
-                  className={`w-full border rounded-md px-4 py-2 text-left ${selectedReason === reason ? 'bg-blue-100 border-blue-400' : 'hover:bg-gray-100'
+                  className={`w-full border border-gray-200 dark:border-gray-600 rounded-md px-4 py-2 text-left text-gray-800 dark:text-gray-200 ${selectedReason === reason ? 'bg-blue-100 dark:bg-blue-900 border-blue-400 dark:border-blue-500' : 'hover:bg-gray-100 dark:hover:bg-gray-700'
                     }`}
                   onClick={() => setSelectedReason(reason)}
                 >
@@ -144,11 +144,11 @@ const ChatMessage = ({ text, from, userQuery, initial }) => {
             </div>
 
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Comentario (opcional):</label>
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Comentario (opcional):</label>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                className="w-full border rounded-md px-3 py-2 text-sm"
+                className="w-full border border-gray-200 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
                 rows={3}
                 placeholder="Describe cómo podríamos mejorar..."
               />
@@ -157,14 +157,14 @@ const ChatMessage = ({ text, from, userQuery, initial }) => {
             <div className="flex justify-end gap-2 pt-4">
               <button
                 onClick={() => setShowModal(false)}
-                className="text-sm text-gray-600 hover:underline"
+                className="text-sm text-gray-600 dark:text-gray-400 hover:underline"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleFeedbackSubmit}
                 disabled={sending || !selectedReason}
-                className="bg-[#0080ff] text-white px-4 py-2 rounded-md text-sm hover:bg-blue-600 disabled:opacity-50"
+                className="bg-[var(--primary-color)] text-white px-4 py-2 rounded-md text-sm hover:opacity-90 disabled:opacity-50"
               >
                 {sending ? 'Enviando...' : 'Enviar'}
               </button>

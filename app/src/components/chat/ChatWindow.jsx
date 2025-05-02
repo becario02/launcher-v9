@@ -80,13 +80,13 @@ const ChatWindow = ({ messages, onSendMessage, onClose, loading, isClosing }) =>
 
   return (
     <div
-      className={`fixed bottom-6 right-6 w-96 max-w-full bg-white rounded-2xl shadow-lg flex flex-col z-50 border border-gray-200 max-h-[80vh]
+      className={`fixed bottom-6 right-6 w-96 max-w-full bg-white dark:bg-[#1c1c24] rounded-2xl shadow-lg flex flex-col z-50 border border-gray-200 dark:border-gray-700 max-h-[80vh]
         transition-all duration-300 ease-out transform
         ${isClosing ? 'opacity-0 translate-y-4' : animateIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
       `}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[#0080ff] text-white rounded-t-2xl">
+      <div className="flex items-center justify-between px-4 py-3 bg-[var(--primary-color)] text-white rounded-t-2xl">
         <span className="font-semibold">Asistente Virtual</span>
         <button onClick={onClose} aria-label="Cerrar chat">
           <X size={20} />
@@ -94,7 +94,7 @@ const ChatWindow = ({ messages, onSendMessage, onClose, loading, isClosing }) =>
       </div>
 
       {/* Mensajes */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-white scrollbar-custom">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-white dark:bg-[#1c1c24] scrollbar-custom">
         {messages.map((msg, idx) => {
           const userQuery = messages
             .slice(0, idx)
@@ -123,10 +123,10 @@ const ChatWindow = ({ messages, onSendMessage, onClose, loading, isClosing }) =>
               />
             </div>
 
-            <div className="bg-[#f0f4f8] py-[10px] px-[14px] rounded-xl flex items-center space-x-1">
-              <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:0s]" />
-              <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:0.2s]" />
-              <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:0.4s]" />
+            <div className="bg-[#f0f4f8] dark:bg-gray-800 py-[10px] px-[14px] rounded-xl flex items-center space-x-1">
+              <span className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce [animation-delay:0s]" />
+              <span className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+              <span className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]" />
             </div>
           </div>
         )}
@@ -135,10 +135,10 @@ const ChatWindow = ({ messages, onSendMessage, onClose, loading, isClosing }) =>
       </div>
 
       {/* Input y botones */}
-      <div className="flex items-center gap-2 border-t p-3 bg-white">
+      <div className="flex items-center gap-2 border-t border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-[#1c1c24]">
         <input
           type="text"
-          className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0080ff]"
+          className="flex-1 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
@@ -149,7 +149,7 @@ const ChatWindow = ({ messages, onSendMessage, onClose, loading, isClosing }) =>
         <button
           onClick={startRecording}
           title="Dictar por voz"
-          className={`p-2 rounded-md transition ${isRecording ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+          className={`p-2 rounded-md transition ${isRecording ? 'bg-red-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
             }`}
         >
           <Mic size={18} />
@@ -157,7 +157,7 @@ const ChatWindow = ({ messages, onSendMessage, onClose, loading, isClosing }) =>
 
         {/* Botón enviar */}
         <button
-          className="px-4 py-2 rounded-md text-sm text-white bg-[#0080ff] hover:bg-blue-600 transition"
+          className="px-4 py-2 rounded-md text-sm text-white bg-[var(--primary-color)] hover:opacity-90 transition"
           onClick={handleSend}
           disabled={loading}
         >
