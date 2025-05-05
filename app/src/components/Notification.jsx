@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Info, AlertTriangle } from 'lucide-react'; // solo importamos estos para info y warning
 
 export default function Notification({
-  type = 'success', // 'success' o 'error'
+  type = 'success', // 'success', 'error', 'info', 'warning'
   message = '',
   visible = false,
   duration = 3000,
@@ -52,11 +53,21 @@ export default function Notification({
       bg: '#ffecec',
       text: 'red',
     },
+    info: {
+      border: '#007bff',
+      bg: '#e7f3ff',
+      text: '#007bff',
+    },
+    warning: {
+      border: '#ff9900',
+      bg: '#fff7e6',
+      text: '#ff9900',
+    },
   };
 
   const current = colors[type] || colors.success;
 
-  // Icono personalizado según tipo
+  // Icono según tipo
   const getIcon = () => {
     if (type === 'success') {
       return (
@@ -124,6 +135,10 @@ export default function Notification({
           />
         </svg>
       );
+    } else if (type === 'info') {
+      return <Info size={20} color={current.text} />;
+    } else if (type === 'warning') {
+      return <AlertTriangle size={20} color={current.text} />;
     }
   };
 

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
-import Notification from '@/components/admin/news/Notification';
+import Notification from '@/components/Notification';
 import SubMenu from '@/components/SubMenu';
 import InstanceModal from '@/components/InstanceModal';
 
