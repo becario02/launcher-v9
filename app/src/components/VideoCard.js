@@ -34,7 +34,7 @@ export default function VideoCard({ video, onView, onEdit, onDelete }) {
         'font-poppins'
       )}
     >
-      {/* Thumbnail - clickable ahora */}
+      {/* Thumbnail - clickable con overlay siempre visible */}
       <div 
         className="relative w-full h-48 bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden cursor-pointer group"
         onClick={() => onView('view', video)}
@@ -46,17 +46,18 @@ export default function VideoCard({ video, onView, onEdit, onDelete }) {
               alt={video.title}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
-            {/* Overlay de play */}
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-              <PlayCircle className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            {/* Overlay semi-transparente siempre visible */}
+            <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-10 transition-opacity duration-300 flex items-center justify-center">
+              {/* Ícono de play siempre visible */}
+              <PlayCircle className="w-16 h-16 text-white drop-shadow-lg" />
             </div>
           </>
         ) : (
           <>
-            <Video className="w-12 h-12 text-gray-400 dark:text-gray-600" />
-            {/* Overlay de play para videos sin thumbnail */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <PlayCircle className="w-12 h-12 text-gray-400 dark:text-gray-600" />
+            <Video className="w-12 h-12 text-gray-400 dark:text-gray-600 opacity-50" />
+            {/* Overlay para videos sin thumbnail */}
+            <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-10 transition-opacity duration-300 flex items-center justify-center">
+              <PlayCircle className="w-16 h-16 text-white dark:text-gray-300 drop-shadow-lg" />
             </div>
           </>
         )}
@@ -122,7 +123,7 @@ export default function VideoCard({ video, onView, onEdit, onDelete }) {
             <span>Editar</span>
           </button>
           <button
-            onClick={() => onDelete(video.idVideo)}
+            onClick={() => onDelete(video)} // Pasar el objeto completo del video
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-800 transition text-sm"
           >
             <Trash2 className="w-4 h-4" />

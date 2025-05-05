@@ -11,6 +11,7 @@ import {
   Newspaper,
   Menu,
   Users,
+  Video,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -37,6 +38,8 @@ function getActiveItemFromPath(pathname) {
     return 'AdminMenus';
   } else if (pathname.includes('/admin/users')) {
     return 'AdminUsers';
+  } else if (pathname.includes('/admin/videos')) {
+    return 'AdminVideos';
   } else if (pathname.includes('/nucleares')) {
     return 'NUCLEARES';
   } else if (pathname.includes('/financieros')) {
@@ -286,6 +289,12 @@ export default function Sidebar({ onClose }) {
               text="Admin Usuarios"
               active={activeItem === 'AdminUsers'}
               onClick={() => navigateTo('/admin/users', 'AdminUsers')}
+            />
+            <SidebarItem
+              icon={Video}
+              text="Admin Videos"
+              active={activeItem === 'AdminVideos'}
+              onClick={() => navigateTo('/admin/videos', 'AdminVideos')}
             />
           </>
         )}
