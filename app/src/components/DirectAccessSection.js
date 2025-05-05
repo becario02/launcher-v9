@@ -19,6 +19,7 @@ import { Trash2, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '@/context/CompanyContext';
+import Notification from './Notification';
 
 const translateModuleGroup = (moduleGroup) => {
   const translations = {
@@ -91,10 +92,18 @@ const DirectAccessSection = () => {
   const [activeId, setActiveId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [idToDelete, setIdToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
+
+  const [notification, setNotification] = useState({
+    visible: false,
+    type: 'success',
+    message: '',
+    style: 'toast'
+  });  
 
   useEffect(() => {
     const fetchAccesses = async () => {
@@ -179,6 +188,7 @@ const DirectAccessSection = () => {
   // Función que elimina después de confirmar
   const handleDelete = async () => {
     if (!idToDelete) return;
+    setIsDeleting(true); // Activar estado cargando
 
     try {
       await fetch('http://localhost:5173/mslauncher/api/v1/DeleteMenuShortCuts', {
@@ -188,9 +198,23 @@ const DirectAccessSection = () => {
       });
 
       setItems((prevItems) => prevItems.filter((item) => item.id !== idToDelete));
+      setNotification({
+        visible: true,
+        type: 'success',
+        message: 'Acceso directo eliminado correctamente.',
+        style: 'toast'
+      });
+
     } catch (error) {
       console.error(`Error deleting shortcut with id ${idToDelete}:`, error);
+      setNotification({
+        visible: true,
+        type: 'error',
+        message: 'Hubo un problema al eliminar el acceso directo.',
+        style: 'toast'
+      });
     } finally {
+      setIsDeleting(false); // Desactivar estado cargando
       setShowModal(false);
       setIdToDelete(null);
     }
@@ -207,6 +231,19 @@ const DirectAccessSection = () => {
   } : null;
 
   return (
+    <>
+    {/* NOTIFICACIÓN */}
+    {notification.visible && notification.style === 'toast' && (
+      <div className="fixed top-4 right-4 z-[9999]">
+        <Notification
+          visible
+          type={notification.type}
+          message={notification.message}
+          style="toast"
+          onClose={() => setNotification((prev) => ({ ...prev, visible: false }))}
+        />
+      </div>
+    )}
     <section className="font-[Poppins] bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-xl px-5 py-4 shadow-sm">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-[13px] font-medium text-gray-800 dark:text-gray-100">
@@ -279,28 +316,92 @@ const DirectAccessSection = () => {
 
       {/* Modal de Confirmación */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-[#1C1C24] rounded-lg p-6 w-full max-w-sm">
-            <h2 className="text-lg font-bold mb-4 text-center text-gray-800 dark:text-gray-100">¿Eliminar acceso directo?</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6 text-center">Esta acción no se puede deshacer.</p>
-            <div className="flex justify-between">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400 text-gray-700 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-white dark:bg-[#1C1C24] rounded-xl shadow-lg p-8 w-full max-w-sm text-center">
+          
+          {/* Ícono + Título en la misma fila */}
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="bg-[#FFEFEF] dark:bg-[#402020] rounded-full p-2">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="text-red-500"
               >
-                Cancelar
-              </button>
-              <button
-                onClick={handleDelete}
-                className="px-4 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white"
-              >
-                Eliminar
-              </button>
+                <path
+                  d="M14 11v6M10 11v6M6 7v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7M4 7h16M7 7l2-4h6l2 4"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </div>
+            <h2 className="text-h3 font-regular text-gray-800 dark:text-gray-100">
+              ¿Eliminar acceso directo?
+            </h2>
+          </div>
+
+
+          {/* Texto principal */}
+          <p className="text-p font-regular text-gray-600 dark:text-gray-400 mb-4">
+            Estás a punto de eliminar este acceso directo, ya no aparecerá en tu lista.
+          </p>
+
+          {/* Pregunta final */}
+          <p className="text-p text-gray-600 dark:text-gray-400 font-regular mb-6">
+            ¿Estás seguro de ejecutar esta acción?
+          </p>
+
+          {/* Botones */}
+          <div className="flex justify-center gap-3">
+            <button
+              onClick={() => setShowModal(false)}
+              className="px-5 py-2 text-p rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className={`px-5 py-2 rounded-md text-white flex items-center text-p justify-center gap-2 ${
+                isDeleting
+                  ? 'bg-primary cursor-not-allowed'
+                  : 'bg-primary hover:bg-primary-dark'
+              }`}
+            >
+              {isDeleting && (
+                <svg
+                  className="animate-spin h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8z"
+                  ></path>
+                </svg>
+              )}
+              {isDeleting ? 'Eliminando...' : 'Confirmar'}
+            </button>
           </div>
         </div>
-      )}
+      </div>
+    )}
     </section>
+    </>
   );
 };
 

@@ -141,7 +141,7 @@ export default function PermissionsModal({
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="sticky top-0 z-10 flex items-center px-6 py-4 bg-primary-blue">
+          <div className="sticky top-0 z-10 flex items-center px-6 py-4 bg-primary">
             <div className="absolute left-6 hidden lg:block">
               <h2 className="flex items-center text-h2 font-semibold text-white">
                 <Users className="mr-2" /> Configurar Audiencia
@@ -157,7 +157,7 @@ export default function PermissionsModal({
                   className={`
                     flex items-center px-3 py-1 sm:px-4 sm:py-1.5 text-p font-medium rounded-full transition-colors
                     ${viewMode === 'add'
-                      ? 'bg-white dark:bg-gray-800 shadow-sm text-primary-blue'
+                      ? 'bg-white dark:bg-gray-800 shadow-sm text-primary'
                       : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100'}
                   `}
                 >
@@ -168,7 +168,7 @@ export default function PermissionsModal({
                   className={`
                     flex items-center px-3 py-1 sm:px-4 sm:py-1.5 text-p font-medium rounded-full transition-colors
                     ${viewMode === 'view'
-                      ? 'bg-white dark:bg-gray-800 shadow-sm text-primary-blue'
+                      ? 'bg-white dark:bg-gray-800 shadow-sm text-primary'
                       : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100'}
                   `}
                 >

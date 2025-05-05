@@ -15,6 +15,11 @@ export default function NewsCard({
 
   // Usa la clase 'bg-primary' que apunta a tu CSS variable --primary
   const categoryValueStyle = 'bg-primary text-white rounded-full px-2 py-0.5';
+  const categoryTranslations = {
+    NEWS: 'Noticias',
+    ADVICE: 'Consejo',
+    NOTIFICATION: 'Notificación'
+  };
 
   return (
     <div
@@ -60,7 +65,9 @@ export default function NewsCard({
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-1 text-xs">
             <span className="text-gray-4 dark:text-gray-3">Categoría:</span>
-            <span className={categoryValueStyle}>{item.category}</span>
+            <span className={categoryValueStyle}>
+              {categoryTranslations[item.category] || item.category}
+            </span>
           </div>
           <span
             className={`

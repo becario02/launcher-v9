@@ -96,11 +96,11 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
     <>
       {/* Content */}
       <div className="p-6 overflow-y-auto flex-grow bg-white dark:bg-gray-7">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Aplicaciones */}
           <div className="bg-gray-1 dark:bg-gray-6 rounded-xl p-4 border border-gray-2 dark:border-gray-6 flex flex-col">
             <div className="flex items-center mb-3">
-              <Layers className="text-primary-blue mr-2" size={18} />
+              <Layers className="text-primary mr-2" size={18} />
               <h3 className="font-medium text-gray-5 dark:text-gray-2 text-h3">APLICACIONES</h3>
               <span className="ml-2 bg-indigo-50 dark:bg-blue-900 dark:bg-opacity-20 text-primary-blue text-p-small font-medium px-2 py-0.5 rounded-full">
                 {filteredApplications.length}
@@ -134,8 +134,8 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
                     key={index} 
                     className="flex items-center p-2 mb-1 hover:bg-gray-1 dark:hover:bg-gray-6 rounded-md transition-colors"
                   >
-                    <div className="bg-indigo-100 dark:bg-blue-900 dark:bg-opacity-20 p-2 rounded-md mr-3 flex-shrink-0">
-                      <Layers size={16} className="text-primary-blue" />
+                    <div className="bg-indigo-100 dark:bg-gray-2 dark:bg-opacity-20 p-2 rounded-md mr-3 flex-shrink-0">
+                      <Layers size={16} className="text-primary" />
                     </div>
                     <div className="flex-grow">
                       <p className="text-p font-medium text-gray-5 dark:text-gray-2">{app.name || 'Sin nombre'}</p>
@@ -159,7 +159,7 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
           {/* Clientes */}
           <div className="bg-gray-1 dark:bg-gray-6 rounded-xl p-4 border border-gray-2 dark:border-gray-6 flex flex-col">
             <div className="flex items-center mb-3">
-              <Building2 className="text-primary-blue mr-2" size={18} />
+              <Building2 className="text-primary mr-2" size={18} />
               <h3 className="font-medium text-gray-5 dark:text-gray-2 text-h3">CLIENTES</h3>
               <span className="ml-2 bg-indigo-50 dark:bg-blue-900 dark:bg-opacity-20 text-primary-blue text-p-small font-medium px-2 py-0.5 rounded-full">
                 {filteredClients.length}
@@ -193,8 +193,8 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
                     key={index} 
                     className="flex items-center p-2 mb-1 hover:bg-gray-1 dark:hover:bg-gray-6 rounded-md transition-colors"
                   >
-                    <div className="bg-indigo-100 dark:bg-blue-900 dark:bg-opacity-20 p-2 rounded-md mr-3 flex-shrink-0">
-                      <Building2 size={16} className="text-primary-blue" />
+                    <div className="bg-indigo-100 dark:bg-gray-2 dark:bg-opacity-20 p-2 rounded-md mr-3 flex-shrink-0">
+                      <Building2 size={16} className="text-primary" />
                     </div>
                     <div className="flex-grow">
                       <p className="text-p font-medium text-gray-5 dark:text-gray-2">{client.name || 'Sin nombre'}</p>
@@ -210,102 +210,6 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
                   {clientSearchTerm 
                     ? `No se encontraron clientes con "${clientSearchTerm}"` 
                     : 'No hay clientes asignados'}
-                </p>
-              )}
-            </div>
-          </div>
-          
-          {/* Usuarios */}
-          <div className="bg-gray-1 dark:bg-gray-6 rounded-xl p-4 border border-gray-2 dark:border-gray-6 flex flex-col">
-            <div className="flex items-center mb-3">
-              <Users className="text-primary-blue mr-2" size={18} />
-              <h3 className="font-medium text-gray-5 dark:text-gray-2 text-h3">USUARIOS</h3>
-              <span className="ml-2 bg-indigo-50 dark:bg-blue-900 dark:bg-opacity-20 text-primary-blue text-p-small font-medium px-2 py-0.5 rounded-full">
-                {Object.values(filteredUserGroups).reduce((total, group) => total + group.users.length, 0)}
-              </span>
-            </div>
-            
-            {/* Buscador de usuarios */}
-            <div className="relative mb-3">
-              <input
-                type="text"
-                placeholder="Buscar usuarios..."
-                value={userSearchTerm || ''}
-                onChange={(e) => setUserSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border-gray-2 dark:border-gray-6 text-primary-blue dark:text-white placeholder:text-primary-blue dark:placeholder:text-gray-3 bg-white dark:bg-gray-7 border rounded-md text-p focus:outline-none focus:ring-2 focus:ring-primary-blue"
-              />
-              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-blue dark:text-gray-3" />
-              {userSearchTerm && (
-                <button
-                  onClick={() => setUserSearchTerm('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-3 hover:text-gray-4 dark:text-gray-4 dark:hover:text-gray-2"
-                >
-                  <X size={14} className="text-primary-blue dark:text-gray-3" />
-                </button>
-              )}
-            </div>
-            
-            <div className="flex-grow overflow-y-auto max-h-[280px] px-1 py-2 bg-white dark:bg-gray-7 rounded-lg border border-gray-2 dark:border-gray-6">
-              {Object.keys(filteredUserGroups).length > 0 ? (
-                Object.keys(filteredUserGroups).map(clientId => {
-                  const clientGroup = filteredUserGroups[clientId];
-                  const isExpanded = expandedClients[clientId] !== false;
-                  
-                  return (
-                    <div key={clientId} className="mb-3">
-                      {/* Encabezado del grupo de cliente con botón para colapsar/expandir */}
-                      <div className="w-full bg-gray-1 dark:bg-gray-6 rounded-md mb-1">
-                        <button 
-                          onClick={() => toggleClientExpanded(clientId)}
-                          className="w-full px-3 py-1.5 text-p font-medium text-gray-5 dark:text-gray-2 flex items-center justify-between hover:bg-gray-2 dark:hover:bg-gray-5 transition-colors"
-                        >
-                          <div className="flex items-center">
-                            <Building2 size={14} className="mr-1.5 text-primary-blue" />
-                            <span>{clientGroup.clientName}</span>
-                            <span className="ml-2 text-p-small text-gray-3">
-                              ({clientGroup.users.length} {clientGroup.users.length === 1 ? 'usuario' : 'usuarios'})
-                            </span>
-                          </div>
-                          
-                          <div className="flex items-center">
-                            {/* Icono para indicar expandido/colapsado */}
-                            <div className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
-                              <ChevronDown size={16} className="text-primary-blue" />
-                            </div>
-                          </div>
-                        </button>
-                      </div>
-                      
-                      {/* Lista de usuarios de este cliente (mostrar solo si está expandido) */}
-                      <div 
-                        className={`pl-2 overflow-hidden transition-all duration-200 ${
-                          isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
-                        }`}
-                      >
-                        {clientGroup.users.map((user, index) => (
-                          <div 
-                            key={index} 
-                            className="flex items-center p-2 mb-1 hover:bg-gray-1 dark:hover:bg-gray-6 rounded-md transition-colors"
-                          >
-                            <div className="bg-indigo-100 dark:bg-blue-900 dark:bg-opacity-20 p-2 rounded-md mr-3 flex-shrink-0">
-                              <Users size={14} className="text-primary-blue" />
-                            </div>
-                            <div className="flex-grow">
-                              <p className="text-p font-medium text-gray-5 dark:text-gray-2">{user.name || 'Sin nombre'}</p>
-                              <p className="text-p-small text-gray-3 truncate">{user.email || 'Sin email'}</p>
-                            </div>
-                            <div className="ml-2 w-2 h-2 rounded-full bg-green-500 flex-shrink-0" title="Asignado"></div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="text-p text-primary-blue dark:text-gray-3 text-center py-4">
-                  {userSearchTerm 
-                    ? `No se encontraron usuarios con "${userSearchTerm}"` 
-                    : 'No hay usuarios asignados'}
                 </p>
               )}
             </div>
@@ -327,7 +231,7 @@ export default function ViewAudience({ assignedAudience, handleCloseModal }) {
         
         <button 
           onClick={handleCloseModal}
-          className="px-4 py-2 text-p text-semantic-red dark:text-semantic-red bg-white dark:bg-gray-7 border-semantic-red dark:border-semantic-red hover:bg-semantic-r dark:hover:bg-gray-6 border rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5">
+          className="px-4 py-2 text-p text-primary dark:text-primary bg-white dark:bg-gray-7 border-primary dark:border-primary hover:bg-semantic-r dark:hover:bg-gray-6 border rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5">
           Cerrar
         </button>
       </div>

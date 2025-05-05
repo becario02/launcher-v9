@@ -131,10 +131,21 @@ export default function AddPermissions({
           ...clientsToSelect.filter(client => client && client.id).map(client => client.id)
         ])
       ];
-      
+    
+      // ✅ NUEVO: Recolectar todos los usuarios de los nuevos clientes seleccionados
+      const newUserIds = new Set(permissions.users || []);
+      newSelectedClients.forEach(clientId => {
+        if (clientUserRelations[clientId]) {
+          clientUserRelations[clientId].forEach(userId => {
+            if (userId) newUserIds.add(userId);
+          });
+        }
+      });
+    
       setPermissions({
         ...permissions,
-        clients: newSelectedClients
+        clients: newSelectedClients,
+        users: Array.from(newUserIds) // ✅ Actualizar usuarios
       });
     } else {
       const clientIdsToRemove = new Set(
@@ -269,20 +280,20 @@ export default function AddPermissions({
     
     // Si se cambia un cliente, actualizar usuarios
     if (type === 'clients') {
-      // Obtener usuarios válidos basados en los clientes seleccionados
       const validUserIds = new Set();
+      
+      // Recolectar todos los usuarios de los clientes seleccionados
       updatedPermissions.clients.forEach(clientId => {
         if (clientId && clientUserRelations[clientId]) {
-          (clientUserRelations[clientId] || []).forEach(userId => {
+          clientUserRelations[clientId].forEach(userId => {
             if (userId) validUserIds.add(userId);
           });
         }
       });
-      
-      // Mantener solo usuarios válidos
-      updatedPermissions.users = (updatedPermissions.users || [])
-        .filter(userId => userId && validUserIds.has(userId));
-    }
+    
+      // Nueva lista de usuarios: todos los usuarios de los clientes seleccionados
+      updatedPermissions.users = Array.from(validUserIds);
+    }    
     
     setPermissions(updatedPermissions);
     
@@ -368,11 +379,11 @@ export default function AddPermissions({
   return (
     <>
       <div className="p-6 flex-grow overflow-y-auto bg-gray-100 dark:bg-gray-7">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {/* Aplicaciones */}
           <div className="flex flex-col p-4 bg-white border border-gray-200 rounded-xl dark:bg-gray-6 dark:border-gray-6">
             <div className="flex items-center mb-3">
-              <Layers size={18} className="mr-2 text-primary-blue" />
+              <Layers size={18} className="mr-2 text-primary" />
               <h3 className="text-h3 font-medium text-gray-700 dark:text-gray-2">APLICACIONES</h3>
             </div>
             <div className="relative mb-3">
@@ -458,7 +469,7 @@ export default function AddPermissions({
           {/* Clientes */}
           <div className="flex flex-col p-4 bg-white border border-gray-200 rounded-xl dark:bg-gray-6 dark:border-gray-6">
             <div className="flex items-center mb-3">
-              <Building2 size={18} className="mr-2 text-primary-blue" />
+              <Building2 size={18} className="mr-2 text-primary" />
               <h3 className="text-h3 font-medium text-gray-700 dark:text-gray-2">CLIENTES</h3>
             </div>
             <div className="relative mb-3">
@@ -541,145 +552,7 @@ export default function AddPermissions({
             </div>
           </div>
 
-          {/* Usuarios */}
-          <div className="flex flex-col p-4 bg-white border border-gray-200 rounded-xl dark:bg-gray-6 dark:border-gray-6">
-            <div className="flex items-center mb-3">
-              <Users size={18} className="mr-2 text-primary-blue" />
-              <h3 className="text-h3 font-medium text-gray-700 dark:text-gray-2">USUARIOS</h3>
-            </div>
-            {permissions.clients?.length ? (
-              <>
-                <div className="relative mb-3">
-                  <input
-                    type="text"
-                    placeholder="Buscar usuarios..."
-                    value={userSearchTerm}
-                    onChange={e => setUserSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 border rounded-md text-p bg-gray-50 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-blue dark:bg-gray-7 dark:text-white dark:placeholder-gray-3 dark:border-gray-6"
-                  />
-                  <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-blue dark:text-gray-3" />
-                  {userSearchTerm && (
-                    <button
-                      onClick={() => setUserSearchTerm('')}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-4 dark:hover:text-gray-2"
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
-                </div>
-                <label className="flex items-center mb-2 p-2 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-6">
-                  <input
-                    type="checkbox"
-                    checked={allUsersSelected}
-                    onChange={handleSelectAllUsers}
-                    className="w-4 h-4 text-primary-blue border-gray-300 rounded focus:ring-primary-blue dark:bg-gray-7 dark:border-gray-6"
-                  />
-                  <span className="ml-2 text-p font-medium text-gray-700 dark:text-gray-2 hover:text-primary-blue">
-                    {userSearchTerm ? 'Todos los usuarios filtrados' : 'Todos los usuarios'}
-                  </span>
-                </label>
-                <div className="flex-grow overflow-y-auto p-1 bg-white border border-gray-200 rounded-lg dark:bg-gray-7 dark:border-gray-6 max-h-[280px]">
-                  {permissions.clients.map(clientId => {
-                    const clientUsers = getClientUsers(clientId);
-                    if (!clientUsers?.length) return null;
-                    const client = clients.find(c => c?.id === clientId);
-                    const isExpanded = expandedClients[clientId] !== false;
-                    const selectableUsers = clientUsers.filter(u => !isAlreadyAssigned('users', u));
-                    const allClientUsersSelected =
-                      selectableUsers.length &&
-                      selectableUsers.every(u => permissions.users?.includes(u.id));
-
-                    return (
-                      <div key={clientId} className="mb-3">
-                        <div className="mb-1 rounded-md border
-                                      bg-gray-50 border-gray-200
-                                      dark:bg-gray-6 dark:border-gray-6">
-                          <button
-                            onClick={() => toggleClientExpanded(clientId)}
-                            className="flex w-full items-center justify-between px-3 py-1.5 text-p font-medium text-gray-700 dark:text-gray-2 hover:bg-gray-100 dark:hover:bg-gray-5 transition-colors"
-                          >
-                            <div className="flex items-center">
-                              <Building2 size={14} className="mr-1.5 text-primary-blue" />
-                              <span>{client?.name}</span>
-                              <span className="ml-2 text-xs text-gray-500 dark:text-gray-3">
-                                ({clientUsers.length})
-                              </span>
-                            </div>
-                            <ChevronDown size={16} className={`text-primary-blue transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                          </button>
-                          <div className="flex justify-end px-3 pb-1.5">
-                            <label className="flex items-center text-p-small">
-                              <span className="mr-1 text-gray-500 dark:text-gray-3">Seleccionar todos</span>
-                              <input
-                                type="checkbox"
-                                checked={allClientUsersSelected}
-                                onChange={() => handleSelectClientUsers(clientId, clientUsers)}
-                                disabled={!selectableUsers.length}
-                                className="w-3.5 h-3.5 text-primary-blue border-gray-300 rounded focus:ring-primary-blue dark:bg-gray-7 dark:border-gray-6"
-                              />
-                            </label>
-                          </div>
-                        </div>
-                        <div className={`pl-2 transition-all duration-200 overflow-hidden ${isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                          {clientUsers.map(user => (
-                            <div
-                              key={user.id}
-                              className={`flex items-center p-2 mb-1 rounded-md transition-colors ${
-                                isAlreadyAssigned('users', user)
-                                  ? 'bg-gray-50 dark:bg-gray-6'
-                                  : 'hover:bg-gray-100 dark:hover:bg-gray-5 cursor-pointer'
-                              }`}
-                              title={isAlreadyAssigned('users', user) ? 'Ya asignado' : undefined}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={
-                                  isAlreadyAssigned('users', user) ||
-                                  permissions.users?.includes(user.id)
-                                }
-                                disabled={isAlreadyAssigned('users', user)}
-                                onChange={() => handlePermissionChange('users', user.id, user)}
-                                className={`w-4 h-4 rounded focus:ring-primary-blue ${
-                                  isAlreadyAssigned('users', user)
-                                    ? 'text-green-500 opacity-70 cursor-not-allowed'
-                                    : 'text-primary-blue'
-                                }`}
-                              />
-                              <span
-                                className={`ml-2 text-p truncate ${
-                                  isAlreadyAssigned('users', user)
-                                    ? 'text-gray-400 dark:text-gray-3'
-                                    : 'text-gray-700 dark:text-gray-2'
-                                }`}
-                              >
-                                {user.email || user.name}
-                              </span>
-                              {isAlreadyAssigned('users', user) && (
-                                <Info size={16} className="ml-auto text-green-500" />
-                              )}
-                            </div>
-                          ))}
-                          {!clientUsers.some(u => !isAlreadyAssigned('users', u)) && (
-                            <p className="py-4 text-center text-p text-gray-500 dark:text-gray-3">
-                              {userSearchTerm
-                                ? `No se encontraron resultados para "${userSearchTerm}"`
-                                : 'No hay usuarios disponibles para este cliente'}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center justify-center flex-grow p-4 bg-gray-50 dark:bg-gray-6 rounded-lg">
-                <p className="text-p text-gray-500 dark:text-gray-3 text-center">
-                  Selecciona al menos un cliente para ver usuarios
-                </p>
-              </div>
-            )}
-          </div>
+          
         </div>
       </div>
 
@@ -694,7 +567,7 @@ export default function AddPermissions({
         <button
           onClick={async () => { setSaving(true); await onSavePermissions(); setSaving(false); }}
           disabled={saving}
-          className="flex items-center px-4 py-2 text-p text-white bg-primary-blue rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-70 dark:bg-primary-blue"
+          className="flex items-center px-4 py-2 text-p text-white bg-primary rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-70 dark:bg-primary"
         >
           {saving ? (
             <>

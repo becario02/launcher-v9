@@ -45,7 +45,7 @@ const Navbar = ({ onMenuClick }) => {
           {/* Main navbar */}
           <div className="flex-1 max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-16">
             {/* Selector de empresa */}
-            <div className="w-40 sm:w-auto mr-4">
+            <div className="hidden md:block w-40 sm:w-auto mr-4">
               <CompanySelector />
             </div>
 

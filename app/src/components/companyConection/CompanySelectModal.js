@@ -46,6 +46,23 @@ const CompanySelectModal = () => {
     }
   };
 
+  function formatServer(server) {
+    if (!server) return '';
+    let hostPart = server;
+    let portOrInstance = '';
+    if (server.includes(':')) {
+      [hostPart, portOrInstance] = server.split(':');
+      portOrInstance = ':' + portOrInstance;
+    } else if (server.includes('\\')) {
+      [hostPart, portOrInstance] = server.split('\\');
+      portOrInstance = '\\' + portOrInstance;
+    }
+    const parts = hostPart.split('.');
+    const last = parts.pop();
+    const maskedParts = parts.map(part => '*'.repeat(part.length));
+    return maskedParts.concat(last).join('.') + portOrInstance;
+  }
+
   if (!showCompanyModal) return null;
 
   return (
@@ -91,7 +108,7 @@ const CompanySelectModal = () => {
                             <div className="text-[#696974] dark:text-gray-400 text-[12px] space-y-0.5">
                               <p className="truncate flex items-center">
                                 <span className="font-medium mr-1">Servidor:</span>
-                                {company.serverErpDb}
+                                {formatServer(company.serverErpDb)}
                               </p>
                               <p className="truncate flex items-center">
                                 <span className="font-medium mr-1">Base de datos:</span>

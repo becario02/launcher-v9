@@ -180,6 +180,23 @@ export default function Sidebar({ onClose }) {
 
   const isDivisionActive = ['NUCLEARES', 'FINANCIAL', 'AUXILIARES'].includes(activeItem);
 
+  function formatServer(server) {
+    if (!server) return '';
+    let hostPart = server;
+    let portOrInstance = '';
+    if (server.includes(':')) {
+      [hostPart, portOrInstance] = server.split(':');
+      portOrInstance = ':' + portOrInstance;
+    } else if (server.includes('\\')) {
+      [hostPart, portOrInstance] = server.split('\\');
+      portOrInstance = '\\' + portOrInstance;
+    }
+    const parts = hostPart.split('.');
+    const last = parts.pop();
+    const maskedParts = parts.map(part => '*'.repeat(part.length));
+    return maskedParts.concat(last).join('.') + portOrInstance;
+  }
+
   return (
     <div className="w-60 h-screen flex flex-col bg-white dark:bg-[#1c1c24] fixed top-0 left-0 z-10 border-r border-gray-200 dark:border-gray-700">
       {/* Header */}
@@ -290,7 +307,7 @@ export default function Sidebar({ onClose }) {
         <div className="bg-white dark:bg-[#1c1c24] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 space-y-3">
           <InfoItem label="Versión de licencia" value="12345" />
           <InfoItem label="Versión de BD" value="12345" />
-          <InfoItem label="IP" value={selectedCompany?.serverErpDb || 'Desconocido'} />
+          <InfoItem label="IP" value={formatServer(selectedCompany?.serverErpDb) || 'Desconocido'} />
           {/* Display user profile if available */}
           {user && user.profileName && (
             <InfoItem label="Perfil" value={user.profileName} />

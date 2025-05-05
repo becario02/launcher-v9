@@ -197,9 +197,9 @@ export default function NewsModal({
                   ${isView ? 'cursor-not-allowed opacity-60' : ''}
                 `}
               >
-                <option value="NEWS">NEWS</option>
-                <option value="ADVICE">ADVICE</option>
-                <option value="NOTIFICATION">NOTIFICATION</option>
+                <option value="NEWS">NOTICIAS</option>
+                <option value="ADVICE">CONSEJO</option>
+                <option value="NOTIFICATION">NOTIFICACIÓN</option>
               </select>
             </div>
 
