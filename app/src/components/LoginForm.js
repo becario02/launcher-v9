@@ -101,25 +101,40 @@ export default function LoginForm() {
           validateStatus: () => true
         }
       );
-      const msg = res.data.message || res.data.Message;
-      if (
-        msg === 'Usuario o contraseña incorrectos' ||
-        msg === 'Invalid username or password'
-      ) {
-        setError(msg);
-      } else if (
-        msg.startsWith('Se ha detectado') ||
-        msg.startsWith('New device detected')
-      ) {
+      
+      // Handle different scenarios based on response
+      if (res.data.statusCode === '401' && 
+          (res.data.message.includes('Has excedido el número de intentos') || 
+           res.data.message.includes('You have exceeded the allowed number'))) {
+        // Handle exceeded login attempts - move to verification method
+        // Save the message to display to the user
+        const securityMessage = res.data.message;
         setStep('method');
-      } else if (
-        msg === 'Inicio de sesión exitoso' ||
-        msg === 'Login successful'
-      ) {
-        saveSession(res.data.data);
-        return;
+        // Store the security message in localStorage to access it in the VerificationMethod component
+        localStorage.setItem('securityMessage', securityMessage);
       } else {
-        setError(msg);
+        const msg = res.data.message || res.data.Message;
+        if (
+          msg === 'Usuario o contraseña incorrectos' ||
+          msg === 'Invalid username or password'
+        ) {
+          setError(msg);
+        } else if (
+          msg.startsWith('Se ha detectado') ||
+          msg.startsWith('New device detected')
+        ) {
+          // Save the device detection message
+          localStorage.setItem('securityMessage', msg);
+          setStep('method');
+        } else if (
+          msg === 'Inicio de sesión exitoso' ||
+          msg === 'Login successful'
+        ) {
+          saveSession(res.data.data);
+          return;
+        } else {
+          setError(msg);
+        }
       }
     } catch (err) {
       console.error(err);

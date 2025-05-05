@@ -1,10 +1,21 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, AlertTriangle } from 'lucide-react';
 
 const VerificationMethod = ({ onMethodSelected, onBack }) => {
   const [method, setMethod] = useState('email');
+  const [securityMessage, setSecurityMessage] = useState('');
+
+  // Retrieve the security message when component mounts
+  useEffect(() => {
+    const message = localStorage.getItem('securityMessage');
+    if (message) {
+      setSecurityMessage(message);
+      // Clean up after retrieving
+      localStorage.removeItem('securityMessage');
+    }
+  }, []);
 
   const handleContinue = () => {
     onMethodSelected(method);
@@ -29,6 +40,17 @@ const VerificationMethod = ({ onMethodSelected, onBack }) => {
         <h2 className="text-2xl font-medium text-gray-800 mb-2">
           Autentificación de dos factores
         </h2>
+        
+        {/* Security Alert Message */}
+        {securityMessage && (
+          <div className="mb-4 p-3 bg-amber-50 border-l-4 border-amber-500 flex items-start">
+            <AlertTriangle size={20} className="text-amber-500 mr-2 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-amber-800">
+              {securityMessage}
+            </p>
+          </div>
+        )}
+        
         <p className="text-sm text-gray-500 mb-8">
           Elige un método de autentificación
         </p>
