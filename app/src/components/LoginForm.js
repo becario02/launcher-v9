@@ -13,13 +13,14 @@ import VerificationMethod from './VerificationMethod';
 import TokenInput from './TokenInput';
 import { recuperarContraseña } from '@/services/api/recuperarContraseña';
 import axios from 'axios';
+import { v4 as uuidv4 } from 'uuid';
 
 export default function LoginForm() {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState('login'); // 'login' | 'method' | 'token'
   const [error, setError] = useState('');
-  const [ip, setIp] = useState('');
+  const [deviceId, setDeviceId] = useState('');
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [modalStates, setModalStates] = useState({
     error: false,
@@ -35,9 +36,12 @@ export default function LoginForm() {
   const language = rawLang.startsWith('es') ? 'es-MX' : 'en-US';
 
   useEffect(() => {
-    fetch('https://api.ipify.org?format=json')
-      .then(res => res.json())
-      .then(data => setIp(data.ip));
+    let storedId = localStorage.getItem('deviceId');
+    if (!storedId) {
+      storedId = uuidv4();
+      localStorage.setItem('deviceId', storedId);
+    }
+    setDeviceId(storedId.substring(0, 20));
   }, []);
 
   const handleChange = e => {
@@ -90,7 +94,7 @@ export default function LoginForm() {
         {
           username: formData.username,
           password: formData.password,
-          ipHostUser: ip,
+          ipHostUser: deviceId,
           digitToken: null
         },
         {
@@ -153,7 +157,7 @@ export default function LoginForm() {
         {
           username: formData.username,
           password: formData.password,
-          ipHostUser: ip,
+          ipHostUser: deviceId,
           digitToken: token
         },
         {
