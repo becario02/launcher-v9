@@ -15,6 +15,11 @@ export default function ChangePasswordModal({ onClose, onSuccess }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const modalRef = useRef(null);
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    label: 'Muy débil',
+    color: 'bg-red-500'
+  });
 
   // Obtener el idioma del navegador o usar español por defecto
   const rawLang =
@@ -45,6 +50,90 @@ export default function ChangePasswordModal({ onClose, onSuccess }) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Evaluar la fortaleza de la contraseña cuando cambia
+  useEffect(() => {
+    if (passwords.newPassword) {
+      const strength = evaluatePasswordStrength(passwords.newPassword);
+      setPasswordStrength(strength);
+    } else {
+      setPasswordStrength({ score: 0, label: 'Muy débil', color: 'bg-red-500' });
+    }
+  }, [passwords.newPassword]);
+
+  // Función para evaluar la fortaleza de la contraseña
+  const evaluatePasswordStrength = (password) => {
+    let score = 0;
+    
+    // Longitud mínima
+    if (password.length >= 8) score += 1;
+    if (password.length >= 12) score += 1;
+    
+    // Complejidad
+    if (/[a-z]/.test(password)) score += 1; // Minúsculas
+    if (/[A-Z]/.test(password)) score += 1; // Mayúsculas
+    if (/[0-9]/.test(password)) score += 1; // Números
+    if (/[^a-zA-Z0-9]/.test(password)) score += 1; // Caracteres especiales
+    
+    // Patrones repetitivos (reduce la puntuación)
+    if (/(.)\1{2,}/.test(password)) score -= 1; // Caracteres repetidos
+    if (/^(?:123|abc|qwerty|password|contraseña|admin)/i.test(password)) score -= 1; // Patrones comunes
+    
+    // Asegúrate que el puntaje no sea negativo
+    score = Math.max(0, score);
+    
+    // Máximo 5 puntos
+    score = Math.min(5, score);
+    
+    // Determina la etiqueta y color según la puntuación
+    const strengthMap = [
+      { score: 0, label: 'Muy débil', color: 'bg-red-500' },
+      { score: 1, label: 'Muy débil', color: 'bg-red-500' },
+      { score: 2, label: 'Débil', color: 'bg-orange-500' },
+      { score: 3, label: 'Moderada', color: 'bg-yellow-500' },
+      { score: 4, label: 'Fuerte', color: 'bg-blue-500' },
+      { score: 5, label: 'Muy fuerte', color: 'bg-green-500' }
+    ];
+    
+    return strengthMap[score];
+  };
+  
+  // Validar contraseña - validación más estricta
+  const validatePassword = (password) => {
+    const errors = [];
+    
+    // Verificamos todos los criterios obligatorios
+    if (password.length < 8) {
+      errors.push('La contraseña debe tener al menos 8 caracteres');
+    }
+    
+    if (!/[a-z]/.test(password)) {
+      errors.push('Debe incluir al menos una letra minúscula');
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+      errors.push('Debe incluir al menos una letra mayúscula');
+    }
+    
+    if (!/[0-9]/.test(password)) {
+      errors.push('Debe incluir al menos un número');
+    }
+    
+    if (!/[^a-zA-Z0-9]/.test(password)) {
+      errors.push('Debe incluir al menos un carácter especial');
+    }
+    
+    // Verificaciones adicionales de seguridad
+    if (/(.)\1{2,}/.test(password)) {
+      errors.push('No debe contener caracteres repetidos consecutivamente');
+    }
+    
+    if (/^(?:123|abc|qwerty|password|contraseña|admin)/i.test(password)) {
+      errors.push('No debe contener secuencias comunes o predecibles');
+    }
+    
+    return errors;
+  };
 
   const handleClose = () => {
     // Iniciar animación de salida
@@ -81,6 +170,35 @@ export default function ChangePasswordModal({ onClose, onSuccess }) {
     }
   };
 
+  // Renderizar indicador de fortaleza
+  const renderStrengthIndicator = () => {
+    const { score, label, color } = passwordStrength;
+    const percentage = (score / 5) * 100;
+    
+    return (
+      <div className="mt-2">
+        <div className="flex justify-between text-xs mb-1">
+          <span className="text-gray-600 dark:text-gray-400">Fortaleza:</span>
+          <span className={`font-medium ${
+            score <= 2 
+              ? 'text-red-600 dark:text-red-400' 
+              : score <= 3 
+                ? 'text-yellow-600 dark:text-yellow-400' 
+                : 'text-green-600 dark:text-green-400'
+          }`}>
+            {label}
+          </span>
+        </div>
+        <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <div 
+            className={`h-full ${color} transition-all duration-300`} 
+            style={{ width: `${percentage}%` }}
+          ></div>
+        </div>
+      </div>
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -95,8 +213,10 @@ export default function ChangePasswordModal({ onClose, onSuccess }) {
       return;
     }
 
-    if (passwords.newPassword.length < 8) {
-      setError('La nueva contraseña debe tener al menos 8 caracteres');
+    // Validación de requisitos
+    const validationErrors = validatePassword(passwords.newPassword);
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join('. '));
       return;
     }
 
@@ -215,6 +335,27 @@ export default function ChangePasswordModal({ onClose, onSuccess }) {
                   {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              
+              {/* Indicador de fortaleza y requisitos */}
+              {passwords.newPassword && renderStrengthIndicator()}
+              
+              <ul className="mt-2 text-xs text-gray-500 dark:text-gray-400 space-y-1 pl-5 list-disc">
+                <li className={passwords.newPassword.length >= 8 ? 'text-green-600 dark:text-green-400' : ''}>
+                  Mínimo 8 caracteres
+                </li>
+                <li className={/[a-z]/.test(passwords.newPassword) ? 'text-green-600 dark:text-green-400' : ''}>
+                  Al menos una letra minúscula
+                </li>
+                <li className={/[A-Z]/.test(passwords.newPassword) ? 'text-green-600 dark:text-green-400' : ''}>
+                  Al menos una letra mayúscula
+                </li>
+                <li className={/[0-9]/.test(passwords.newPassword) ? 'text-green-600 dark:text-green-400' : ''}>
+                  Al menos un número
+                </li>
+                <li className={/[^a-zA-Z0-9]/.test(passwords.newPassword) ? 'text-green-600 dark:text-green-400' : ''}>
+                  Al menos un carácter especial
+                </li>
+              </ul>
             </div>
             
             {/* Confirmar nueva contraseña */}
@@ -239,6 +380,13 @@ export default function ChangePasswordModal({ onClose, onSuccess }) {
                   {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              
+              {/* Mensaje de coincidencia */}
+              {passwords.newPassword && passwords.confirmPassword && (
+                <p className={`mt-1 text-xs ${passwords.newPassword === passwords.confirmPassword ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {passwords.newPassword === passwords.confirmPassword ? 'Las contraseñas coinciden' : 'Las contraseñas no coinciden'}
+                </p>
+              )}
             </div>
             
             {/* Mensaje de error */}
@@ -259,8 +407,8 @@ export default function ChangePasswordModal({ onClose, onSuccess }) {
               </button>
               <button
                 type="submit"
-                disabled={loading}
-                className="px-4 py-2 bg-primary text-white rounded-md hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed"
+                disabled={loading || validatePassword(passwords.newPassword).length > 0 || passwords.newPassword !== passwords.confirmPassword || !passwords.currentPassword}
+                className="px-4 py-2 bg-primary text-white rounded-md hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {loading ? 'Procesando...' : 'Cambiar contraseña'}
               </button>

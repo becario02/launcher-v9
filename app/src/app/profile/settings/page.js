@@ -11,6 +11,7 @@ import clsx from 'clsx';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useTheme } from '@/context/theme';
 import Cookies from 'js-cookie';
+import SkeletonLoader from '@/components/SkeletonLoader';
 
 const colorOptions = ['#0080FF', '#8B5CF6', '#EC4899', '#22C55E', '#F97316'];
 const themeOptions = ['light', 'dark'];
@@ -242,9 +243,7 @@ export default function SettingsPage() {
             </div>
 
             {loading ? (
-              <div className="text-center py-8">
-                <p className="text-gray-600 dark:text-gray-300">Cargando datos del perfil...</p>
-              </div>
+              <SkeletonLoader />
             ) : error ? (
               <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 my-4">
                 <p className="text-red-700 dark:text-red-400">{error}</p>
