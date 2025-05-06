@@ -21,9 +21,9 @@ export default function SubMenu({
       <div key={item.keyValue}>
         <div
           onClick={() => item.children?.length > 0 && toggleItemExpansion(item.keyValue)}
-          className="flex items-center justify-between p-3 my-1 rounded-md cursor-pointer bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#252530]"
+          className="flex items-center justify-between p-3 my-1 rounded-md cursor-pointer bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#252530]"
         >
-          <span className="text-gray-800 dark:text-white">{item.textOption || item.idName}</span>
+          <span className=" dark:text-white text-h3 font-medium text-primary">{item.textOption || item.idName}</span>
 
           <div className="flex items-center">
             {(!item.children || item.children.length === 0) && (

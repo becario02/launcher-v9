@@ -8,7 +8,7 @@ import NewsGrid from '@/components/admin/news/NewsGrid';
 import NewsPagination from '@/components/admin/news/NewsPagination';
 import NewsModal from '@/components/admin/news/NewsModal';
 import ConfirmModal from '@/components/admin/news/ConfirmModal';
-import Notification from '@/components/admin/news/Notification';
+import Notification from '@/components/Notification';
 import PermissionsModal from '@/components/admin/news/PermissionsModal';
 import { getCategoryColor } from '@/utils/categoryUtils';
 import { initialNewsData } from '@/services/newsService';
