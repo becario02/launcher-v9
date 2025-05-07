@@ -12,6 +12,7 @@ import {
   Menu,
   Users,
   Video,
+  Shield
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -48,6 +49,8 @@ function getActiveItemFromPath(pathname) {
     return 'AUXILIARES';
   } else if (pathname.startsWith('/custom/')) {
     return pathname;
+  } else if (pathname.includes('/admin/permisos-menu')) {
+    return 'PermisosMenu';
   }
   // Default fallback
   return 'Dashboard';
@@ -278,11 +281,17 @@ export default function Sidebar({ onClose }) {
         {/* Only show admin-specific menu items if user is an admin */}
         {isAdmin && (
           <>
-            <SidebarItem
+            {/*<SidebarItem
               icon={Menu}
               text="Admin Menús"
               active={activeItem === 'AdminMenus'}
               onClick={() => navigateTo('/admin/menus', 'AdminMenus')}
+            />*/}
+            <SidebarItem
+              icon={Shield}
+              text="Permisos de menu"
+              active={activeItem === 'PermisosMenu'}
+              onClick={() => navigateTo('/admin/permisos-menu', 'PermisosMenu')}
             />
             <SidebarItem
               icon={Users}

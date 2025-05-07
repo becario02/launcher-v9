@@ -30,6 +30,11 @@ export default function NewsFilters({
 
   const toggleFilters = () => setShowFilters(prev => !prev);
   const filterBg = showFilters ? `${primaryColor}33` : 'transparent';
+  const categoryTranslations = {
+    NEWS: 'Noticias',
+    ADVICE: 'Consejo',
+    NOTIFICATION: 'Notificación'
+  };
 
   return (
     <div
@@ -218,7 +223,7 @@ export default function NewsFilters({
           <option value="all">Todas las categorías</option>
           {categories.filter(cat => cat !== 'all').map(category => (
             <option key={category} value={category}>
-              {category}
+              {categoryTranslations[category]}
             </option>
           ))}
         </select>

@@ -52,7 +52,6 @@ export default function MenuHierarchyEditor() {
   const [expandedItems, setExpandedItems] = useState({});
   const [isLoading, setIsLoading] = useState(true);
 
-  const [inlineAdd, setInlineAdd] = useState(false);
   const [newMenuText, setNewMenuText] = useState('');
   const [newResourceUrl, setNewResourceUrl] = useState('');
   const [newParentId, setNewParentId] = useState('');
@@ -187,7 +186,6 @@ export default function MenuHierarchyEditor() {
         resourceUrl: newResourceUrl
       })
     });
-    setInlineAdd(false);
     setNewMenuText('');
     setNewResourceUrl('');
     setNewParentId('');
@@ -358,37 +356,14 @@ export default function MenuHierarchyEditor() {
 
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-h2 font-bold text-gray-800 dark:text-white">Organizar Jerarquía</h2>
-        <div className="flex items-center space-x-2 text-p">
-          <button
-            onClick={clearChanges}
-            disabled={!changedItems.size}
-            className={`p-2 rounded ${changedItems.size ? 'bg-yellow-500 text-white hover:bg-yellow-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-            title="Limpiar cambios"
-          >
-            <span className="text-p">🧹</span>
-          </button>
-          <button
-            onClick={() => openConfirm('save')}
-            disabled={!changedItems.size}
-            className={`px-4 py-2 rounded  flex items-center gap-2 ${changedItems.size ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-          >
-            <Save size={16}/> Guardar
-          </button>
-          <button onClick={() => setInlineAdd(true)} className="px-4 py-2 bg-primary text-white rounded flex items-center gap-2 hover:bg-semantic.green">
-            <Plus size={16}/> Nuevo
-          </button>
-        </div>
+        <h2 className="text-h2 font-bold text-gray-800 dark:text-white">Agregar opciones personalizadas</h2>
       </div>
 
       {/* Inline Add */}
-      {inlineAdd && (
+      
         <div className="mb-4 bg-white dark:bg-[#1c1c24] rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="flex bg-gray-100 dark:bg-gray-800 px-4 py-2 text-h3 text-gray-500 dark:text-gray-400	border-b border-gray-200 dark:border-gray-700">
             <span className="font-medium">Nueva Opción</span>
-            <button onClick={() => setInlineAdd(false)} className="ml-auto">
-              <X size={18} className="text-gray-500 dark:text-gray-400"/>
-            </button>
           </div>
           <div className="p-4 text-p grid grid-cols-3 gap-4">
             <input
@@ -434,19 +409,6 @@ export default function MenuHierarchyEditor() {
             </button>
           </div>
         </div>
-      )}
-
-      {/* Lista jerárquica */}
-      <div className="bg-white dark:bg-[#1c1c24] rounded-lg overflow-hidden	border border-gray-200 dark:border-gray-700">
-        <div className="flex bg-gray-100 dark:bg-gray-800 px-4 py-2 text-h3 text-gray-500	dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
-          <div className="w-1/3 font-medium">Nombre del Menú</div>
-          <div className="w-1/3 font-medium">Grupo / Módulo</div>
-          <div className="w-1/3 flex justify-end font-medium">Acciones</div>
-        </div>
-        <div className="p-2 text-p">
-          {hierarchyData.map((it, i) => renderItem(it, i))}
-        </div>
-      </div>
     </div>
   );
 }
