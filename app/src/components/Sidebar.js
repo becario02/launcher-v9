@@ -12,7 +12,8 @@ import {
   Menu,
   Users,
   Video,
-  Shield
+  Shield,
+  Settings
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -49,8 +50,6 @@ function getActiveItemFromPath(pathname) {
     return 'AUXILIARES';
   } else if (pathname.startsWith('/custom/')) {
     return pathname;
-  } else if (pathname.includes('/admin/permisos-menu')) {
-    return 'PermisosMenu';
   }
   // Default fallback
   return 'Dashboard';
@@ -185,6 +184,7 @@ export default function Sidebar({ onClose }) {
   };
 
   const isDivisionActive = ['NUCLEARES', 'FINANCIAL', 'AUXILIARES'].includes(activeItem);
+  const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminMenus'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
 
   function formatServer(server) {
     if (!server) return '';
@@ -270,42 +270,55 @@ export default function Sidebar({ onClose }) {
           />
         </ExpandableItem>
 
-        {/* Show Noticias for all users, but with different routes */}
-        <SidebarItem
-          icon={Newspaper}
-          text="Noticias"
-          active={activeItem === 'Noticias'}
-          onClick={() => navigateTo(isAdmin ? '/admin/news' : '/news', 'Noticias')}
-        />
+        {/* Show Noticias for regular users */}
+        {!isAdmin && (
+          <SidebarItem
+            icon={Newspaper}
+            text="Noticias"
+            active={activeItem === 'Noticias'}
+            onClick={() => navigateTo('/news', 'Noticias')}
+          />
+        )}
         
-        {/* Only show admin-specific menu items if user is an admin */}
+        {/* Admin dropdown section */}
         {isAdmin && (
-          <>
-            {/*<SidebarItem
-              icon={Menu}
-              text="Admin Menús"
-              active={activeItem === 'AdminMenus'}
-              onClick={() => navigateTo('/admin/menus', 'AdminMenus')}
-            />*/}
+          <ExpandableItem
+            icon={Settings}
+            text="Administración"
+            defaultOpen={false}
+            isChildActive={isAdminActive || (isAdmin && activeItem === 'Noticias')}
+          >
             <SidebarItem
-              icon={Shield}
-              text="Permisos de menu"
-              active={activeItem === 'PermisosMenu'}
-              onClick={() => navigateTo('/admin/permisos-menu', 'PermisosMenu')}
+              icon={Newspaper}
+              text="Noticias"
+              indent
+              active={activeItem === 'Noticias'}
+              onClick={() => navigateTo('/admin/news', 'Noticias')}
             />
             <SidebarItem
               icon={Users}
-              text="Admin Usuarios"
+              text="Usuarios"
+              indent
               active={activeItem === 'AdminUsers'}
               onClick={() => navigateTo('/admin/users', 'AdminUsers')}
             />
             <SidebarItem
               icon={Video}
-              text="Admin Videos"
+              text="Videos"
+              indent
               active={activeItem === 'AdminVideos'}
               onClick={() => navigateTo('/admin/videos', 'AdminVideos')}
             />
-          </>
+            {/* Uncomment this if needed later
+            <SidebarItem
+              icon={Menu}
+              text="Menús"
+              indent
+              active={activeItem === 'AdminMenus'}
+              onClick={() => navigateTo('/admin/menus', 'AdminMenus')}
+            />
+            */}
+          </ExpandableItem>
         )}
 
         {/* CUSTOM PARENTS al final */}
