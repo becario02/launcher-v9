@@ -98,6 +98,15 @@ export default function ProfilePage() {
     }).format(date);
   };
 
+  const prifileMap = {
+    'ADMINADVAN': 'ADMINISTRADOR DE ADVAN',
+    'USERADVAN': 'USUARIO DE ADVAN',
+    'ADMINCUSTOMER': 'ADMINISTRADOR DEL CLIENTE',
+    'USERCUSTOMER': 'USUARIO DEL CLIENTE',
+  }
+
+  const profileName = prifileMap[profileData?.profileName] || 'N/A';
+
   return (
     <div className="flex">
       <div className="hidden md:block">
@@ -210,7 +219,7 @@ export default function ProfilePage() {
                       <div>
                         <label className="block text-[12px] font-medium font-poppins leading-[18px] text-[#92929d] mb-1">Perfil de usuario</label>
                         <div className="text-[14px] font-medium font-poppins leading-[21px] text-[#171725] dark:text-[#f5f7fa]">
-                          {profileData?.profileName || 'N/A'}
+                          {profileName}
                         </div>
                       </div>
 

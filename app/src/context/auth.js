@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
     
     // Update admin status if cookie exists
     if (profileName) {
-      setIsAdmin(profileName === 'Administrador ADVAN');
+      setIsAdmin(profileName?.includes('ADMIN'));
     }
  
     // If not authenticated and not on a public page, redirect to login
@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
     } 
     
     // If authenticated but accessing admin page without admin privileges
-    if (authCookie && isAdminPath && profileName !== 'Administrador ADVAN') {
+    if (authCookie && isAdminPath && !profileName?.includes('ADMIN')) {
       router.push('/'); // Redirect to home if not admin
       return;
     }
@@ -48,8 +48,8 @@ export function AuthProvider({ children }) {
   }, [pathname, router]); 
  
   const login = (userData) => {
-    // Set isAdmin based on profileName
-    const adminStatus = userData.profileName === 'Administrador ADVAN';
+    // Set isAdmin based on profileName 
+    const adminStatus = userData.profileName?.includes('ADMIN');
     setIsAdmin(adminStatus);
     setUser({...userData, isAdmin: adminStatus});
     router.push('/'); 

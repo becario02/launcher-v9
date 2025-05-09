@@ -24,7 +24,7 @@ export function middleware(request) {
   // Check authentication and role
   const isAuthenticated = request.cookies.has('auth');
   const profileName = request.cookies.get('profileName')?.value;
-  const isAdmin = profileName === 'Administrador ADVAN';
+  const isAdmin = profileName?.includes('ADMIN');
 
   // If not authenticated and not on a public route, redirect to login
   if (!isAuthenticated && !isPublicRoute) {

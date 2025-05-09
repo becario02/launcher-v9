@@ -103,7 +103,9 @@ export default function CompanySelector() {
             >
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0080FF]/10 dark:bg-[#0080FF] text-[#0080FF] dark:text-white border">
-                  <span className="text-[14px] font-medium">{selectedCompany.name.charAt(0)}</span>
+                <span className="text-[14px] font-medium">
+                  {selectedCompany?.name ? selectedCompany.name.charAt(0) : '-'}
+                </span>
                 </div>
                 <div className="flex flex-col items-start truncate">
                   <span className="text-[14px] font-medium truncate max-w-[200px] cursor-default">
