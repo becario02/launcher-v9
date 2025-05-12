@@ -19,12 +19,12 @@ export default function AdminNotificationsPage() {
   const { primaryColor } = usePrimaryColor();
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Estados para paginación
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [totalNotifications, setTotalNotifications] = useState(0);
-  
+
   // Estados para filtros
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -32,16 +32,16 @@ export default function AdminNotificationsPage() {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [companyId, setCompanyId] = useState(null);
-  
+
   // Estados para modales
   const [modalOpen, setModalOpen] = useState(false);
   const [editingNotification, setEditingNotification] = useState(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [notificationToDelete, setNotificationToDelete] = useState(null);
-  
+
   // Estado para el listado de compañías
   const [companies, setCompanies] = useState([]);
-  
+
   // Estado para manejar el toast
   const [toast, setToast] = useState({
     visible: false,
@@ -54,21 +54,21 @@ export default function AdminNotificationsPage() {
 
   const fetchNotifications = () => {
     setIsLoading(true);
-    
+
     // Construir los parámetros para la petición
-    const params = { 
-      page, 
+    const params = {
+      page,
       pageSize,
       search: search || undefined,
       status: status || undefined,
       category: category || undefined,
       companyId: companyId || undefined
     };
-    
+
     // Añadir fechas solo si están definidas
     if (startDate) params.startDate = startDate.toISOString();
     if (endDate) params.endDate = endDate.toISOString();
-    
+
     axios
       .get('http://localhost:5173/mslauncher/api/v1/notifications', {
         params,
@@ -119,7 +119,7 @@ export default function AdminNotificationsPage() {
     const delayDebounce = setTimeout(() => {
       fetchNotifications();
     }, 400); // pequeño debounce para evitar exceso de llamadas
-    
+
     return () => clearTimeout(delayDebounce);
   }, [page, search, status, category, startDate, endDate, companyId]);
 
@@ -133,7 +133,7 @@ export default function AdminNotificationsPage() {
         status: data.status,
         companyIds: data.companyIds || []
       };
-      
+
       if (editingNotification) {
         // Update
         const response = await axios.put('http://localhost:5173/mslauncher/api/v1/notification', {
@@ -144,7 +144,7 @@ export default function AdminNotificationsPage() {
             'Accept-Language': 'es'
           }
         });
-        
+
         if (response.data && response.data.statusCode === "200") {
           showToast('Notificación actualizada exitosamente', 'success');
           setModalOpen(false);
@@ -160,7 +160,7 @@ export default function AdminNotificationsPage() {
             'Accept-Language': 'es'
           }
         });
-        
+
         if (response.data && response.data.statusCode === "201") {
           showToast('Notificación creada exitosamente', 'success');
           setModalOpen(false);
@@ -177,14 +177,14 @@ export default function AdminNotificationsPage() {
 
   const handleDeleteNotification = async () => {
     if (!notificationToDelete) return;
-    
+
     try {
       const response = await axios.delete(`http://localhost:5173/mslauncher/api/v1/notification/${notificationToDelete}`, {
         headers: {
           'Accept-Language': 'es'
         }
       });
-      
+
       if (response.data && response.data.statusCode === "200") {
         showToast('Notificación eliminada exitosamente', 'success');
         fetchNotifications();
@@ -260,7 +260,7 @@ export default function AdminNotificationsPage() {
   };
 
   return (
-    <div className="flex font-poppins overflow-hidden">
+    <div className="flex font-poppins">
       {/* Sidebar - Fixed on desktop */}
       <div className="hidden md:block fixed z-10 h-full">
         <Sidebar />
@@ -278,12 +278,10 @@ export default function AdminNotificationsPage() {
 
       <div className="flex-1 w-full md:pl-60">
         {/* Navbar fixed */}
-        <div className="fixed top-0 right-0 left-0 md:left-60 z-20">
-          <Navbar onMenuClick={() => setSidebarOpen(true)} />
-        </div>
+        <Navbar className="sticky top-0 z-30" onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Main */}
-        <main className="min-h-screen bg-[#F2F6FD] dark:bg-[#13131a] pt-36 pb-14 px-4 md:px-8 xl:px-10 w-full overflow-x-hidden">
+        <main className="min-h-screen bg-[#F2F6FD] dark:bg-[#13131a] pt-14 pb-14 px-4 md:px-8 xl:px-10 w-full">
           <div className="max-w-7xl mx-auto space-y-10">
             {/* Header */}
             <div className="flex flex-col gap-4">
@@ -311,7 +309,7 @@ export default function AdminNotificationsPage() {
                   Nueva notificación
                 </button>
               </div>
-              
+
               {/* Buscador y filtros */}
               <div className="bg-white dark:bg-[#1C1C24] rounded-lg shadow-sm border border-gray-200 dark:border-[#2C2C38] p-4">
                 <div className="flex flex-col gap-4">
@@ -339,7 +337,7 @@ export default function AdminNotificationsPage() {
                       </button>
                     )}
                   </div>
-                  
+
                   {/* Botón para mostrar/ocultar filtros avanzados */}
                   <div className="flex justify-between items-center">
                     <button
@@ -349,7 +347,7 @@ export default function AdminNotificationsPage() {
                       <span>Filtros avanzados</span>
                       <ChevronDown className={`w-4 h-4 transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} />
                     </button>
-                    
+
                     {(search || status || category || startDate || endDate || companyId) && (
                       <button
                         onClick={clearAllFilters}
@@ -359,7 +357,7 @@ export default function AdminNotificationsPage() {
                       </button>
                     )}
                   </div>
-                  
+
                   {/* Filtros avanzados */}
                   {showAdvancedFilters && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2 pt-4 border-t border-gray-100 dark:border-[#2C2C38]">
@@ -381,7 +379,7 @@ export default function AdminNotificationsPage() {
                           <option value="INACTIVE">Inactivas</option>
                         </select>
                       </div>
-                      
+
                       {/* Filtro de Categoría */}
                       <div>
                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -402,7 +400,7 @@ export default function AdminNotificationsPage() {
                           <option value="NA">Sin Categoría</option>
                         </select>
                       </div>
-                      
+
                       {/* Filtro de Compañía */}
                       <div>
                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -424,7 +422,7 @@ export default function AdminNotificationsPage() {
                           ))}
                         </select>
                       </div>
-                      
+
                       {/* Filtro de Fecha Inicial */}
                       <div>
                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -440,7 +438,7 @@ export default function AdminNotificationsPage() {
                           className="w-full px-3 py-2 rounded-md text-sm border border-gray-300 dark:border-[#2C2C38] bg-white dark:bg-[#262631] text-gray-800 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:focus:border-primary"
                         />
                       </div>
-                      
+
                       {/* Filtro de Fecha Final */}
                       <div>
                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -515,8 +513,8 @@ export default function AdminNotificationsPage() {
                   ) : notifications.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="text-center py-8 text-gray-500 dark:text-gray-400">
-                        {search || status || category || startDate || endDate || companyId ? 
-                          'No se encontraron notificaciones con los filtros aplicados' : 
+                        {search || status || category || startDate || endDate || companyId ?
+                          'No se encontraron notificaciones con los filtros aplicados' :
                           'No hay notificaciones registradas'}
                       </td>
                     </tr>
@@ -648,9 +646,9 @@ export default function AdminNotificationsPage() {
 
         {/* Toast */}
         {toast.visible && (
-          <Toast 
-            message={toast.message} 
-            type={toast.type} 
+          <Toast
+            message={toast.message}
+            type={toast.type}
             onClose={handleCloseToast}
           />
         )}
@@ -662,12 +660,12 @@ export default function AdminNotificationsPage() {
 // Componente para mostrar el estado
 const StatusBadge = ({ status }) => {
   const isActive = status === 'ACTIVE';
-  
+
   return (
     <span className={clsx(
       'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
-      isActive 
-        ? 'bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400' 
+      isActive
+        ? 'bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400'
         : 'bg-gray-100 text-gray-800 dark:bg-gray-800/40 dark:text-gray-400'
     )}>
       <span className={clsx(

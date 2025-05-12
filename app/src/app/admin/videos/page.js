@@ -27,17 +27,17 @@ export default function AdminVideosPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState('add');
   const [currentVideo, setCurrentVideo] = useState(null);
-  
+
   // Estados de búsqueda y filtros
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [totalVideos, setTotalVideos] = useState(0);
-  
+
   // Vista actual (tabla o grilla)
   const [viewMode, setViewMode] = useState('table');
-  
+
   // Estado para notificaciones
   const [toast, setToast] = useState({
     visible: false,
@@ -54,14 +54,14 @@ export default function AdminVideosPage() {
     setIsLoading(true);
     try {
       const response = await axios.get('http://localhost:5173/mslauncher/api/v1/videos', {
-        params: { 
-          page, 
+        params: {
+          page,
           pageSize,
           title: search || null,
           status: statusFilter !== 'all' ? statusFilter : null,
         }
       });
-      
+
       // Acceder correctamente a los datos en la respuesta
       const responseData = response.data;
       setVideos(responseData.data || []); // 'data' en minúsculas
@@ -83,7 +83,7 @@ export default function AdminVideosPage() {
     const delayDebounce = setTimeout(() => {
       fetchVideos();
     }, 300);
-    
+
     return () => clearTimeout(delayDebounce);
   }, [page, search, statusFilter]);
 
@@ -221,7 +221,7 @@ export default function AdminVideosPage() {
   );
 
   return (
-    <div className="flex font-poppins overflow-hidden">
+    <div className="flex font-poppins">
       {/* Sidebar - Fixed on desktop */}
       <div className="hidden md:block fixed z-10 h-full">
         <Sidebar />
@@ -238,13 +238,11 @@ export default function AdminVideosPage() {
       )}
 
       <div className="flex-1 w-full md:pl-60">
-        {/* Navbar fixed */}
-        <div className="fixed top-0 right-0 left-0 md:left-60 z-20">
-          <Navbar onMenuClick={() => setSidebarOpen(true)} />
-        </div>
+        {/* Navbar*/}
+        <Navbar className="sticky top-0 z-30" onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Main content */}
-        <main className="min-h-screen bg-[#F2F6FD] dark:bg-[#13131a] pt-36 pb-14 px-4 md:px-8 xl:px-10 w-full overflow-x-hidden">
+        <main className="min-h-screen bg-[#F2F6FD] dark:bg-[#13131a] pt-14 pb-14 px-4 md:px-8 xl:px-10 w-full">
           <div className="max-w-7xl mx-auto space-y-10">
             {/* Header */}
             <div className="flex flex-col gap-4">
@@ -269,7 +267,7 @@ export default function AdminVideosPage() {
                   Nuevo video
                 </button>
               </div>
-              
+
               {/* Buscador y filtros */}
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="flex flex-col sm:flex-row gap-4 flex-grow">
@@ -296,7 +294,7 @@ export default function AdminVideosPage() {
                       </button>
                     )}
                   </div>
-                  
+
                   <select
                     value={statusFilter}
                     onChange={(e) => {
@@ -310,15 +308,15 @@ export default function AdminVideosPage() {
                     <option value="INACTIVE">Inactivos</option>
                   </select>
                 </div>
-                
+
                 {/* Botones de vista */}
                 <div className="flex gap-2">
                   <button
                     onClick={() => setViewMode('table')}
                     className={clsx(
                       "p-2 rounded-md transition-colors",
-                      viewMode === 'table' 
-                        ? "bg-primary text-white" 
+                      viewMode === 'table'
+                        ? "bg-primary text-white"
                         : "bg-gray-100 dark:bg-[#2C2C38] text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#3C3C48]"
                     )}
                   >
@@ -328,8 +326,8 @@ export default function AdminVideosPage() {
                     onClick={() => setViewMode('grid')}
                     className={clsx(
                       "p-2 rounded-md transition-colors",
-                      viewMode === 'grid' 
-                        ? "bg-primary text-white" 
+                      viewMode === 'grid'
+                        ? "bg-primary text-white"
                         : "bg-gray-100 dark:bg-[#2C2C38] text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#3C3C48]"
                     )}
                   >
@@ -368,9 +366,9 @@ export default function AdminVideosPage() {
                         <tr key={video.idVideo} className="hover:bg-gray-50 dark:hover:bg-[#262636] transition">
                           <td className="px-6 py-4 font-medium">{video.title}</td>
                           <td className="px-6 py-4">
-                            <a 
-                              href={video.url} 
-                              target="_blank" 
+                            <a
+                              href={video.url}
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 dark:text-blue-400 hover:underline truncate max-w-xs inline-block"
                             >
@@ -478,7 +476,7 @@ export default function AdminVideosPage() {
                 search={search}
               />
             )}
-            
+
             {/* Paginación para vista de grilla */}
             {viewMode === 'grid' && totalVideos > 0 && (
               <div className="flex flex-col sm:flex-row justify-between items-center pt-6 gap-4">
@@ -539,9 +537,9 @@ export default function AdminVideosPage() {
 
         {/* Toast */}
         {toast.visible && (
-          <Toast 
-            message={toast.message} 
-            type={toast.type} 
+          <Toast
+            message={toast.message}
+            type={toast.type}
             onClose={handleCloseToast}
           />
         )}
