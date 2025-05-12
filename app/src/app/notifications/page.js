@@ -3,170 +3,110 @@
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
-import { Bell } from 'lucide-react';
+import { Bell, Settings, RefreshCw, Video, FileText, Info, AlertCircle, CheckCircle } from 'lucide-react';
 import Toast from '@/components/Toast';
 import clsx from 'clsx';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useTheme } from '@/context/theme';
+import { useNotifications } from '@/context/NotificationContext';
+import axios from 'axios';
 import Cookies from 'js-cookie';
 import SkeletonLoader from '@/components/SkeletonLoader';
+import { format, formatDistance } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 export default function NotificationsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme } = useTheme();
   const { primaryColor } = usePrimaryColor();
+  const { refreshUnreadCount } = useNotifications();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   
-  // Obtener el idioma del navegador o usar español por defecto
-  const rawLang =
-    typeof navigator !== 'undefined'
-      ? navigator.language || 'en-US'
-      : 'en-US';
-  const language = rawLang.startsWith('es') ? 'es-MX' : 'en-US';
+  // Obtener el ID de usuario de las cookies
+  const userId = Cookies.get('idUser') || '2'; // Fallback a 2 si no hay cookie
 
-  useEffect(() => {
-    // Simulación de carga de datos
-    const simulateLoading = async () => {
-      try {
-        setLoading(true);
-        // Simulamos el tiempo de carga de la API
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Datos de ejemplo para notificaciones
-        const mockNotifications = [
-          {
-            id: 1,
-            title: 'Lorem ipsum placerat mi tellus non',
-            message: 'Lorem ipsum velit mauris tellus sed nulla vitae nibh semper nunc accumsan pretium aliquam tincidunt suspendisse noncus felis porttitor tortor consequat vitae et integer ac ut gravida vitae purus quisquet enim habitant ornare in laboris sit sed quam vel moncus.',
-            type: 'alert',
-            read: false,
-            timestamp: new Date(Date.now() - 1000 * 60 * 23).toISOString() // 23 minutos atrás
+  // Cargar notificaciones desde la API
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `http://localhost:5173/mslauncher/api/v1/notifications/user/${userId}`,
+        {
+          params: {
+            page: 1,
+            pageSize: 50, // Un número grande para obtener todas
           },
-          {
-            id: 2,
-            title: 'Lorem ipsum placerat mi tellus non',
-            message: 'Lorem ipsum velit mauris tellus sed nulla vitae nibh semper nunc accumsan pretium aliquam tincidunt suspendisse noncus felis porttitor tortor consequat vitae et integer ac ut gravida vitae purus quisquet enim habitant ornare in laboris sit sed quam vel moncus.',
-            type: 'info',
-            read: false,
-            timestamp: new Date(Date.now() - 1000 * 60 * 23).toISOString() // 23 minutos atrás
-          },
-          {
-            id: 3,
-            title: 'Lorem ipsum placerat mi tellus non',
-            message: 'Lorem ipsum velit mauris tellus sed nulla vitae nibh semper nunc accumsan pretium aliquam tincidunt suspendisse noncus felis porttitor tortor consequat vitae et integer ac ut gravida vitae purus quisquet enim habitant ornare in laboris sit sed quam vel moncus.',
-            type: 'success',
-            read: true,
-            timestamp: new Date(Date.now() - 1000 * 60 * 23).toISOString() // 23 minutos atrás
-          },
-          {
-            id: 4,
-            title: 'Lorem ipsum placerat mi tellus non',
-            message: 'Lorem ipsum velit mauris tellus sed nulla vitae nibh semper nunc accumsan pretium aliquam tincidunt suspendisse noncus felis porttitor tortor consequat vitae et integer ac ut gravida vitae purus quisquet enim habitant ornare in laboris sit sed quam vel moncus.',
-            type: 'warning',
-            read: false,
-            timestamp: new Date(Date.now() - 1000 * 60 * 23).toISOString() // 23 minutos atrás
-          },
-          {
-            id: 5,
-            title: 'Lorem ipsum placerat mi tellus non',
-            message: 'Lorem ipsum velit mauris tellus sed nulla vitae nibh semper nunc accumsan pretium aliquam tincidunt suspendisse noncus felis porttitor tortor consequat vitae et integer ac ut gravida vitae purus quisquet enim habitant ornare in laboris sit sed quam vel moncus.',
-            type: 'info',
-            read: true,
-            timestamp: new Date(Date.now() - 1000 * 60 * 23).toISOString() // 23 minutos atrás
-          },
-          {
-            id: 6,
-            title: 'Lorem ipsum placerat mi tellus non',
-            message: 'Lorem ipsum velit mauris tellus sed nulla vitae nibh semper nunc accumsan pretium aliquam tincidunt suspendisse noncus felis porttitor tortor consequat vitae et integer ac ut gravida vitae purus quisquet enim habitant ornare in laboris sit sed quam vel moncus.',
-            type: 'success',
-            read: true,
-            timestamp: new Date(Date.now() - 1000 * 60 * 23).toISOString() // 23 minutos atrás
+          headers: {
+            'Accept-Language': 'es'
           }
-        ];
-        
-        setNotifications(mockNotifications);
-      } catch (error) {
-        console.error('Error:', error);
-        setError('Error al cargar las notificaciones de ejemplo');
-      } finally {
-        setLoading(false);
+        }
+      );
+      
+      if (response.data && response.data.data) {
+        setNotifications(response.data.data);
+      } else {
+        setNotifications([]);
       }
-    };
+      setError(null);
+    } catch (error) {
+      console.error('Error al obtener notificaciones:', error);
+      setError('Error al cargar las notificaciones. Por favor intenta nuevamente.');
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    simulateLoading();
+  // Cargar notificaciones al montar el componente
+  useEffect(() => {
+    fetchNotifications();
   }, []);
 
   // Función para formatear la fecha y hora de la notificación
   const formatNotificationTime = (timestamp) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    if (!timestamp) return '';
     
-    if (diffInMinutes < 1) {
-      return 'Ahora mismo';
-    } else if (diffInMinutes < 60) {
-      return `hace ${diffInMinutes} minutos`;
-    } else if (diffInMinutes < 1440) {
-      const hours = Math.floor(diffInMinutes / 60);
-      return `hace ${hours} horas`;
-    } else {
-      const days = Math.floor(diffInMinutes / 1440);
-      return `hace ${days} días`;
+    try {
+      const date = new Date(timestamp);
+      
+      return formatDistance(date, new Date(), {
+        addSuffix: true,
+        locale: es
+      });
+    } catch (e) {
+      console.error('Error al formatear fecha:', e);
+      return '';
     }
   };
 
-  // Función para renderizar el icono según el tipo de notificación
-  const renderNotificationIcon = (type) => {
-    switch (type) {
-      case 'alert':
+  // Función para renderizar el icono según la categoría de notificación
+  const renderNotificationIcon = (category) => {
+    switch (category) {
+      case 'SYSTEMUPDATE':
         return (
-          <div className="w-8 h-8 rounded-md bg-red-100 flex items-center justify-center">
-            <Bell className="w-4 h-4 text-red-500" />
+          <div className="w-8 h-8 rounded-md bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+            <RefreshCw className="w-4 h-4 text-red-500" />
           </div>
         );
-      case 'info':
+      case 'NEWVIDEO':
         return (
-          <div className="w-8 h-8 rounded-md bg-blue-100 flex items-center justify-center">
-            <div className="w-4 h-4 text-blue-500">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 12h0"></path>
-                <path d="M12 16v-4"></path>
-                <circle cx="12" cy="8" r="0.5"></circle>
-                <circle cx="12" cy="12" r="10"></circle>
-              </svg>
-            </div>
+          <div className="w-8 h-8 rounded-md bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+            <Video className="w-4 h-4 text-blue-500" />
           </div>
         );
-      case 'success':
+      case 'NEWARTICLE':
         return (
-          <div className="w-8 h-8 rounded-md bg-green-100 flex items-center justify-center">
-            <div className="w-4 h-4 text-green-500">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 12l2 2 4-4"></path>
-                <circle cx="12" cy="12" r="10"></circle>
-              </svg>
-            </div>
-          </div>
-        );
-      case 'warning':
-        return (
-          <div className="w-8 h-8 rounded-md bg-amber-100 flex items-center justify-center">
-            <div className="w-4 h-4 text-amber-500">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 9v4"></path>
-                <path d="M12 17h.01"></path>
-                <path d="M3 12a9 9 0 1 0 18 0 9 9 0 1 0 -18 0"></path>
-              </svg>
-            </div>
+          <div className="w-8 h-8 rounded-md bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+            <FileText className="w-4 h-4 text-green-500" />
           </div>
         );
       default:
         return (
-          <div className="w-8 h-8 rounded-md bg-gray-100 flex items-center justify-center">
-            <Bell className="w-4 h-4 text-gray-500" />
+          <div className="w-8 h-8 rounded-md bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+            <Info className="w-4 h-4 text-amber-500" />
           </div>
         );
     }
@@ -175,17 +115,27 @@ export default function NotificationsPage() {
   // Función para marcar una notificación como leída
   const markAsRead = async (notificationId) => {
     try {
-      // Simulamos una pequeña demora como si fuera una llamada a la API
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await axios.post(
+        `http://localhost:5173/mslauncher/api/v1/notification/${notificationId}/read/${userId}`,
+        {},
+        {
+          headers: {
+            'Accept-Language': 'es'
+          }
+        }
+      );
       
       // Actualizar el estado local
       setNotifications(prevNotifications => 
         prevNotifications.map(notification => 
-          notification.id === notificationId 
-            ? { ...notification, read: true } 
+          notification.idNotification === notificationId 
+            ? { ...notification, isRead: true } 
             : notification
         )
       );
+      
+      // Actualizar el contador de notificaciones no leídas en el contexto
+      refreshUnreadCount();
       
       // Mostrar toast de éxito
       setToast({
@@ -199,7 +149,7 @@ export default function NotificationsPage() {
         setToast({ show: false, message: '', type: 'success' });
       }, 3000);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error al marcar notificación como leída:', error);
       setToast({
         show: true,
         message: 'Error al marcar la notificación como leída',
@@ -216,13 +166,45 @@ export default function NotificationsPage() {
   // Función para marcar todas las notificaciones como leídas
   const markAllAsRead = async () => {
     try {
-      // Simulamos una pequeña demora como si fuera una llamada a la API
-      await new Promise(resolve => setTimeout(resolve, 500));
+      setLoading(true);
+      
+      // Obtenemos solo las notificaciones no leídas
+      const unreadNotifications = notifications.filter(n => !n.isRead);
+      
+      // Si no hay notificaciones no leídas, no hacemos nada
+      if (unreadNotifications.length === 0) {
+        setToast({
+          show: true,
+          message: 'No hay notificaciones sin leer',
+          type: 'info'
+        });
+        setLoading(false);
+        return;
+      }
+      
+      // Creamos un array de promesas para marcar cada notificación como leída
+      const markReadPromises = unreadNotifications.map(notification => 
+        axios.post(
+          `http://localhost:5173/mslauncher/api/v1/notification/${notification.idNotification}/read/${userId}`,
+          {},
+          {
+            headers: {
+              'Accept-Language': 'es'
+            }
+          }
+        )
+      );
+      
+      // Esperamos a que todas las solicitudes se completen
+      await Promise.all(markReadPromises);
       
       // Actualizar el estado local
       setNotifications(prevNotifications => 
-        prevNotifications.map(notification => ({ ...notification, read: true }))
+        prevNotifications.map(notification => ({ ...notification, isRead: true }))
       );
+      
+      // Actualizar el contador de notificaciones no leídas en el contexto
+      refreshUnreadCount();
       
       // Mostrar toast de éxito
       setToast({
@@ -231,17 +213,15 @@ export default function NotificationsPage() {
         type: 'success'
       });
       
-      // Ocultar el toast después de 3 segundos
-      setTimeout(() => {
-        setToast({ show: false, message: '', type: 'success' });
-      }, 3000);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error al marcar todas las notificaciones como leídas:', error);
       setToast({
         show: true,
         message: 'Error al marcar todas las notificaciones como leídas',
         type: 'error'
       });
+    } finally {
+      setLoading(false);
       
       // Ocultar el toast después de 3 segundos
       setTimeout(() => {
@@ -249,6 +229,9 @@ export default function NotificationsPage() {
       }, 3000);
     }
   };
+
+  // Verificar si hay notificaciones no leídas
+  const hasUnreadNotifications = notifications.some(notification => !notification.isRead);
 
   return (
     <div className="flex">
@@ -278,7 +261,8 @@ export default function NotificationsPage() {
         )}
 
         <main className="min-h-screen bg-[#F2F6FD] dark:bg-[#13131a] pt-14 pb-14">
-          <div className="px-4 md:px-6">
+          <div className="w-full max-w-3xl px-4 md:px-12 lg:px-6 mx-auto md:ml-0 lg:ml-24 xl:ml-32 space-y-12">
+            
             {/* TÍTULO PRINCIPAL */}
             <div className="flex items-center mb-6 pt-4">
               <Bell className="w-6 h-6 mr-3 text-primary" />
@@ -292,82 +276,111 @@ export default function NotificationsPage() {
             ) : error ? (
               <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 my-4">
                 <p className="text-red-700 dark:text-red-400">{error}</p>
+                <button 
+                  onClick={fetchNotifications}
+                  className="mt-2 text-sm text-red-700 dark:text-red-400 hover:underline flex items-center gap-1"
+                >
+                  <RefreshCw className="w-3 h-3" /> Intentar nuevamente
+                </button>
               </div>
             ) : (
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Columna izquierda - Información de perfil */}
-                <div className="w-full md:w-64">
-                  <div className="bg-white dark:bg-[#1C1C24] rounded-2xl p-5 shadow-sm">
-                    <h3 className="text-base font-medium text-[#000000] dark:text-[#e2e2ea] mb-2">
-                      Perfil
+              <div className="space-y-4">
+                <div className="flex flex-col md:flex-row gap-10">
+                  <div className="w-full md:hidden lg:block md:w-60 pt-2">
+                    <h3 className="text-[14px] leading-[21px] font-medium font-poppins text-[#000000] dark:text-[#e2e2ea]">
+                      Notificaciones
                     </h3>
-                    <p className="text-sm text-[#696974] dark:text-[#92929d]">
-                      Tu información personal y los ajustes de seguridad de la cuenta.
+                    <p className="text-[12px] leading-[18px] font-normal font-poppins text-[#696974] dark:text-[#92929d] mt-1">
+                      Alertas y mensajes importantes del sistema.
                     </p>
                   </div>
-                </div>
-
-                {/* Columna derecha - Notificaciones */}
-                <div className="flex-1">
-                  {notifications.length === 0 ? (
-                    <div className="bg-white dark:bg-[#1C1C24] rounded-2xl p-8 shadow-sm flex flex-col items-center justify-center">
-                      <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-                        <Bell className="w-6 h-6 text-gray-400" />
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">No hay notificaciones</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                        Cuando recibas notificaciones, aparecerán aquí.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {notifications.map((notification) => (
-                        <div 
-                          key={notification.id}
-                          className="bg-white dark:bg-[#1C1C24] rounded-2xl p-4 shadow-sm relative border-b border-gray-100 dark:border-gray-800"
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center mb-4">
+                      <button 
+                        onClick={fetchNotifications}
+                        className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary hover:dark:text-primary flex items-center gap-1"
+                      >
+                        <RefreshCw className="w-3 h-3" /> Actualizar
+                      </button>
+                      
+                      {hasUnreadNotifications && (
+                        <button 
+                          onClick={markAllAsRead} 
+                          className="text-sm text-primary hover:text-primary/80 font-medium"
+                          disabled={loading}
                         >
-                          <div className="flex items-start gap-3">
-                            {notification.type === 'alert' ? (
-                              <div className="text-red-500 mt-1">
-                                <Bell className="w-4 h-4" />
-                              </div>
-                            ) : (
-                              <div className="text-blue-500 mt-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M12 12h0"></path>
-                                  <path d="M12 16v-4"></path>
-                                  <circle cx="12" cy="8" r="0.5"></circle>
-                                  <circle cx="12" cy="12" r="10"></circle>
-                                </svg>
-                              </div>
+                          Marcar todas como leídas
+                        </button>
+                      )}
+                    </div>
+                    
+                    {notifications.length === 0 ? (
+                      <div className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-2xl p-6 shadow-sm">
+                        <div className="flex flex-col items-center justify-center py-6">
+                          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                            <Bell className="w-6 h-6 text-gray-400" />
+                          </div>
+                          <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">No hay notificaciones</h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                            Cuando recibas notificaciones, aparecerán aquí.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-2xl shadow-sm overflow-hidden">
+                        {notifications.map((notification, index) => (
+                          <div 
+                            key={notification.idNotification}
+                            className={clsx(
+                              "relative p-4",
+                              index !== notifications.length - 1 && "border-b border-gray-100 dark:border-[#2C2C38]",
+                              !notification.isRead && "border-l-4 border-l-primary pl-3"
                             )}
-                            
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <h3 className="text-sm font-medium text-gray-800 dark:text-white">
-                                  {notification.title}
-                                </h3>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  {formatNotificationTime(notification.timestamp)}
-                                </span>
+                          >
+                            <div className="flex items-start gap-3">
+                              {renderNotificationIcon(notification.category)}
+                              
+                              <div className="flex-1">
+                                <div className="mb-1">
+                                  <h3 className="text-sm font-medium text-gray-800 dark:text-white">
+                                    {notification.title}
+                                  </h3>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    {formatNotificationTime(notification.creationDate)}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                                  {notification.description}
+                                </p>
+                                
+                                {!notification.isRead && (
+                                  <div className="flex justify-end">
+                                    <button 
+                                      onClick={() => markAsRead(notification.idNotification)}
+                                      className="text-xs text-primary hover:text-primary/80 font-medium"
+                                    >
+                                      Marcar como leída
+                                    </button>
+                                  </div>
+                                )}
                               </div>
-                              <p className="text-sm text-gray-600 dark:text-gray-300">
-                                {notification.message}
-                              </p>
                             </div>
-
-                            {!notification.read && (
-                              <div className="ml-2">
-                                <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-primary text-white">
+                            
+                            {!notification.isRead && (
+                              <div className="absolute top-4 right-4">
+                                <span className={clsx(
+                                  "inline-block px-2 py-1 text-xs font-medium rounded-full",
+                                  "bg-primary/10 text-primary"
+                                )}>
                                   Nuevo
                                 </span>
                               </div>
                             )}
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

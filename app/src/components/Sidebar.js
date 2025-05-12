@@ -13,7 +13,8 @@ import {
   Users,
   Video,
   Shield,
-  Settings
+  Settings,
+  Bell
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -42,6 +43,8 @@ function getActiveItemFromPath(pathname) {
     return 'AdminUsers';
   } else if (pathname.includes('/admin/videos')) {
     return 'AdminVideos';
+  } else if (pathname.includes('/admin/notifications')) {
+    return 'AdminNotifications';
   } else if (pathname.includes('/nucleares')) {
     return 'NUCLEARES';
   } else if (pathname.includes('/financieros')) {
@@ -184,7 +187,7 @@ export default function Sidebar({ onClose }) {
   };
 
   const isDivisionActive = ['NUCLEARES', 'FINANCIAL', 'AUXILIARES'].includes(activeItem);
-  const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminMenus'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
+  const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminMenus', 'AdminNotifications'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
 
   function formatServer(server) {
     if (!server) return '';
@@ -308,6 +311,13 @@ export default function Sidebar({ onClose }) {
               indent
               active={activeItem === 'AdminVideos'}
               onClick={() => navigateTo('/admin/videos', 'AdminVideos')}
+            />
+            <SidebarItem
+              icon={Bell}
+              text="Notificaciones"
+              indent
+              active={activeItem === 'AdminNotifications'}
+              onClick={() => navigateTo('/admin/notifications', 'AdminNotifications')}
             />
             {/* Uncomment this if needed later
             <SidebarItem
