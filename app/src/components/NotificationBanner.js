@@ -12,7 +12,7 @@ const NotificationBanner = () => {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const { primaryColor } = usePrimaryColor();
-  const { markNotificationAsRead } = useNotifications();
+  const { markNotificationAsRead, bannerRefresh } = useNotifications();
 
   // Obtener el ID de usuario de las cookies
   const userId = Cookies.get('idUser') || '2'; // Fallback a 2 si no hay cookie
@@ -83,7 +83,7 @@ const NotificationBanner = () => {
     const interval = setInterval(fetchNotifications, 120000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [bannerRefresh]);
 
   if (isLoading || !currentNotification) return null;
 

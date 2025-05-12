@@ -20,7 +20,8 @@ export const useNotifications = () => {
 export const NotificationProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoadingCount, setIsLoadingCount] = useState(false);
-  const [lastRefresh, setLastRefresh] = useState(Date.now());
+  const [bannerRefresh, setBannerRefresh] = useState(Date.now());
+  const [panelRefresh, setPanelRefresh] = useState(Date.now());
 
   // Obtener el ID de usuario de las cookies
   const userId = Cookies.get('idUser') || '2'; // Fallback a 2 si no hay cookie
@@ -66,8 +67,9 @@ export const NotificationProvider = ({ children }) => {
         setUnreadCount(prev => prev - 1);
       }
       
-      // Refrescar para asegurarnos que el contador esté sincronizado
-      setLastRefresh(Date.now());
+      // Refrescar el banner y el panel
+      setBannerRefresh(Date.now());
+      setPanelRefresh(Date.now());
     } catch (error) {
       console.error('Error al marcar notificación como leída:', error);
       // Si hay error, refrescar para obtener el contador actualizado
@@ -75,9 +77,19 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
-  // Función para forzar una actualización
+  // Función para forzar una actualización del contador
   const refreshUnreadCount = () => {
-    setLastRefresh(Date.now());
+    fetchUnreadCount();
+  };
+
+  // Función para forzar actualización del panel de notificaciones
+  const refreshNotificationPanel = () => {
+    setPanelRefresh(Date.now());
+  };
+
+  // Función para forzar actualización del banner de notificaciones
+  const refreshNotificationBanner = () => {
+    setBannerRefresh(Date.now());
   };
 
   // Efecto para cargar el conteo inicial y configurar intervalos
@@ -90,17 +102,15 @@ export const NotificationProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Efecto para recargar cuando se solicita explícitamente
-  useEffect(() => {
-    fetchUnreadCount();
-  }, [lastRefresh]);
-
   const value = {
     unreadCount,
     isLoadingCount,
     markNotificationAsRead,
     refreshUnreadCount,
-    lastRefresh
+    refreshNotificationPanel,
+    refreshNotificationBanner,
+    bannerRefresh,
+    panelRefresh
   };
 
   return (

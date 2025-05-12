@@ -12,7 +12,7 @@ import { useNotifications } from '@/context/NotificationContext';
 const NotificationsPanel = () => {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { refreshUnreadCount, lastRefresh } = useNotifications();
+  const { panelRefresh } = useNotifications();
 
   // Obtener el ID de usuario de las cookies
   const userId = Cookies.get('idUser') || '2'; // Fallback a 2 si no hay cookie
@@ -48,7 +48,7 @@ const NotificationsPanel = () => {
     }
   };
 
-  // Cargar notificaciones al montar el componente y cuando cambie lastRefresh
+  // Cargar notificaciones al montar el componente y cuando cambie panelRefresh
   useEffect(() => {
     fetchNotifications();
     
@@ -56,7 +56,7 @@ const NotificationsPanel = () => {
     const interval = setInterval(fetchNotifications, 120000);
     
     return () => clearInterval(interval);
-  }, [lastRefresh]); // Añadir lastRefresh como dependencia para que se actualice cuando cambie
+  }, [panelRefresh]); // Añadir panelRefresh como dependencia para que se actualice cuando cambie
 
   // Función para obtener la ruta del icono y el color de fondo según la categoría
   const getNotificationStyles = (category) => {
@@ -111,9 +111,19 @@ const NotificationsPanel = () => {
       {/* Lista de notificaciones */}
       <div className="flex flex-col flex-1 gap-4 md:gap-2">
         {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
+          // Skeleton loading state
+          <>
+            {[...Array(4)].map((_, index) => (
+              <div key={index} className="flex items-start gap-4 md:gap-3 min-h-[64px] md:min-h-[48px]">
+                <div className="w-[36px] h-[36px] md:w-[28px] md:h-[28px] bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse"></div>
+                <div className="flex-1">
+                  <div className="h-[15px] md:h-[12px] bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2 animate-pulse"></div>
+                  <div className="h-[13px] md:h-[10px] bg-gray-100 dark:bg-gray-800 rounded w-full mb-1 animate-pulse"></div>
+                  <div className="h-[10px] md:h-[8px] bg-gray-100 dark:bg-gray-800 rounded w-1/4 mt-1 animate-pulse"></div>
+                </div>
+              </div>
+            ))}
+          </>
         ) : notifications.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-[14px] text-gray-500 dark:text-gray-400">

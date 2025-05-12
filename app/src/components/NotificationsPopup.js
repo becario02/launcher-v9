@@ -7,12 +7,14 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Cookies from 'js-cookie';
 import Link from 'next/link';
+import { useNotifications } from '@/context/NotificationContext';
 
 const NotificationsPopup = ({ isOpen, onClose }) => {
   const [mounted, setMounted] = useState(false);
   const [showAnimation, setShowAnimation] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { refreshUnreadCount } = useNotifications();
 
   // Obtener el ID de usuario de las cookies
   const userId = Cookies.get('idUser') || '2'; // Fallback a 2 si no hay cookie
@@ -56,6 +58,8 @@ const NotificationsPopup = ({ isOpen, onClose }) => {
     } else {
       setShowAnimation(false);
       timers.push(setTimeout(() => setMounted(false), 200));
+      // Refrescar el conteo cuando se cierra el popup
+      refreshUnreadCount();
     }
     return () => timers.forEach(clearTimeout);
   }, [isOpen]);
@@ -118,9 +122,19 @@ const NotificationsPopup = ({ isOpen, onClose }) => {
           {/* Notificaciones */}
           <div className="flex flex-col gap-y-[20px] py-2 overflow-auto flex-1">
             {loading ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-              </div>
+              // Skeleton loading state
+              <>
+                {[...Array(4)].map((_, index) => (
+                  <div key={index} className="flex items-start gap-3 min-h-[36px]">
+                    <div className="w-9 h-9 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse"></div>
+                    <div className="flex-1">
+                      <div className="h-[14px] bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2 animate-pulse"></div>
+                      <div className="h-[10px] bg-gray-100 dark:bg-gray-800 rounded w-full mb-1 animate-pulse"></div>
+                      <div className="h-[8px] bg-gray-100 dark:bg-gray-800 rounded w-1/4 mt-1 animate-pulse"></div>
+                    </div>
+                  </div>
+                ))}
+              </>
             ) : notifications.length === 0 ? (
               <div className="flex items-center justify-center h-full">
                 <p className="text-[12px] text-gray-500 dark:text-gray-400">
