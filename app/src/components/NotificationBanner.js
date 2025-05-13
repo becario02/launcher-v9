@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import { Bell, X } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import Cookies from 'js-cookie';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useNotifications } from '@/context/NotificationContext';
@@ -11,11 +11,58 @@ const NotificationBanner = () => {
   const [currentNotification, setCurrentNotification] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [truncatedDescription, setTruncatedDescription] = useState('');
+  const [windowWidth, setWindowWidth] = useState(0);
+  const descriptionRef = useRef(null);
   const { primaryColor } = usePrimaryColor();
   const { markNotificationAsRead, bannerRefresh } = useNotifications();
 
   // Obtener el ID de usuario de las cookies
-  const userId = Cookies.get('idUser') || '2'; // Fallback a 2 si no hay cookie
+  const userId = Cookies.get('idUser')
+
+  // Actualizar el ancho de la ventana
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    
+    // Establecer el ancho inicial
+    handleResize();
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Truncar la descripción basado en el ancho de la pantalla
+  useEffect(() => {
+    if (!currentNotification) return;
+    
+    const truncateText = (text, maxLength) => {
+      if (!text) return '';
+      return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    };
+    
+    // Definir longitud máxima según el ancho de la pantalla
+    let maxLength;
+    if (windowWidth < 640) { // móvil
+      maxLength = 0; // No mostrar en móvil
+    } else if (windowWidth < 768) { // tablet pequeña
+      maxLength = 30;
+    } else if (windowWidth < 1024) { // tablet/laptop
+      maxLength = 60;
+    } else if (windowWidth < 1280) { // laptop/desktop
+      maxLength = 100;
+    } else { // pantallas grandes
+      maxLength = 150;
+    }
+    
+    // Aplicar truncado
+    if (maxLength > 0) {
+      setTruncatedDescription(truncateText(currentNotification.description, maxLength));
+    } else {
+      setTruncatedDescription('');
+    }
+  }, [currentNotification, windowWidth]);
 
   // Función para obtener las notificaciones no leídas
   const fetchNotifications = async () => {
@@ -87,39 +134,24 @@ const NotificationBanner = () => {
 
   if (isLoading || !currentNotification) return null;
 
-  // Formatear la hora de la notificación (si se necesita mostrar)
-  const formatTime = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')} hrs`;
-  };
-
-  // Detectar si es una notificación de actualización de sistema
-  const isSystemUpdate = currentNotification.category === 'SYSTEMUPDATE';
-
   return (
     <div 
-      className="w-full text-white py-3 px-4 relative" 
+      className="w-full text-white py-3 px-12 relative" 
       style={{ 
         backgroundColor: primaryColor
       }}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <Bell size={16} className="text-white" />
-          <div className="flex flex-col md:flex-row md:items-center md:space-x-2">
-            <span className="text-sm font-medium">{currentNotification.title}</span>
-            {isSystemUpdate && (
-              <span className="text-xs text-gray-300 hidden md:inline">
-                {formatTime(currentNotification.creationDate)}
-              </span>
-            )}
+        <div className="flex items-center gap-3 flex-grow">
+          <Bell size={16} className="text-white shrink-0" />
+          <div className="flex flex-col md:flex-row md:items-center w-full">
+            <span className="text-sm font-medium whitespace-nowrap mr-4">{currentNotification.title}</span>
+            <span ref={descriptionRef} className="text-xs text-gray-200 hidden md:inline">
+              {truncatedDescription || currentNotification.description}
+            </span>
           </div>
-          <span className="text-xs text-gray-200 hidden md:inline truncate max-w-md">
-            {currentNotification.description}
-          </span>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center ml-3 shrink-0">
           <button
             className="text-xs font-medium px-3 py-1 rounded-md hover:bg-white/10 focus:outline-none focus:ring-1 focus:ring-white/30 transition"
             style={{ 
@@ -128,13 +160,6 @@ const NotificationBanner = () => {
             onClick={() => handleMarkAsRead(currentNotification.idNotification)}
           >
             Entendido
-          </button>
-          <button 
-            className="text-white hover:text-gray-300 transition focus:outline-none"
-            onClick={() => handleMarkAsRead(currentNotification.idNotification)}
-            aria-label="Cerrar notificación"
-          >
-            <X size={16} />
           </button>
         </div>
       </div>

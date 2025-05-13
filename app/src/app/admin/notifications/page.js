@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import clsx from 'clsx';
-import { Pencil, PlusCircle, Bell, ChevronDown, Calendar, ChevronRight, ChevronLeft, Search, X, Trash2, Building } from 'lucide-react';
+import { Pencil, PlusCircle, Bell, Calendar, ChevronRight, ChevronLeft, Trash2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import { usePrimaryColor } from '@/context/primaryColor';
@@ -13,6 +13,7 @@ import { es } from 'date-fns/locale';
 import NotificationFormModal from '@/components/NotificationFormModal';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import CategoryBadge from '@/components/CategoryBadge';
+import NotificationFilters from '@/components/NotificationFilters';
 
 export default function AdminNotificationsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -48,9 +49,6 @@ export default function AdminNotificationsPage() {
     message: '',
     type: 'success'
   });
-
-  // Estado para manejar el panel de filtros avanzados
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const fetchNotifications = () => {
     setIsLoading(true);
@@ -229,10 +227,8 @@ export default function AdminNotificationsPage() {
   const TableRowSkeleton = () => (
     <tr className="animate-pulse">
       <td className="px-6 py-4">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-      </td>
-      <td className="px-6 py-4 hidden md:table-cell">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
       </td>
       <td className="px-6 py-4 hidden lg:table-cell">
         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
@@ -282,7 +278,7 @@ export default function AdminNotificationsPage() {
 
         {/* Main */}
         <main className="min-h-screen bg-[#F2F6FD] dark:bg-[#13131a] pt-14 pb-14 px-4 md:px-8 xl:px-10 w-full">
-          <div className="max-w-7xl mx-auto space-y-10">
+          <div className="max-w-7xl mx-auto space-y-8">
             {/* Header */}
             <div className="flex flex-col gap-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -310,264 +306,108 @@ export default function AdminNotificationsPage() {
                 </button>
               </div>
 
-              {/* Buscador y filtros */}
-              <div className="bg-white dark:bg-[#1C1C24] rounded-lg shadow-sm border border-gray-200 dark:border-[#2C2C38] p-4">
-                <div className="flex flex-col gap-4">
-                  {/* Buscador */}
-                  <div className="relative max-w-md w-full">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <Search className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Buscar por título o descripción..."
-                      value={search}
-                      onChange={(e) => {
-                        setSearch(e.target.value);
-                        setPage(1);
-                      }}
-                      className="w-full pl-10 pr-10 py-2 rounded-md text-sm border border-gray-300 dark:border-[#2C2C38] bg-white dark:bg-[#262631] text-gray-800 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:focus:border-primary"
-                    />
-                    {search && (
-                      <button
-                        onClick={() => setSearch('')}
-                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Botón para mostrar/ocultar filtros avanzados */}
-                  <div className="flex justify-between items-center">
-                    <button
-                      onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                      className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition flex items-center gap-1"
-                    >
-                      <span>Filtros avanzados</span>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    {(search || status || category || startDate || endDate || companyId) && (
-                      <button
-                        onClick={clearAllFilters}
-                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition"
-                      >
-                        Limpiar filtros
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Filtros avanzados */}
-                  {showAdvancedFilters && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2 pt-4 border-t border-gray-100 dark:border-[#2C2C38]">
-                      {/* Filtro de Estado */}
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Estado
-                        </label>
-                        <select
-                          value={status}
-                          onChange={(e) => {
-                            setStatus(e.target.value);
-                            setPage(1);
-                          }}
-                          className="w-full px-3 py-2 rounded-md text-sm border border-gray-300 dark:border-[#2C2C38] bg-white dark:bg-[#262631] text-gray-800 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:focus:border-primary"
-                        >
-                          <option value="">Todos</option>
-                          <option value="ACTIVE">Activas</option>
-                          <option value="INACTIVE">Inactivas</option>
-                        </select>
-                      </div>
-
-                      {/* Filtro de Categoría */}
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Categoría
-                        </label>
-                        <select
-                          value={category}
-                          onChange={(e) => {
-                            setCategory(e.target.value);
-                            setPage(1);
-                          }}
-                          className="w-full px-3 py-2 rounded-md text-sm border border-gray-300 dark:border-[#2C2C38] bg-white dark:bg-[#262631] text-gray-800 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:focus:border-primary"
-                        >
-                          <option value="">Todas</option>
-                          <option value="SYSTEMUPDATE">Actualización del Sistema</option>
-                          <option value="NEWVIDEO">Nuevo Video</option>
-                          <option value="NEWARTICLE">Nuevo Artículo</option>
-                          <option value="NA">Sin Categoría</option>
-                        </select>
-                      </div>
-
-                      {/* Filtro de Compañía */}
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Compañía
-                        </label>
-                        <select
-                          value={companyId || ''}
-                          onChange={(e) => {
-                            setCompanyId(e.target.value ? parseInt(e.target.value) : null);
-                            setPage(1);
-                          }}
-                          className="w-full px-3 py-2 rounded-md text-sm border border-gray-300 dark:border-[#2C2C38] bg-white dark:bg-[#262631] text-gray-800 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:focus:border-primary"
-                        >
-                          <option value="">Todas</option>
-                          {companies.map(company => (
-                            <option key={company.idCompany} value={company.idCompany}>
-                              {company.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Filtro de Fecha Inicial */}
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Desde
-                        </label>
-                        <input
-                          type="date"
-                          value={startDate ? startDate.toISOString().split('T')[0] : ''}
-                          onChange={(e) => {
-                            setStartDate(e.target.value ? new Date(e.target.value) : null);
-                            setPage(1);
-                          }}
-                          className="w-full px-3 py-2 rounded-md text-sm border border-gray-300 dark:border-[#2C2C38] bg-white dark:bg-[#262631] text-gray-800 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:focus:border-primary"
-                        />
-                      </div>
-
-                      {/* Filtro de Fecha Final */}
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Hasta
-                        </label>
-                        <input
-                          type="date"
-                          value={endDate ? endDate.toISOString().split('T')[0] : ''}
-                          onChange={(e) => {
-                            setEndDate(e.target.value ? new Date(e.target.value) : null);
-                            setPage(1);
-                          }}
-                          className="w-full px-3 py-2 rounded-md text-sm border border-gray-300 dark:border-[#2C2C38] bg-white dark:bg-[#262631] text-gray-800 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:focus:border-primary"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+              {/* Componente de filtros */}
+              <NotificationFilters 
+                search={search}
+                setSearch={setSearch}
+                status={status}
+                setStatus={setStatus}
+                category={category}
+                setCategory={setCategory}
+                startDate={startDate}
+                setStartDate={setStartDate}
+                endDate={endDate}
+                setEndDate={setEndDate}
+                companyId={companyId}
+                setCompanyId={setCompanyId}
+                companies={companies}
+                setPage={setPage}
+                clearAllFilters={clearAllFilters}
+              />
             </div>
 
             {/* Tabla */}
-            <div className="rounded-lg border border-gray-200 dark:border-[#2C2C38] shadow-sm bg-white dark:bg-[#1C1C24] overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-[#F9FAFB] dark:bg-[#2C2C38] text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">
-                  <tr>
-                    <th className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1">
-                        Título
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
-                      </div>
-                    </th>
-                    <th className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                      <div className="flex items-center gap-1">
-                        Descripción
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
-                      </div>
-                    </th>
-                    <th className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
-                      <div className="flex items-center gap-1">
-                        Categoría
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
-                      </div>
-                    </th>
-                    <th className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1">
-                        Estado
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
-                      </div>
-                    </th>
-                    <th className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                      <div className="flex items-center gap-1">
-                        Fecha Expiración
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
-                      </div>
-                    </th>
-                    <th className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1">
-                        Acciones
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-[#2C2C38] text-gray-800 dark:text-gray-200">
-                  {isLoading ? (
-                    // Skeleton loading state
-                    <>
-                      {[...Array(pageSize)].map((_, index) => (
-                        <TableRowSkeleton key={index} />
-                      ))}
-                    </>
-                  ) : notifications.length === 0 ? (
+            <div className="custom-scrollbar overflow-hidden rounded-xl border border-gray-200 dark:border-[#2C2C38] shadow-sm bg-white dark:bg-[#1C1C24]">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-[#F9FAFB] dark:bg-[#2C2C38] text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">
                     <tr>
-                      <td colSpan={6} className="text-center py-8 text-gray-500 dark:text-gray-400">
-                        {search || status || category || startDate || endDate || companyId ?
-                          'No se encontraron notificaciones con los filtros aplicados' :
-                          'No hay notificaciones registradas'}
-                      </td>
+                      <th className="px-6 py-4 whitespace-nowrap font-medium">Información</th>
+                      <th className="px-6 py-4 whitespace-nowrap hidden lg:table-cell font-medium">Categoría</th>
+                      <th className="px-6 py-4 whitespace-nowrap font-medium">Estado</th>
+                      <th className="px-6 py-4 whitespace-nowrap hidden md:table-cell font-medium">Fecha Expiración</th>
+                      <th className="px-6 py-4 whitespace-nowrap font-medium">Acciones</th>
                     </tr>
-                  ) : (
-                    notifications.map(notification => (
-                      <tr key={notification.idNotification} className="hover:bg-gray-50 dark:hover:bg-[#262636] transition">
-                        <td className="px-6 py-4 font-medium">{notification.title}</td>
-                        <td className="px-6 py-4 hidden md:table-cell">
-                          <div className="max-w-xs truncate">{notification.description}</div>
-                        </td>
-                        <td className="px-6 py-4 hidden lg:table-cell">
-                          <CategoryBadge category={notification.category} />
-                        </td>
-                        <td className="px-6 py-4">
-                          <StatusBadge status={notification.status} />
-                        </td>
-                        <td className="px-6 py-4 hidden md:table-cell">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            <span>{formatDate(notification.expirationDate)}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => {
-                                setEditingNotification(notification);
-                                setModalOpen(true);
-                              }}
-                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-                              title="Editar notificación"
-                            >
-                              <Pencil className="w-3.5 h-3.5 text-primary" />
-                              <span className="text-xs font-medium">Editar</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setNotificationToDelete(notification.idNotification);
-                                setConfirmDialogOpen(true);
-                              }}
-                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition"
-                              title="Eliminar notificación"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
-                              <span className="text-xs font-medium">Eliminar</span>
-                            </button>
-                          </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-[#2C2C38] text-gray-800 dark:text-gray-200">
+                    {isLoading ? (
+                      // Skeleton loading state
+                      <>
+                        {[...Array(pageSize)].map((_, index) => (
+                          <TableRowSkeleton key={index} />
+                        ))}
+                      </>
+                    ) : notifications.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="text-center py-8 text-gray-500 dark:text-gray-400">
+                          {search || status || category || startDate || endDate || companyId ?
+                            'No se encontraron notificaciones con los filtros aplicados' :
+                            'No hay notificaciones registradas'}
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      notifications.map(notification => (
+                        <tr key={notification.idNotification} className="hover:bg-gray-50 dark:hover:bg-[#262636] transition">
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col">
+                              <span className="font-medium text-gray-800 dark:text-gray-200 mb-1">{notification.title}</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{notification.description}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 hidden lg:table-cell">
+                            <CategoryBadge category={notification.category} />
+                          </td>
+                          <td className="px-6 py-4">
+                            <StatusBadge status={notification.status} />
+                          </td>
+                          <td className="px-6 py-4 hidden md:table-cell">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4 text-gray-400" />
+                              <span>{formatDate(notification.expirationDate)}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  setEditingNotification(notification);
+                                  setModalOpen(true);
+                                }}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                                title="Editar notificación"
+                              >
+                                <Pencil className="w-3.5 h-3.5 text-primary" />
+                                <span className="text-xs font-medium">Editar</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setNotificationToDelete(notification.idNotification);
+                                  setConfirmDialogOpen(true);
+                                }}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition"
+                                title="Eliminar notificación"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
+                                <span className="text-xs font-medium">Eliminar</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
               {/* Paginación */}
               <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200 dark:border-[#2C2C38] text-sm">
@@ -583,7 +423,7 @@ export default function AdminNotificationsPage() {
                     disabled={page === 1 || isLoading || totalNotifications === 0}
                     onClick={() => setPage(prev => Math.max(prev - 1, 1))}
                     className={clsx(
-                      "inline-flex items-center px-3 py-1.5 rounded text-gray-700 dark:text-gray-200",
+                      "inline-flex items-center px-3 py-2 rounded-md text-gray-700 dark:text-gray-200",
                       "transition focus:outline-none",
                       page === 1 || isLoading || totalNotifications === 0
                         ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-[#2C2C38]"
@@ -597,7 +437,7 @@ export default function AdminNotificationsPage() {
                     disabled={page * pageSize >= totalNotifications || isLoading || totalNotifications === 0}
                     onClick={() => setPage(prev => prev + 1)}
                     className={clsx(
-                      "inline-flex items-center px-3 py-1.5 rounded text-gray-700 dark:text-gray-200",
+                      "inline-flex items-center px-3 py-2 rounded-md text-gray-700 dark:text-gray-200",
                       "transition focus:outline-none",
                       page * pageSize >= totalNotifications || isLoading || totalNotifications === 0
                         ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-[#2C2C38]"
@@ -663,7 +503,7 @@ const StatusBadge = ({ status }) => {
 
   return (
     <span className={clsx(
-      'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
+      'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
       isActive
         ? 'bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400'
         : 'bg-gray-100 text-gray-800 dark:bg-gray-800/40 dark:text-gray-400'

@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { BellOff, RefreshCw, Video, FileText, HelpCircle } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 
 const NotificationsPanel = () => {
@@ -58,27 +58,27 @@ const NotificationsPanel = () => {
     return () => clearInterval(interval);
   }, [panelRefresh]); // Añadir panelRefresh como dependencia para que se actualice cuando cambie
 
-  // Función para obtener la ruta del icono y el color de fondo según la categoría
+  // Función para obtener el icono y el color de fondo según la categoría
   const getNotificationStyles = (category) => {
     switch (category) {
       case 'SYSTEMUPDATE':
         return {
-          icon: '/assets/notifications/icon-alerta.svg',
+          icon: <RefreshCw size={20} className="text-red-500" />,
           bgColor: '#ff000019'
         };
       case 'NEWVIDEO':
         return {
-          icon: '/assets/notifications/icon-play.svg',
+          icon: <Video size={20} className="text-blue-500" />,
           bgColor: '#0080ff19'
         };
       case 'NEWARTICLE':
         return {
-          icon: '/assets/notifications/icon-news.svg',
+          icon: <FileText size={20} className="text-green-500" />,
           bgColor: '#0a910119'
         };
       default:
         return {
-          icon: '/assets/notifications/icon-medalla.svg',
+          icon: <HelpCircle size={20} className="text-amber-500" />,
           bgColor: '#ff740d19'
         };
     }
@@ -125,9 +125,13 @@ const NotificationsPanel = () => {
             ))}
           </>
         ) : notifications.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-[14px] text-gray-500 dark:text-gray-400">
+          <div className="flex flex-col items-center justify-center h-full text-center p-4">
+            <BellOff size={48} className="text-gray-300 dark:text-gray-600 mb-4" />
+            <p className="text-[16px] md:text-[14px] text-gray-500 dark:text-gray-400 font-medium">
               No tienes notificaciones sin leer
+            </p>
+            <p className="text-[14px] md:text-[12px] text-gray-400 dark:text-gray-500 mt-2">
+              Las nuevas notificaciones aparecerán en este panel
             </p>
           </div>
         ) : (
@@ -142,13 +146,7 @@ const NotificationsPanel = () => {
                   className="w-[36px] h-[36px] md:w-[28px] md:h-[28px] flex items-center justify-center rounded-md shrink-0"
                   style={{ backgroundColor: bgColor }}
                 >
-                  <Image
-                    src={icon}
-                    alt="icono"
-                    width={20}
-                    height={20}
-                    className="object-contain"
-                  />
+                  {icon}
                 </div>
 
                 <div className="flex-1 overflow-hidden">

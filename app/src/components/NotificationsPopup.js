@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { RefreshCw, Video, FileText, HelpCircle } from 'lucide-react';
+import { RefreshCw, Video, FileText, HelpCircle, BellOff } from 'lucide-react';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -136,9 +136,13 @@ const NotificationsPopup = ({ isOpen, onClose }) => {
                 ))}
               </>
             ) : notifications.length === 0 ? (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-[12px] text-gray-500 dark:text-gray-400">
+              <div className="flex flex-col items-center justify-center h-full text-center px-4">
+                <BellOff size={36} className="text-gray-300 dark:text-gray-600 mb-3" />
+                <p className="text-[12px] text-gray-500 dark:text-gray-400 font-medium">
                   No tienes notificaciones sin leer
+                </p>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
+                  Cuando haya nuevas notificaciones, aparecerán aquí
                 </p>
               </div>
             ) : (
