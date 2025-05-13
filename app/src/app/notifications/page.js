@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
-import { Bell, Settings, RefreshCw, Video, FileText, Info, AlertCircle, CheckCircle } from 'lucide-react';
+import { Bell, Video, FileText, Info, RefreshCw } from 'lucide-react';
 import Toast from '@/components/Toast';
 import clsx from 'clsx';
 import { usePrimaryColor } from '@/context/primaryColor';
@@ -11,19 +11,26 @@ import { useTheme } from '@/context/theme';
 import { useNotifications } from '@/context/NotificationContext';
 import axios from 'axios';
 import Cookies from 'js-cookie';
-import SkeletonLoader from '@/components/SkeletonLoader';
-import { format, formatDistance } from 'date-fns';
+import NotificationsSkeletonLoader from '@/components/NotificationsSkeletonLoader';
+import { formatDistance } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export default function NotificationsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme } = useTheme();
   const { primaryColor } = usePrimaryColor();
-  const { refreshUnreadCount } = useNotifications();
+  const { 
+    refreshUnreadCount, 
+    markNotificationAsRead, 
+    panelRefresh,
+    refreshNotificationPanel 
+  } = useNotifications();
+  
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [markingAsRead, setMarkingAsRead] = useState(null); // ID de la notificación que se está marcando como leída
   
   // Obtener el ID de usuario de las cookies
   const userId = Cookies.get('idUser') || '2'; // Fallback a 2 si no hay cookie
@@ -60,10 +67,48 @@ export default function NotificationsPage() {
     }
   };
 
-  // Cargar notificaciones al montar el componente
+  // Manejar marcar como leída una notificación
+  const handleMarkAsRead = async (notificationId) => {
+    if (markingAsRead) return; // Prevenir múltiples clics
+    
+    try {
+      setMarkingAsRead(notificationId);
+      
+      // Usar la función del contexto para marcar como leída
+      await markNotificationAsRead(notificationId);
+      
+      // Actualizar la interfaz local
+      setNotifications(prev => 
+        prev.map(notif => 
+          notif.idNotification === notificationId 
+            ? { ...notif, isRead: true } 
+            : notif
+        )
+      );
+      
+      // Mostrar toast de éxito
+      setToast({
+        show: true,
+        message: 'Notificación marcada como leída',
+        type: 'success'
+      });
+      
+    } catch (error) {
+      console.error('Error al marcar como leída:', error);
+      setToast({
+        show: true,
+        message: 'Error al marcar la notificación como leída',
+        type: 'error'
+      });
+    } finally {
+      setMarkingAsRead(null);
+    }
+  };
+
+  // Cargar notificaciones al montar el componente y cuando panelRefresh cambie
   useEffect(() => {
     fetchNotifications();
-  }, []);
+  }, [panelRefresh]);
 
   // Función para formatear la fecha y hora de la notificación
   const formatNotificationTime = (timestamp) => {
@@ -112,127 +157,6 @@ export default function NotificationsPage() {
     }
   };
 
-  // Función para marcar una notificación como leída
-  const markAsRead = async (notificationId) => {
-    try {
-      await axios.post(
-        `http://localhost:5173/mslauncher/api/v1/notification/${notificationId}/read/${userId}`,
-        {},
-        {
-          headers: {
-            'Accept-Language': 'es'
-          }
-        }
-      );
-      
-      // Actualizar el estado local
-      setNotifications(prevNotifications => 
-        prevNotifications.map(notification => 
-          notification.idNotification === notificationId 
-            ? { ...notification, isRead: true } 
-            : notification
-        )
-      );
-      
-      // Actualizar el contador de notificaciones no leídas en el contexto
-      refreshUnreadCount();
-      
-      // Mostrar toast de éxito
-      setToast({
-        show: true,
-        message: 'Notificación marcada como leída',
-        type: 'success'
-      });
-      
-      // Ocultar el toast después de 3 segundos
-      setTimeout(() => {
-        setToast({ show: false, message: '', type: 'success' });
-      }, 3000);
-    } catch (error) {
-      console.error('Error al marcar notificación como leída:', error);
-      setToast({
-        show: true,
-        message: 'Error al marcar la notificación como leída',
-        type: 'error'
-      });
-      
-      // Ocultar el toast después de 3 segundos
-      setTimeout(() => {
-        setToast({ show: false, message: '', type: 'success' });
-      }, 3000);
-    }
-  };
-
-  // Función para marcar todas las notificaciones como leídas
-  const markAllAsRead = async () => {
-    try {
-      setLoading(true);
-      
-      // Obtenemos solo las notificaciones no leídas
-      const unreadNotifications = notifications.filter(n => !n.isRead);
-      
-      // Si no hay notificaciones no leídas, no hacemos nada
-      if (unreadNotifications.length === 0) {
-        setToast({
-          show: true,
-          message: 'No hay notificaciones sin leer',
-          type: 'info'
-        });
-        setLoading(false);
-        return;
-      }
-      
-      // Creamos un array de promesas para marcar cada notificación como leída
-      const markReadPromises = unreadNotifications.map(notification => 
-        axios.post(
-          `http://localhost:5173/mslauncher/api/v1/notification/${notification.idNotification}/read/${userId}`,
-          {},
-          {
-            headers: {
-              'Accept-Language': 'es'
-            }
-          }
-        )
-      );
-      
-      // Esperamos a que todas las solicitudes se completen
-      await Promise.all(markReadPromises);
-      
-      // Actualizar el estado local
-      setNotifications(prevNotifications => 
-        prevNotifications.map(notification => ({ ...notification, isRead: true }))
-      );
-      
-      // Actualizar el contador de notificaciones no leídas en el contexto
-      refreshUnreadCount();
-      
-      // Mostrar toast de éxito
-      setToast({
-        show: true,
-        message: 'Todas las notificaciones marcadas como leídas',
-        type: 'success'
-      });
-      
-    } catch (error) {
-      console.error('Error al marcar todas las notificaciones como leídas:', error);
-      setToast({
-        show: true,
-        message: 'Error al marcar todas las notificaciones como leídas',
-        type: 'error'
-      });
-    } finally {
-      setLoading(false);
-      
-      // Ocultar el toast después de 3 segundos
-      setTimeout(() => {
-        setToast({ show: false, message: '', type: 'success' });
-      }, 3000);
-    }
-  };
-
-  // Verificar si hay notificaciones no leídas
-  const hasUnreadNotifications = notifications.some(notification => !notification.isRead);
-
   return (
     <div className="flex">
       <div className="hidden md:block">
@@ -261,7 +185,7 @@ export default function NotificationsPage() {
         )}
 
         <main className="min-h-screen bg-[#F2F6FD] dark:bg-[#13131a] pt-14 pb-14">
-          <div className="w-full max-w-3xl px-4 md:px-12 lg:px-6 mx-auto md:ml-0 lg:ml-24 xl:ml-32 space-y-12">
+          <div className="w-full max-w-4xl px-4 md:px-12 lg:px-6 mx-auto md:ml-0 lg:ml-24 xl:ml-32 space-y-12">
             
             {/* TÍTULO PRINCIPAL */}
             <div className="flex items-center mb-6 pt-4">
@@ -272,16 +196,10 @@ export default function NotificationsPage() {
             </div>
 
             {loading ? (
-              <SkeletonLoader />
+              <NotificationsSkeletonLoader />
             ) : error ? (
               <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 my-4">
                 <p className="text-red-700 dark:text-red-400">{error}</p>
-                <button 
-                  onClick={fetchNotifications}
-                  className="mt-2 text-sm text-red-700 dark:text-red-400 hover:underline flex items-center gap-1"
-                >
-                  <RefreshCw className="w-3 h-3" /> Intentar nuevamente
-                </button>
               </div>
             ) : (
               <div className="space-y-4">
@@ -295,25 +213,6 @@ export default function NotificationsPage() {
                     </p>
                   </div>
                   <div className="flex-1">
-                    <div className="flex justify-between items-center mb-4">
-                      <button 
-                        onClick={fetchNotifications}
-                        className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary hover:dark:text-primary flex items-center gap-1"
-                      >
-                        <RefreshCw className="w-3 h-3" /> Actualizar
-                      </button>
-                      
-                      {hasUnreadNotifications && (
-                        <button 
-                          onClick={markAllAsRead} 
-                          className="text-sm text-primary hover:text-primary/80 font-medium"
-                          disabled={loading}
-                        >
-                          Marcar todas como leídas
-                        </button>
-                      )}
-                    </div>
-                    
                     {notifications.length === 0 ? (
                       <div className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-2xl p-6 shadow-sm">
                         <div className="flex flex-col items-center justify-center py-6">
@@ -327,14 +226,14 @@ export default function NotificationsPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-2xl shadow-sm overflow-hidden">
+                      <div className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-2xl shadow-sm overflow-hidden p-0 md:p-0">
                         {notifications.map((notification, index) => (
                           <div 
                             key={notification.idNotification}
                             className={clsx(
-                              "relative p-4",
-                              index !== notifications.length - 1 && "border-b border-gray-100 dark:border-[#2C2C38]",
-                              !notification.isRead && "border-l-4 border-l-primary pl-3"
+                              "relative p-4 md:p-5 lg:p-6",
+                              !notification.isRead && "bg-blue-50/30 dark:bg-blue-900/5",
+                              index !== notifications.length - 1 && "border-b border-gray-100 dark:border-[#2C2C38]"
                             )}
                           >
                             <div className="flex items-start gap-3">
@@ -352,30 +251,26 @@ export default function NotificationsPage() {
                                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                                   {notification.description}
                                 </p>
-                                
-                                {!notification.isRead && (
-                                  <div className="flex justify-end">
-                                    <button 
-                                      onClick={() => markAsRead(notification.idNotification)}
-                                      className="text-xs text-primary hover:text-primary/80 font-medium"
-                                    >
-                                      Marcar como leída
-                                    </button>
-                                  </div>
-                                )}
                               </div>
+                              
+                              {!notification.isRead && (
+                                <button
+                                  disabled={markingAsRead === notification.idNotification}
+                                  onClick={() => handleMarkAsRead(notification.idNotification)}
+                                  className={clsx(
+                                    "ml-2 inline-block px-4 py-2 text-xs font-medium rounded-full",
+                                    "transition-all duration-150",
+                                    markingAsRead === notification.idNotification
+                                      ? "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-300 cursor-wait"
+                                      : "bg-primary text-white"
+                                  )}
+                                >
+                                  {markingAsRead === notification.idNotification ? 
+                                    "Procesando..." : "Nuevo"
+                                  }
+                                </button>
+                              )}
                             </div>
-                            
-                            {!notification.isRead && (
-                              <div className="absolute top-4 right-4">
-                                <span className={clsx(
-                                  "inline-block px-2 py-1 text-xs font-medium rounded-full",
-                                  "bg-primary/10 text-primary"
-                                )}>
-                                  Nuevo
-                                </span>
-                              </div>
-                            )}
                           </div>
                         ))}
                       </div>
