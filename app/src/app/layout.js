@@ -5,6 +5,7 @@ import { TabsProvider } from "@/context/tabs";
 import { ThemeProvider } from "@/context/theme";
 import { PrimaryColorProvider } from "@/context/primaryColor";
 import { CompanyProvider } from "@/context/CompanyContext";
+import { NotificationProvider } from "@/context/NotificationContext";
 import CompanySelectModal from "@/components/companyConection/CompanySelectModal";
 import ChatContainer from '@/components/chat/ChatContainer';
 import "./globals.css";
@@ -38,11 +39,13 @@ export default function RootLayout({ children }) {
           <PrimaryColorProvider>
             <AuthProvider>
               <CompanyProvider>
-                <TabsProvider>
-                  {children}
-                </TabsProvider>
-                <CompanySelectModal />
-                <ChatContainer />
+                <NotificationProvider>
+                  <TabsProvider>
+                    {children}
+                  </TabsProvider>
+                  <CompanySelectModal />
+                  <ChatContainer />
+                </NotificationProvider>
               </CompanyProvider>
             </AuthProvider>
           </PrimaryColorProvider>

@@ -1,26 +1,35 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ChevronDown, Menu } from 'lucide-react';
+import axios from 'axios';
 import ModuleTabs from './ModuleTabs';
 import ProfilePopup from './ProfilePopup';
 import NotificationsPopup from './NotificationsPopup';
+import NotificationBanner from './NotificationBanner';
 import HelpCenterModal from './HelpCenterModal';
 import { useTabs } from '@/context/tabs';
 import CompanySelector from './CompanySelector';
 import { useTheme } from '@/context/theme';
 import { useCompany } from '@/context/CompanyContext';
+import { useNotifications } from '@/context/NotificationContext';
 import Cookies from 'js-cookie';
 
 const Navbar = ({ onMenuClick }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isHelpCenterOpen, setIsHelpCenterOpen] = useState(false);
+  
   const { tabs } = useTabs();
   const { theme, setTheme } = useTheme();
   const { showCompanyModal, setShowCompanyModal } = useCompany();
+  const { unreadCount, isLoadingCount, refreshUnreadCount } = useNotifications();
+  
   const showTabs = tabs.length > 0;
+
+  // Obtener el ID de usuario de las cookies
+  const userId = Cookies.get('idUser') || '2'; // Fallback a 2 si no hay cookie
 
   // Obtener nombre + primer apellido directamente de la cookie
   const getUserShortName = () => {
@@ -31,6 +40,13 @@ const Navbar = ({ onMenuClick }) => {
   };
 
   const userShortName = getUserShortName();
+
+  // Actualizar el conteo cuando se cierre el popup de notificaciones
+  useEffect(() => {
+    if (!isNotificationsOpen) {
+      refreshUnreadCount();
+    }
+  }, [isNotificationsOpen]);
 
   return (
     <>
@@ -91,9 +107,11 @@ const Navbar = ({ onMenuClick }) => {
                     className="w-5 h-5"
                   />
                 </button>
-                <span className="absolute -top-1.5 -right-1.5 bg-[#fc5a5a] text-white text-[12px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center font-semibold">
-                  2
-                </span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-[#fc5a5a] text-white text-[12px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center font-semibold">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </div>
 
               {/* Perfil */}
@@ -133,6 +151,9 @@ const Navbar = ({ onMenuClick }) => {
             </div>
           </div>
         </div>
+
+        {/* Notification Banner - Colocado justo después del navbar y antes de los tabs */}
+        <NotificationBanner />
 
         {/* Tabs */}
         <ModuleTabs />

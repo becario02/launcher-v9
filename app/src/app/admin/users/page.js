@@ -156,7 +156,7 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="flex font-poppins overflow-hidden">
+    <div className="flex font-poppins">
       <div className="hidden md:block fixed z-10 h-full">
         <Sidebar />
       </div>
@@ -171,11 +171,9 @@ export default function AdminUsersPage() {
       )}
 
       <div className="flex-1 w-full md:pl-60">
-        <div className="fixed top-0 right-0 left-0 md:left-60 z-20">
-          <Navbar onMenuClick={() => setSidebarOpen(true)} />
-        </div>
+        <Navbar className="sticky top-0 z-30" onMenuClick={() => setSidebarOpen(true)} />
 
-        <main className="min-h-screen bg-[#F2F6FD] dark:bg-[#13131a] pt-36 pb-14 px-4 md:px-8 xl:px-10 w-full overflow-x-hidden">
+        <main className="min-h-screen bg-[#F2F6FD] dark:bg-[#13131a] pt-14 pb-14 px-4 md:px-8 xl:px-10 w-full">
           <div className="max-w-7xl mx-auto space-y-10">
             <div className="flex flex-col gap-4">
               <UserHeader
