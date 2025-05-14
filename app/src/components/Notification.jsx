@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Info, AlertTriangle } from 'lucide-react'; // solo importamos estos para info y warning
+import { createPortal } from 'react-dom';
 
 export default function Notification({
   type = 'success', // 'success', 'error', 'info', 'warning'
@@ -170,20 +171,16 @@ export default function Notification({
   }
 
   // ---------- TOAST ----------
-  return (
+  return createPortal(
     <div
+      className={`fixed top-[100px] right-5 z-[2147483647] flex items-center gap-3 p-4 rounded-[10px] shadow-md transition-all duration-300 ${
+        isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'
+      }`}
       style={{
-        position: 'fixed',
-        top: '100px', // aquí bajo la notificación para que no tape navbar
-        right: '20px',
-        zIndex: 9999,
         border: `1px solid ${current.border}`,
         backgroundColor: current.bg,
         color: current.text,
       }}
-      className={`flex items-center gap-3 p-4 rounded-[10px] shadow-md transition-all duration-300 ${
-        isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'
-      }`}
     >
       {getIcon()}
       <h4
@@ -195,6 +192,8 @@ export default function Notification({
       >
         {message}
       </h4>
-    </div>
+    </div>,
+    typeof window !== 'undefined' ? document.body : null
   );
+
 }

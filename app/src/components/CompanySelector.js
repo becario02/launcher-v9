@@ -34,7 +34,7 @@ export default function CompanySelector() {
 
   if (loading) {
     return (
-      <div className="font-[Poppins] relative w-full sm:w-72 text-sm font-medium text-gray-700 dark:text-gray-200">
+      <div className="font-[Poppins] relative w-[567px] text-sm font-medium text-gray-700 dark:text-gray-200">
         {/* Loading skeleton placeholder */}
       </div>
     );
@@ -42,7 +42,7 @@ export default function CompanySelector() {
 
   if (!selectedCompany) {
     return (
-      <div className="font-[Poppins] relative w-full sm:w-72 text-sm font-medium text-gray-700 dark:text-gray-200">
+      <div className="font-[Poppins] relative w-[567px] text-sm font-medium text-gray-700 dark:text-gray-200">
         <button
           onClick={openCompanySelector}
           className="w-full flex items-center justify-between border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-[#1c1c24] hover:bg-gray-50 dark:hover:bg-[#2c2c38] transition-all"
@@ -88,41 +88,86 @@ export default function CompanySelector() {
   }
 
   return (
-    <div ref={dropdownRef} className="font-[Poppins] relative w-full sm:w-72 text-sm font-medium text-gray-700 dark:text-gray-200">
+    <div ref={dropdownRef} className="font-[Poppins] relative w-[567px] text-sm font-medium text-gray-700 dark:text-gray-200">
       <Tooltip.Provider delayDuration={300}>
         <Tooltip.Root open={open || showSingleMessage ? false : undefined}>
           <Tooltip.Trigger asChild>
             <button
               onClick={handleSelectorClick}
-              className={`w-full flex items-center justify-between border ${
+              className={`w-full flex items-center justify-between ${
                 open || showSingleMessage
-                  ? 'border-[var(--primary-color)] border-b-transparent rounded-t-lg'
-                  : 'border-gray-300 dark:border-gray-600 rounded-lg'
+                  ? 'border border-[var(--primary-color)] border-b-transparent rounded-t-lg'
+                  : 'border border-gray-300 dark:border-gray-600 rounded-lg'
               } px-3 py-2 bg-white dark:bg-[#1c1c24] hover:bg-gray-50 dark:hover:bg-[#2c2c38] transition-all`}
               aria-label={`Selected company: ${selectedCompany.name}`}
             >
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0080FF]/10 dark:bg-[#0080FF] text-[#0080FF] dark:text-white border">
-                <span className="text-[14px] font-medium">
-                  {selectedCompany?.name ? selectedCompany.name.charAt(0) : '-'}
-                </span>
+              <div className="flex items-center gap-3 w-full">
+                {/* Company logo/icon */}
+                <div className="flex-shrink-0">
+                  <div className="w-9 h-9 flex items-center justify-center rounded-[50px] bg-white dark:bg-primary border border-gray-200 dark:border-gray-600 overflow-hidden">
+                    <Image 
+                      src="/assets/company-selector/truck-icon.png" 
+                      alt="Company logo" 
+                      width={36} 
+                      height={36}
+                      className="object-contain"
+                      onError={(e) => {
+                        try {
+                          e.target.style.display = 'none';
+                          if (e.currentTarget && e.currentTarget.parentElement) {
+                            e.currentTarget.parentElement.innerHTML = selectedCompany.name.charAt(0);
+                          }
+                        } catch (error) {
+                          console.error("Error handling image load failure:", error);
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="flex flex-col items-start truncate">
-                  <span className="text-[14px] font-medium truncate max-w-[200px] cursor-default">
-                    {selectedCompany.name}
-                  </span>
-                  <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
-                    {formatServer(selectedCompany.serverErpDb)} • {selectedCompany.nameErpDb}
-                  </span>
+                
+                {/* Company information - left aligned */}
+                <div className="flex flex-col items-start flex-grow overflow-hidden">
+                  <div className="flex items-center w-full">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                      {selectedCompany.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center w-full text-[10px] text-gray-500 dark:text-gray-400">
+                    {/* IP bloque izquierdo */}
+                    <div className="w-1/3">
+                      <span
+                        className="block w-[180px] truncate"
+                      >
+                        IP: {formatServer(selectedCompany.serverErpDb)}
+                      </span>
+                    </div>
+
+                    {/* BD centro exacto */}
+                    <div className="w-1/3 text-center">
+                      <span className="whitespace-nowrap">BD: {selectedCompany.nameErpDb}</span>
+                    </div>
+
+                    {/* PRUEBAS bloque derecho */}
+                    <div className="w-1/3 flex justify-end">
+                      <span className="px-2 py-0.5 bg-primary text-white text-[10px] rounded-[25px] whitespace-nowrap">
+                        PRUEBAS
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Pill label and toggle button - right aligned */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  
+                  <Image
+                    src={open || showSingleMessage ? '/assets/company-selector/icon-contrae-2.svg' : '/assets/company-selector/icon-expand.svg'}
+                    alt="Toggle"
+                    width={16}
+                    height={16}
+                    className="dark:invert"
+                  />
                 </div>
               </div>
-              <Image
-                src={open || showSingleMessage ? '/assets/company-selector/icon-contrae-2.svg' : '/assets/company-selector/icon-expand.svg'}
-                alt="Toggle"
-                width={16}
-                height={16}
-                className="dark:invert"
-              />
             </button>
           </Tooltip.Trigger>
 
@@ -154,7 +199,7 @@ export default function CompanySelector() {
 
       {showSingleMessage && (
         <div className="absolute top-full w-full bg-white dark:bg-[#1c1c24] border border-[var(--primary-color)] border-t-0 rounded-b-lg shadow z-10 p-3 text-center">
-          <p className="text-[13px] text-gray-700 dark:text-gray-200">Solo tienes acceso a esta empresa</p>
+          <p className="text-[14px] text-gray-700 dark:text-gray-200">Solo tienes acceso a esta empresa</p>
         </div>
       )}
 
@@ -175,11 +220,11 @@ export default function CompanySelector() {
                   }}
                   className="cursor-pointer px-3 py-2 hover:bg-gray-100 dark:hover:bg-[#2c2c38] flex items-center gap-2"
                 >
-                  <div className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0080FF]/10 dark:bg-[#0080FF] text-[#0080FF] dark:text-white border">
+                  <div className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0080FF]/10 dark:bg-primary text-[#0080FF] dark:text-white border">
                     <span className="text-[13px] font-medium">{company.name.charAt(0)}</span>
                   </div>
-                  <div className="flex flex-col items-start truncate">
-                    <span className="text-[14px] font-medium text-gray-700 dark:text-gray-200 truncate max-w-[200px]">
+                  <div className="flex flex-col items-start overflow-hidden">
+                    <span className="text-[14px] font-medium text-gray-700 dark:text-gray-200">
                       {company.name}
                     </span>
                     <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate max-w-[200px]">

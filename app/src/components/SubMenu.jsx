@@ -1,4 +1,3 @@
-// components/SubMenu.jsx
 'use client';
 
 import { Pin, ChevronDown, ChevronUp } from 'lucide-react';

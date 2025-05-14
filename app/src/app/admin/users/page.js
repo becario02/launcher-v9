@@ -36,6 +36,17 @@ export default function AdminUsersPage() {
   });
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [profileName, setProfileName] = useState('');
+  const [customOptionsData, setCustomOptionsData] = useState({ custom: [], dashboards: [] });
+
+  const fetchCustomAndDashboard = async () => {
+    try {
+      const response = await axios.get('http://localhost:5173/mslauncher/api/v1/GetCustomAndDashboard');
+      const data = response.data?.data || { custom: [], dashboards: [] };
+      setCustomOptionsData(data);
+    } catch (error) {
+      console.error('Error al obtener opciones personalizadas y dashboards:', error);
+    }
+  };
 
   const fetchCompanies = () => {
     setIsLoading(true);
@@ -50,6 +61,7 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     fetchCompanies();
+      fetchCustomAndDashboard();
   }, []);
 
   useEffect(() => {
@@ -176,6 +188,8 @@ export default function AdminUsersPage() {
                 }}
                 primaryColor={primaryColor}
                 users={users} // ✅ le pasas los usuarios filtrados
+                customOptions={customOptionsData.custom} // 👈 nuevo prop
+                dashboards={customOptionsData.dashboards} // 👈 nuevo prop
               />
 
               {selectedCompany ? (

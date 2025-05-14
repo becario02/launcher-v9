@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { ChevronDown, Menu } from 'lucide-react';
 import ModuleTabs from './ModuleTabs';
 import ProfilePopup from './ProfilePopup';
@@ -57,9 +58,11 @@ const Navbar = ({ onMenuClick }) => {
                   onClick={() => setIsHelpCenterOpen(true)}
                   className="w-9 h-9 border border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center hover:bg-gray-50 dark:hover:bg-[#2c2c38]"
                 >
-                  <img
+                  <Image
                     src="/assets/navbar/icon-frame.svg"
                     alt="Centro de ayuda"
+                    width={20}
+                    height={20}
                     className="w-5 h-5"
                   />
                 </button>
@@ -80,9 +83,11 @@ const Navbar = ({ onMenuClick }) => {
                       ? 'bg-[var(--primary-color)] border-[var(--primary-color)]'
                       : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-[#2c2c38]'}`}
                 >
-                  <img
+                  <Image
                     src={`/assets/navbar/${isNotificationsOpen ? 'icon-frame-12' : 'icon-frame-11'}.svg`}
                     alt="Notificaciones"
+                    width={20}
+                    height={20}
                     className="w-5 h-5"
                   />
                 </button>
@@ -98,9 +103,11 @@ const Navbar = ({ onMenuClick }) => {
                   className={`w-9 h-9 border rounded-full overflow-hidden transition-all
                     ${isProfileOpen ? 'border-[#0080ff]' : 'border-white dark:border-gray-700'}`}
                 >
-                  <img
+                  <Image
                     src="/assets/navbar/perfil.jpg"
                     alt="Perfil"
+                    width={36}
+                    height={36}
                     className="w-full h-full object-cover"
                   />
                 </button>
