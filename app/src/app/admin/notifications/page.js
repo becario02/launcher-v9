@@ -14,6 +14,7 @@ import NotificationFormModal from '@/components/NotificationFormModal';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import CategoryBadge from '@/components/CategoryBadge';
 import NotificationFilters from '@/components/NotificationFilters';
+import Switch from '@/components/Switch'; // Importar el nuevo componente Switch
 
 export default function AdminNotificationsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -39,6 +40,9 @@ export default function AdminNotificationsPage() {
   const [editingNotification, setEditingNotification] = useState(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [notificationToDelete, setNotificationToDelete] = useState(null);
+  
+  // Estado para notificaciones siendo actualizadas (para deshabilitar switches)
+  const [updatingNotifications, setUpdatingNotifications] = useState([]);
 
   // Estado para el listado de compañías
   const [companies, setCompanies] = useState([]);
@@ -120,6 +124,58 @@ export default function AdminNotificationsPage() {
 
     return () => clearTimeout(delayDebounce);
   }, [page, search, status, category, startDate, endDate, companyId]);
+
+  // Función para cambiar el estado de una notificación (activa/inactiva)
+  const handleStatusChange = async (id, newStatus) => {
+    // Añadir ID a la lista de notificaciones que se están actualizando
+    setUpdatingNotifications(prev => [...prev, id]);
+
+    try {
+      const notification = notifications.find(n => n.idNotification === id);
+      if (!notification) return;
+
+      const payload = {
+        id: notification.idNotification,
+        title: notification.title,
+        description: notification.description,
+        category: notification.category,
+        expirationDate: notification.expirationDate,
+        status: newStatus ? 'ACTIVE' : 'INACTIVE',
+        companyIds: notification.companies?.map(c => c.idCompany) || []
+      };
+
+      const response = await axios.put('http://localhost:5173/mslauncher/api/v1/notification', payload, {
+        headers: {
+          'Accept-Language': 'es'
+        }
+      });
+
+      if (response.data && response.data.statusCode === "200") {
+        // Actualizar la lista de notificaciones localmente
+        setNotifications(prev => 
+          prev.map(n => 
+            n.idNotification === id 
+              ? { ...n, status: newStatus ? 'ACTIVE' : 'INACTIVE' } 
+              : n
+          )
+        );
+        
+        showToast(`Notificación ${newStatus ? 'activada' : 'desactivada'} exitosamente`, 'success');
+      } else {
+        showToast(response.data?.message || `Error al ${newStatus ? 'activar' : 'desactivar'} la notificación`, 'error');
+        // Revertir cambio visual en caso de error
+        fetchNotifications();
+      }
+    } catch (err) {
+      console.error('Error al actualizar estado de notificación:', err);
+      showToast(`Error al ${newStatus ? 'activar' : 'desactivar'} la notificación`, 'error');
+      // Revertir cambio visual en caso de error
+      fetchNotifications();
+    } finally {
+      // Remover ID de la lista de notificaciones que se están actualizando
+      setUpdatingNotifications(prev => prev.filter(item => item !== id));
+    }
+  };
 
   const handleNotificationSubmit = async (data) => {
     try {
@@ -234,7 +290,7 @@ export default function AdminNotificationsPage() {
         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
       </td>
       <td className="px-6 py-4">
-        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-12"></div>
       </td>
       <td className="px-6 py-4 hidden md:table-cell">
         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
@@ -332,11 +388,11 @@ export default function AdminNotificationsPage() {
                 <table className="w-full text-sm text-left">
                   <thead className="bg-[#F9FAFB] dark:bg-[#2C2C38] text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">
                     <tr>
-                      <th className="px-6 py-4 whitespace-nowrap font-medium">Información</th>
-                      <th className="px-6 py-4 whitespace-nowrap hidden lg:table-cell font-medium">Categoría</th>
-                      <th className="px-6 py-4 whitespace-nowrap font-medium">Estado</th>
-                      <th className="px-6 py-4 whitespace-nowrap hidden md:table-cell font-medium">Fecha Expiración</th>
-                      <th className="px-6 py-4 whitespace-nowrap font-medium">Acciones</th>
+                      <th className="px-6 py-4 whitespace-nowrap">Información</th>
+                      <th className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">Categoría</th>
+                      <th className="px-6 py-4 whitespace-nowrap">Estado</th>
+                      <th className="px-6 py-4 whitespace-nowrap hidden md:table-cell">Fecha Expiración</th>
+                      <th className="px-6 py-4 whitespace-nowrap">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-[#2C2C38] text-gray-800 dark:text-gray-200">
@@ -368,7 +424,17 @@ export default function AdminNotificationsPage() {
                             <CategoryBadge category={notification.category} />
                           </td>
                           <td className="px-6 py-4">
-                            <StatusBadge status={notification.status} />
+                            <div className="flex items-center">
+                              <Switch 
+                                checked={notification.status === 'ACTIVE'} 
+                                onChange={(checked) => handleStatusChange(notification.idNotification, checked)}
+                                disabled={updatingNotifications.includes(notification.idNotification)}
+                                size="small"
+                              />
+                              <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                                {notification.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
+                              </span>
+                            </div>
                           </td>
                           <td className="px-6 py-4 hidden md:table-cell">
                             <div className="flex items-center gap-1">
@@ -496,23 +562,3 @@ export default function AdminNotificationsPage() {
     </div>
   );
 }
-
-// Componente para mostrar el estado
-const StatusBadge = ({ status }) => {
-  const isActive = status === 'ACTIVE';
-
-  return (
-    <span className={clsx(
-      'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
-      isActive
-        ? 'bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400'
-        : 'bg-gray-100 text-gray-800 dark:bg-gray-800/40 dark:text-gray-400'
-    )}>
-      <span className={clsx(
-        'w-2 h-2 rounded-full mr-1.5',
-        isActive ? 'bg-green-500' : 'bg-gray-500'
-      )}></span>
-      {isActive ? 'Activa' : 'Inactiva'}
-    </span>
-  );
-};

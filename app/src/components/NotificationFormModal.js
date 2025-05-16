@@ -18,7 +18,7 @@ export default function NotificationFormModal({
     description: '',
     category: 'INFO',
     expirationDate: '',
-    status: 'ACTIVE',
+    status: 'ACTIVE', // Mantenemos el status en el formData pero no lo mostramos en el formulario
     companyIds: []
   });
   const [errors, setErrors] = useState({});
@@ -68,7 +68,7 @@ export default function NotificationFormModal({
         description: initialData.description || '',
         category: initialData.category || 'INFO',
         expirationDate: formattedDate,
-        status: initialData.status || 'ACTIVE',
+        status: initialData.status || 'ACTIVE', // Mantenemos el estado actual
         companyIds: companyIds
       });
     } else {
@@ -79,7 +79,7 @@ export default function NotificationFormModal({
         description: '',
         category: 'SYSTEMUPDATE',
         expirationDate: '',
-        status: 'ACTIVE',
+        status: 'ACTIVE', // Por defecto las nuevas notificaciones están activas
         companyIds: []
       });
     }
@@ -435,24 +435,7 @@ export default function NotificationFormModal({
                         </div>
                       </div>
 
-                      {/* Estado (solo para edición) */}
-                      {initialData && (
-                        <div>
-                          <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Estado
-                          </label>
-                          <select
-                            id="status"
-                            name="status"
-                            value={formData.status}
-                            onChange={handleChange}
-                            className="w-full px-3 py-2 rounded-md text-sm border border-gray-300 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:border-[#4a4c57] dark:focus:border-primary dark:bg-[#262631] dark:text-white"
-                          >
-                            <option value="ACTIVE">Activa</option>
-                            <option value="INACTIVE">Inactiva</option>
-                          </select>
-                        </div>
-                      )}
+                      {/* Estado eliminado - Ya no necesitamos este campo */}
                     </div>
 
                     {/* Columna derecha - Selección de compañías */}
