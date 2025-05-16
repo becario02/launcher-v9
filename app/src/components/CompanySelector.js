@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { useCompany } from '@/context/CompanyContext';
-import * as Tooltip from '@radix-ui/react-tooltip';
 
 export default function CompanySelector() {
   const [open, setOpen] = useState(false);
@@ -89,113 +88,82 @@ export default function CompanySelector() {
 
   return (
     <div ref={dropdownRef} className="font-[Poppins] relative w-[567px] text-sm font-medium text-gray-700 dark:text-gray-200">
-      <Tooltip.Provider delayDuration={300}>
-        <Tooltip.Root open={open || showSingleMessage ? false : undefined}>
-          <Tooltip.Trigger asChild>
-            <button
-              onClick={handleSelectorClick}
-              className={`w-full flex items-center justify-between ${
-                open || showSingleMessage
-                  ? 'border border-[var(--primary-color)] border-b-transparent rounded-t-lg'
-                  : 'border border-gray-300 dark:border-gray-600 rounded-lg'
-              } px-3 py-2 bg-white dark:bg-[#1c1c24] hover:bg-gray-50 dark:hover:bg-[#2c2c38] transition-all`}
-              aria-label={`Selected company: ${selectedCompany.name}`}
-            >
-              <div className="flex items-center gap-3 w-full">
-                {/* Company logo/icon */}
-                <div className="flex-shrink-0">
-                  <div className="w-9 h-9 flex items-center justify-center rounded-[50px] bg-white dark:bg-primary border border-gray-200 dark:border-gray-600 overflow-hidden">
-                    <Image 
-                      src="/assets/company-selector/truck-icon.png" 
-                      alt="Company logo" 
-                      width={36} 
-                      height={36}
-                      className="object-contain"
-                      onError={(e) => {
-                        try {
-                          e.target.style.display = 'none';
-                          if (e.currentTarget && e.currentTarget.parentElement) {
-                            e.currentTarget.parentElement.innerHTML = selectedCompany.name.charAt(0);
-                          }
-                        } catch (error) {
-                          console.error("Error handling image load failure:", error);
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-                
-                {/* Company information - left aligned */}
-                <div className="flex flex-col items-start flex-grow overflow-hidden">
-                  <div className="flex items-center w-full">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                      {selectedCompany.name}
-                    </span>
-                  </div>
-                  <div className="flex items-center w-full text-[10px] text-gray-500 dark:text-gray-400">
-                    {/* IP bloque izquierdo */}
-                    <div className="w-1/3">
-                      <span
-                        className="block w-[180px] truncate"
-                      >
-                        IP: {formatServer(selectedCompany.serverErpDb)}
-                      </span>
-                    </div>
-
-                    {/* BD centro exacto */}
-                    <div className="w-1/3 text-center">
-                      <span className="whitespace-nowrap">BD: {selectedCompany.nameErpDb}</span>
-                    </div>
-
-                    {/* PRUEBAS bloque derecho */}
-                    <div className="w-1/3 flex justify-end">
-                      <span className="px-2 py-0.5 bg-primary text-white text-[10px] rounded-[25px] whitespace-nowrap">
-                        PRUEBAS
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Pill label and toggle button - right aligned */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  
-                  <Image
-                    src={open || showSingleMessage ? '/assets/company-selector/icon-contrae-2.svg' : '/assets/company-selector/icon-expand.svg'}
-                    alt="Toggle"
-                    width={16}
-                    height={16}
-                    className="dark:invert"
-                  />
-                </div>
+      <button
+        onClick={handleSelectorClick}
+        className={`w-full flex items-center justify-between ${
+          open || showSingleMessage
+            ? 'border border-[var(--primary-color)] border-b-transparent rounded-t-lg'
+            : 'border border-gray-300 dark:border-gray-600 rounded-lg'
+        } px-3 py-2 bg-white dark:bg-[#1c1c24] hover:bg-gray-50 dark:hover:bg-[#2c2c38] transition-all`}
+        aria-label={`Selected company: ${selectedCompany.name}`}
+      >
+        <div className="flex items-center gap-3 w-full">
+          {/* Company logo/icon */}
+          <div className="flex-shrink-0">
+            <div className="w-9 h-9 flex items-center justify-center rounded-[50px] bg-white dark:bg-primary border border-gray-200 dark:border-gray-600 overflow-hidden">
+              <Image 
+                src="/assets/company-selector/truck-icon.png" 
+                alt="Company logo" 
+                width={36} 
+                height={36}
+                className="object-contain"
+                onError={(e) => {
+                  try {
+                    e.target.style.display = 'none';
+                    if (e.currentTarget && e.currentTarget.parentElement) {
+                      e.currentTarget.parentElement.innerHTML = selectedCompany.name.charAt(0);
+                    }
+                  } catch (error) {
+                    console.error("Error handling image load failure:", error);
+                  }
+                }}
+              />
+            </div>
+          </div>
+          
+          {/* Company information - left aligned */}
+          <div className="flex flex-col items-start flex-grow overflow-hidden">
+            <div className="flex items-center w-full">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                {selectedCompany.name}
+              </span>
+            </div>
+            <div className="flex items-center w-full text-[10px] text-gray-500 dark:text-gray-400">
+              {/* IP y BD */}
+              <div className="flex items-center gap-2 truncate">
+                <span className="truncate">{formatServer(selectedCompany.serverErpDb)}</span>
+                <span className="whitespace-nowrap">•</span>
+                <span className="whitespace-nowrap">{selectedCompany.nameErpDb}</span>
               </div>
-            </button>
-          </Tooltip.Trigger>
-
-          {!(open || showSingleMessage) && (
-            <Tooltip.Portal>
-              <Tooltip.Content
-                side="top"
-                align="center"
-                sideOffset={5}
-                className="bg-white dark:bg-[#1c1c24] border-[var(--primary-color)] text-gray-7 dark:text-white text-xs rounded-md px-4 py-3 shadow-lg z-50 animate-fadeIn max-w-xs"
-              >
-                <div className="flex flex-col gap-1">
-                  <div className="font-medium text-h3">{selectedCompany.name}</div>
-                  <div className="flex items-center gap-2 text-gray-300">
-                    <span className="bg-primary text-white px-2 py-0.5 rounded text-[10px]">
-                      {formatServer(selectedCompany.serverErpDb)}
-                    </span>
-                    <span className="bg-primary text-white px-2 py-0.5 rounded text-[10px]">
-                      {selectedCompany.nameErpDb}
-                    </span>
-                  </div>
-                </div>
-                <Tooltip.Arrow className="fill-gray-800" />
-              </Tooltip.Content>
-            </Tooltip.Portal>
-          )}
-        </Tooltip.Root>
-      </Tooltip.Provider>
+              
+              {/* Espacio flexible */}
+              <div className="flex-grow"></div>
+              
+              {/* PRUEBAS o PRODUCCIÓN */}
+              <div className="flex-shrink-0">
+                <span className={`inline-flex px-2 py-0.5 text-white text-[10px] rounded-[25px] whitespace-nowrap font-medium ${
+                  selectedCompany.environment === 'TEST' 
+                    ? 'bg-gray-500 dark:bg-gray-600' 
+                    : 'bg-primary'
+                }`}>
+                  {selectedCompany.environment === 'TEST' ? 'PRUEBAS' : 'PRODUCCIÓN'}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Toggle button - right aligned */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Image
+              src={open || showSingleMessage ? '/assets/company-selector/icon-contrae-2.svg' : '/assets/company-selector/icon-expand.svg'}
+              alt="Toggle"
+              width={16}
+              height={16}
+              className="dark:invert"
+            />
+          </div>
+        </div>
+      </button>
 
       {showSingleMessage && (
         <div className="absolute top-full w-full bg-white dark:bg-[#1c1c24] border border-[var(--primary-color)] border-t-0 rounded-b-lg shadow z-10 p-3 text-center">
@@ -223,14 +191,24 @@ export default function CompanySelector() {
                   <div className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0080FF]/10 dark:bg-primary text-[#0080FF] dark:text-white border">
                     <span className="text-[13px] font-medium">{company.name.charAt(0)}</span>
                   </div>
-                  <div className="flex flex-col items-start overflow-hidden">
-                    <span className="text-[14px] font-medium text-gray-700 dark:text-gray-200">
-                      {company.name}
-                    </span>
-                    <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
-                      {formatServer(company.serverErpDb)} • {company.nameErpDb}
-                    </span>
-                  </div>
+                    <div className="flex flex-col items-start overflow-hidden">
+                      <span className="text-[14px] font-medium text-gray-700 dark:text-gray-200">
+                        {company.name}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                          {formatServer(company.serverErpDb)} • {company.nameErpDb}
+                        </span>
+                        {/* Añadido tipo de BD (environment) */}
+                        <span className={`inline-flex px-2 py-0.5 text-white text-[10px] rounded-[25px] flex-shrink-0 font-medium ${
+                          company.environment === 'TEST' 
+                            ? 'bg-gray-500 dark:bg-gray-600' 
+                            : 'bg-primary'
+                        }`}>
+                          {company.environment === 'TEST' ? 'PRUEBAS' : 'PRODUCCIÓN'}
+                        </span>
+                      </div>
+                    </div>
                 </li>
               );
             })}

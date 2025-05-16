@@ -110,10 +110,20 @@ const CompanySelectModal = () => {
                                 <span className="font-medium mr-1">Servidor:</span>
                                 {formatServer(company.serverErpDb)}
                               </p>
-                              <p className="truncate flex items-center">
-                                <span className="font-medium mr-1">Base de datos:</span>
-                                {company.nameErpDb}
-                              </p>
+                              <div className="flex items-center">
+                                <p className="truncate flex items-center">
+                                  <span className="font-medium mr-1">Base de datos:</span>
+                                  {company.nameErpDb}
+                                </p>
+                                {/* Etiqueta de tipo de base de datos */}
+                                <span className={`inline-flex px-2 py-1 text-white text-[10px] rounded-[25px] flex-shrink-0 font-medium ml-2 ${
+                                  company.environment === 'TEST' 
+                                    ? 'bg-gray-500 dark:bg-gray-600' 
+                                    : 'bg-primary'
+                                }`}>
+                                  {company.environment === 'TEST' ? 'PRUEBAS' : 'PRODUCCIÓN'}
+                                </span>
+                              </div>
                             </div>
                           </div>
                           {isSelected && (

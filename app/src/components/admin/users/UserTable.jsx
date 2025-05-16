@@ -196,10 +196,20 @@ export default function UserTable({
             {connectionsForUser.length > 0 ? (
               <ul className="space-y-3">
                 {connectionsForUser.map((conn, idx) => (
-                  <li key={idx} className="flex items-start gap-2 bg-gray-100 dark:bg-[#2C2C38] rounded-md p-2">
-                    <Database className="w-4 h-4 text-primary mt-0.5" />
-                    <div className="flex flex-col text-sm">
-                      <span className="font-semibold text-gray-900 dark:text-white">{conn.nameErpDb}</span>
+                  <li key={idx} className="flex items-start gap-2 bg-gray-100 dark:bg-[#2C2C38] rounded-md p-3">
+                    <Database className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <div className="flex flex-col text-sm w-full">
+                      <div className="flex items-center justify-between w-full">
+                        <span className="font-semibold text-gray-900 dark:text-white">{conn.nameErpDb}</span>
+                        {/* Etiqueta de tipo de base de datos */}
+                        <span className={`inline-flex items-center justify-center px-2 py-0.5 text-white text-[10px] rounded-[25px] flex-shrink-0 font-medium ${
+                          conn.environment === 'TEST' 
+                            ? 'bg-gray-500 dark:bg-gray-600' 
+                            : 'bg-primary'
+                        }`}>
+                          {conn.environment === 'TEST' ? 'PRUEBAS' : 'PRODUCCIÓN'}
+                        </span>
+                      </div>
                       <span className="text-gray-500 dark:text-gray-400 text-xs">{formatServer(conn.serverErpDb)}</span>
                     </div>
                   </li>
