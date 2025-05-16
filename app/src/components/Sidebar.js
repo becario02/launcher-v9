@@ -145,6 +145,7 @@ export default function Sidebar({ onClose }) {
   const { theme, setTheme } = useTheme();
   const { selectedCompany } = useCompany();
   const { user, isAdmin } = useAuth();
+  const { isAdvan } = useAuth();
   const [customParents, setCustomParents] = useState([]);
   const [activeItem, setActiveItem] = useState(() => getActiveItemFromPath(pathname));
 
@@ -226,6 +227,7 @@ export default function Sidebar({ onClose }) {
           onClick={() => navigateTo('/', 'Dashboard')}
         />
 
+        {isAdvan && (
         <ExpandableItem
           icon={IconModulos}
           text="Divisiones"
@@ -272,6 +274,7 @@ export default function Sidebar({ onClose }) {
             onClick={() => navigateTo('/divisiones/auxiliares', 'AUXILIARES')}
           />
         </ExpandableItem>
+        )}
 
         {/* Show Noticias for regular users */}
         {!isAdmin && (

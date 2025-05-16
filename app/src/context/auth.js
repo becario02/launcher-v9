@@ -8,6 +8,7 @@ const AuthContext = createContext({});
 export function AuthProvider({ children }) { 
   const [user, setUser] = useState(null); 
   const [isAdmin, setIsAdmin] = useState(false); // New state for admin status
+  const [isAdvan, setIsAdvan] = useState(false); // New state for advan status
   const router = useRouter(); 
   const pathname = usePathname(); 
  
@@ -50,7 +51,9 @@ export function AuthProvider({ children }) {
   const login = (userData) => {
     // Set isAdmin based on profileName 
     const adminStatus = userData.profileName?.includes('ADMIN');
+    const advanStatus = userData.profileName?.includes('ADVAN');
     setIsAdmin(adminStatus);
+    setIsAdvan(advanStatus);
     setUser({...userData, isAdmin: adminStatus});
     router.push('/'); 
   }; 
@@ -66,7 +69,7 @@ export function AuthProvider({ children }) {
   }; 
  
   return ( 
-    <AuthContext.Provider value={{ user, isAdmin, login, logout }}> 
+    <AuthContext.Provider value={{ user, isAdmin, isAdvan, login, logout }}> 
       {children} 
     </AuthContext.Provider> 
   ); 

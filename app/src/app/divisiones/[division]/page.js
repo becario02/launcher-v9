@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, version } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Sidebar from '@/components/Sidebar'
@@ -76,6 +76,7 @@ export default function DivisionPage() {
           grouped[translatedGroup].push({
             title: mod.moduleName,
             slug: mod.moduleName.toLowerCase().replace(/\s+/g, '-'),
+            version: '1234',
             description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
             icon: iconMap[mod.moduleName.toUpperCase()] || Settings
           })

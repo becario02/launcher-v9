@@ -88,14 +88,14 @@ const CompanySelectModal = () => {
                           onClick={() => handleSelectCompany(company)}
                           className={`w-full text-left p-3 rounded-[10px] transition-all flex items-start
                             ${isSelected
-                              ? 'bg-[#0080FF]/10 dark:bg-[#0080FF]/20 border border-[#0080FF]'
+                              ? 'bg-[#0080FF]/10 dark:bg-[#0080FF]/20 border border-primary'
                               : 'bg-[#F5F7FA] hover:bg-[#E2E2EA] dark:bg-[#2c2c38] dark:hover:bg-[#44444F] border border-[#E6E8EC] dark:border-[#2C2C38]'}`}
                         >
                           <div
                             className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 flex-shrink-0
                               ${isSelected
-                                ? 'bg-[#0080FF] text-white'
-                                : 'bg-[#0080FF]/10 dark:bg-[#0080FF] text-[#0080FF] dark:text-white'}`}
+                                ? 'bg-primary text-white'
+                                : 'bg-[#0080FF]/10 dark:bg-primary text-[#0080FF] dark:text-white'}`}
                           >
                             <span className="font-medium text-[14px]">
                               {company.name.charAt(0)}
@@ -120,7 +120,7 @@ const CompanySelectModal = () => {
                             <div className="ml-2 flex-shrink-0 self-center">
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5 text-[#0080FF]"
+                                className="h-5 w-5 text-primary"
                                 viewBox="0 0 20 20"
                                 fill="currentColor"
                               >
@@ -148,8 +148,8 @@ const CompanySelectModal = () => {
               <button
                 onClick={handleConnect}
                 disabled={!selectedCompanyId}
-                className="w-full py-3 px-4 bg-[#0080FF] text-white rounded-[10px] font-medium text-[14px]
-                           hover:bg-[#0080FF]/90 transition-colors
+                className="w-full py-3 px-4 bg-primary text-white rounded-[10px] font-medium text-[14px]
+                           hover:bg-primary transition-colors
                            disabled:bg-[#92929D] disabled:cursor-not-allowed"
               >
                 Conectar
