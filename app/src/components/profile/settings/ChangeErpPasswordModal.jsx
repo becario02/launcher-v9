@@ -163,81 +163,93 @@ export default function ChangeErpPasswordModal({
     };
 
     const enviarCambioPassword = async () => {
-    let token = await login();
+      let token = await login();
 
-    const payload = {
-        server: serverErpDb.replace(':', ','),
-        usuarioOriginal: userErpDb,
-        passwordOriginal: form.currentPassword,
-        nuevaPassword: form.newPassword,
-        usuarioAdmin: 'sa',
-        passwordAdmin: 'AdvanProSA18$',
-        baseDatos: nameErpDb
+      try {
+          
+          const configRes = await fetch('http://localhost:5173/mslauncher/api/v1/configurations');
+          const configJson = await configRes.json();
+
+          const configuraciones = configJson.data || [];
+
+          const usuarioAdmin = configuraciones.find(c => c.configName === 'SQLSERVER_USER_MASTER')?.configValue;
+          const passwordAdmin = configuraciones.find(c => c.configName === 'SQLSERVER_PASSWORD_MASTER')?.configValue;
+
+          if (!usuarioAdmin || !passwordAdmin) {
+              throw new Error('No se pudieron obtener las credenciales del admin');
+          }
+
+          const payload = {
+              server: serverErpDb.replace(':', ','),
+              usuarioOriginal: userErpDb,
+              passwordOriginal: form.currentPassword,
+              nuevaPassword: form.newPassword,
+              usuarioAdmin,
+              passwordAdmin,
+              baseDatos: nameErpDb
+          };
+
+          const response = await fetch('http://localhost:5293/mserpservice/api/cambiar-password', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`
+              },
+              body: JSON.stringify(payload)
+          });
+
+          if (response.status === 404) {
+              token = await refreshToken();
+              if (!token) return setError('Error al refrescar token');
+
+              const retryResponse = await fetch('http://localhost:5293/mserpservice/api/cambiar-password', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${token}`
+                  },
+                  body: JSON.stringify(payload)
+              });
+
+              if (!retryResponse.ok) throw new Error('Error al cambiar contraseña tras refrescar token');
+
+              const retryData = await retryResponse.json();
+              showNotification('success', retryData.message, 'toast');
+
+              await fetch('http://localhost:5173/mslauncher/api/v1/UpdatePasswordErpDb', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                      idUserCompany: idUserCompany,
+                      passwordErpDb: form.newPassword
+                  })
+              });
+
+          } else if (!response.ok) {
+              throw new Error('Error al cambiar contraseña');
+          } else {
+              const data = await response.json();
+              showNotification('success', data.message, 'toast');
+
+              await fetch('http://localhost:5173/mslauncher/api/v1/UpdatePasswordErpDb', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                      idUserCompany: idUserCompany,
+                      passwordErpDb: form.newPassword
+                  })
+              });
+          }
+
+          onSave(form);
+          handleClose();
+
+      } catch (err) {
+          console.error(err);
+          setError('Error al cambiar contraseña');
+          showNotification('error', 'Error al cambiar contraseña', 'toast');
+      }
     };
-
-    try {
-        const response = await fetch('http://localhost:5293/mserpservice/api/cambiar-password', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (response.status === 404) {
-            token = await refreshToken();
-            if (!token) return setError('Error al refrescar token');
-
-            const retryResponse = await fetch('http://localhost:5293/mserpservice/api/cambiar-password', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify(payload)
-            });
-
-            if (!retryResponse.ok) throw new Error('Error al cambiar contraseña tras refrescar token');
-
-            const retryData = await retryResponse.json();
-            showNotification('success', retryData.message, 'toast');
-
-            // 👉 Cambio exitoso, ahora actualiza en el otro servicio
-            await fetch('http://localhost:5173/mslauncher/api/v1/UpdatePasswordErpDb', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    idUserCompany: idUserCompany,
-                    passwordErpDb: form.newPassword
-                })
-            });
-
-        } else if (!response.ok) {
-            throw new Error('Error al cambiar contraseña');
-        } else {
-            const data = await response.json();
-            showNotification('success', data.message, 'toast');
-
-            await fetch('http://localhost:5173/mslauncher/api/v1/UpdatePasswordErpDb', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    idUserCompany: idUserCompany,
-                    passwordErpDb: form.newPassword
-                })
-            });
-        }
-
-        onSave(form);
-        handleClose();
-    } catch (err) {
-        console.error(err);
-        setError('Error al cambiar contraseña');
-        showNotification('error', 'Error al cambiar contraseña', 'toast');
-    }
-};
-
 
   return (
     <div
