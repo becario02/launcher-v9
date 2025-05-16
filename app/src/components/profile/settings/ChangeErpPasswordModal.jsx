@@ -219,7 +219,6 @@ export default function ChangeErpPasswordModal({
             const data = await response.json();
             showNotification('success', data.message, 'toast');
 
-            // 👉 Cambio exitoso, ahora actualiza en el otro servicio
             await fetch('http://localhost:5173/mslauncher/api/v1/UpdatePasswordErpDb', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
