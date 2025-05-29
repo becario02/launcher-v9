@@ -14,14 +14,15 @@ import {
   Video,
   Shield,
   Settings,
-  Bell
+  Bell,
+  Import  // ← NUEVO: Ícono para el integrador
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import clsx from 'clsx';
 
 import { useTheme } from "@/context/theme";
-import { useAuth } from "@/context/auth"; // Import useAuth hook
+import { useAuth } from "@/context/auth";
 import { useCompany } from '@/context/CompanyContext';
 
 import IconModulos from "@/components/icons/sidebar/IconModulos";
@@ -45,6 +46,8 @@ function getActiveItemFromPath(pathname) {
     return 'AdminVideos';
   } else if (pathname.includes('/admin/notifications')) {
     return 'AdminNotifications';
+  } else if (pathname.includes('/admin/integradores')) {  // ← NUEVO
+    return 'AdminIntegradores';
   } else if (pathname.includes('/nucleares')) {
     return 'NUCLEARES';
   } else if (pathname.includes('/financieros')) {
@@ -188,7 +191,8 @@ export default function Sidebar({ onClose }) {
   };
 
   const isDivisionActive = ['NUCLEARES', 'FINANCIAL', 'AUXILIARES'].includes(activeItem);
-  const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminMenus', 'AdminNotifications'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
+  // ← MODIFICADO: Agregamos 'AdminIntegradores' a la lista de ítems admin activos
+  const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminMenus', 'AdminNotifications', 'AdminIntegradores'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
 
   function formatServer(server) {
     if (!server) return '';
@@ -321,6 +325,14 @@ export default function Sidebar({ onClose }) {
               indent
               active={activeItem === 'AdminNotifications'}
               onClick={() => navigateTo('/admin/notifications', 'AdminNotifications')}
+            />
+            {/* ← NUEVO: Ítem del Integrador */}
+            <SidebarItem
+              icon={Import}
+              text="Integrador"
+              indent
+              active={activeItem === 'AdminIntegradores'}
+              onClick={() => navigateTo('/admin/integradores', 'AdminIntegradores')}
             />
             {/* Uncomment this if needed later
             <SidebarItem
