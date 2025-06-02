@@ -135,12 +135,17 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
         const token = loginResult.accessToken;
         setAccessToken(token);
 
-        // Luego obtener clientes con el token
+        // Luego obtener clientes con el token y headers de DB
         const clientesResponse = await fetch(`${urlErp}/mserpservice/api/v1/getCustomers`, {
           method: 'GET',
           headers: {
-            'accept': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'Accept-Language': 'es-MX',
+            'Server-Erp-Db': companyData.serverErpDb,
+            'Name-Erp-Db': companyData.nameErpDb,
+            'User-Erp-Db': companyData.userErpDb,
+            'Password-Erp-Db': companyData.passwordErpDb
           }
         });
 
@@ -248,8 +253,13 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
       const response = await fetch(`${urlErp}/mserpservice/api/v1/getConvenios/${clienteNombre}`, {
         method: 'GET',
         headers: {
-          'accept': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept-Language': 'es-MX',
+          'Server-Erp-Db': companyData.serverErpDb,
+          'Name-Erp-Db': companyData.nameErpDb,
+          'User-Erp-Db': companyData.userErpDb,
+          'Password-Erp-Db': companyData.passwordErpDb
         }
       });
 
@@ -304,8 +314,13 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
       const remitentesResponse = await fetch(`${urlErp}/mserpservice/api/v1/getRemitentesDestin/1`, {
         method: 'GET',
         headers: {
-          'accept': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept-Language': 'es-MX',
+          'Server-Erp-Db': companyData.serverErpDb,
+          'Name-Erp-Db': companyData.nameErpDb,
+          'User-Erp-Db': companyData.userErpDb,
+          'Password-Erp-Db': companyData.passwordErpDb
         }
       });
 
@@ -326,8 +341,13 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
       const destinatariosResponse = await fetch(`${urlErp}/mserpservice/api/v1/getRemitentesDestin/2`, {
         method: 'GET',
         headers: {
-          'accept': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept-Language': 'es-MX',
+          'Server-Erp-Db': companyData.serverErpDb,
+          'Name-Erp-Db': companyData.nameErpDb,
+          'User-Erp-Db': companyData.userErpDb,
+          'Password-Erp-Db': companyData.passwordErpDb
         }
       });
 
@@ -375,16 +395,21 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
       const response = await fetch(`${urlErp}/mserpservice/api/terminales/all`, {
         method: 'GET',
         headers: {
-          'accept': '*/*',
-          'Authorization': `Bearer ${accessToken}`
+          'Accept': '*/*',
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept-Language': 'es-MX',
+          'Server-Erp-Db': companyData.serverErpDb,
+          'Name-Erp-Db': companyData.nameErpDb,
+          'User-Erp-Db': companyData.userErpDb,
+          'Password-Erp-Db': companyData.passwordErpDb
         }
       });
 
       if (response.ok) {
         const result = await response.json();
-        if (Array.isArray(result)) {
+        if (result.statusCode === "200" && result.data && Array.isArray(result.data)) {
           // Filtrar terminales activas y ordenar por terminalClave
-          const terminalesActivas = result
+          const terminalesActivas = result.data
             .filter(terminal => terminal.banInactiva === 0)
             .sort((a, b) => a.terminalClave.localeCompare(b.terminalClave));
           setTerminales(terminalesActivas);
