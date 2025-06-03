@@ -143,20 +143,6 @@ export default function ConnectionsSettings() {
           onClose={() => setModalData(null)}
           showNotification={showNotification}
           onSave={(formData) => {
-            console.log('Cambiar contraseña para:', modalData);
-            console.log('Datos del formulario:', formData);
-
-            // Aquí puedes hacer el fetch:
-            /*
-            await fetch('/api/update-password', {
-              method: 'POST',
-              body: JSON.stringify({
-                ...modalData,
-                ...formData
-              }),
-            });
-            */
-
             setModalData(null);
           }}
         />

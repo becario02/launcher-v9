@@ -193,7 +193,6 @@ export default function SettingsPage() {
 
                 <ConnectionsSettings />
 
-
                 <PrimaryColorSettings
                   colorOptions={colorOptions}
                   primaryColor={primaryColor}

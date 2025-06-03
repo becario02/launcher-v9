@@ -6,8 +6,10 @@ import { ThemeProvider } from "@/context/theme";
 import { PrimaryColorProvider } from "@/context/primaryColor";
 import { CompanyProvider } from "@/context/CompanyContext";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { ModuleProvider } from "@/context/ModuleContext";
 import CompanySelectModal from "@/components/companyConection/CompanySelectModal";
 import ChatContainer from '@/components/chat/ChatContainer';
+import SyncStatus from "@/components/modules/SyncStatus";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -39,13 +41,16 @@ export default function RootLayout({ children }) {
           <PrimaryColorProvider>
             <AuthProvider>
               <CompanyProvider>
-                <NotificationProvider>
-                  <TabsProvider>
-                    {children}
-                  </TabsProvider>
-                  <CompanySelectModal />
-                  <ChatContainer />
-                </NotificationProvider>
+                <ModuleProvider>
+                  <NotificationProvider>
+                    <TabsProvider>
+                      {children}
+                      <SyncStatus />
+                    </TabsProvider>
+                    <CompanySelectModal />
+                    <ChatContainer />
+                  </NotificationProvider>
+                </ModuleProvider>
               </CompanyProvider>
             </AuthProvider>
           </PrimaryColorProvider>

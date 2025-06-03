@@ -9,7 +9,8 @@ const CompanySelectModal = () => {
     showCompanyModal,
     selectCompany,
     setShowCompanyModal,
-    preselectedCompany
+    preselectedCompany,
+    connectAndSync  // ✅ AGREGAR ESTA LÍNEA
   } = useCompany();
 
   // estado con la "clave" única de la empresa seleccionada
@@ -40,9 +41,8 @@ const CompanySelectModal = () => {
       (c) => generateKey(c) === selectedCompanyId
     );
     if (company) {
-      selectCompany(company);
-      // para cerrar el modal después de conectar, descomenta:
-      // setShowCompanyModal(false);
+      // ✅ USAR LA NUEVA FUNCIÓN QUE CONECTA Y SINCRONIZA
+      connectAndSync(company); // En lugar de selectCompany(company)
     }
   };
 

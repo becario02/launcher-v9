@@ -150,33 +150,6 @@ export default function Sidebar({ onClose }) {
   const [activeItem, setActiveItem] = useState(() => getActiveItemFromPath(pathname));
 
   useEffect(() => {
-    async function fetchCustomMenu() {
-      try {
-        const res = await fetch('http://localhost:5173/mslauncher/api/v1/MenuCustomOption', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ idCompany: selectedCompany.idCompany })
-        });
-        const { data } = await res.json();
-        const custom = data.options.custom || [];
-
-        setCustomParents(
-          custom
-            .filter(c => c.idMenuParent === null)
-            .map(c => ({
-              id: c.idCustomOption,
-              label: c.textOption,
-              route: c.resourceUrl || `/custom/${c.idCustomOption}`
-            }))
-        );
-      } catch (err) {
-        console.error('Sidebar: error fetching menu', err);
-      }
-    }
-    if (selectedCompany?.idCompany) fetchCustomMenu();
-  }, [selectedCompany]);
-
-  useEffect(() => {
     const ai = getActiveItemFromPath(pathname);
     if (ai !== activeItem) setActiveItem(ai);
   }, [pathname, activeItem]);
@@ -227,7 +200,7 @@ export default function Sidebar({ onClose }) {
           onClick={() => navigateTo('/', 'Dashboard')}
         />
 
-        {isAdvan && (
+        {!isAdvan && (
         <ExpandableItem
           icon={IconModulos}
           text="Divisiones"

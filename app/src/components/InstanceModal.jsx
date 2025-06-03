@@ -1,4 +1,3 @@
-// components/InstanceModal.jsx
 'use client';
 
 import { Layers, X, ChevronDown } from 'lucide-react';
@@ -12,6 +11,30 @@ export default function InstanceModal({
   primaryColor,
 }) {
   if (!isOpen) return null;
+
+  // Si las instancias no tienen información de división/módulo, usar los parámetros actuales
+  // Si tienes diferentes módulos, deberías modificar la estructura de instances para incluir esta info
+  const enhancedInstances = instances.map(instance => ({
+    ...instance,
+    division: instance.division || division,
+    module: instance.module || moduleParam
+  }));
+
+  // Agrupar instancias por división y módulo
+  const groupedInstances = enhancedInstances.reduce((acc, instance) => {
+    const key = `${instance.division}-${instance.module}`;
+    
+    if (!acc[key]) {
+      acc[key] = {
+        division: instance.division,
+        module: instance.module,
+        instances: []
+      };
+    }
+    
+    acc[key].instances.push(instance);
+    return acc;
+  }, {});
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -29,21 +52,20 @@ export default function InstanceModal({
         </div>
 
         <div className="p-4 max-h-96 overflow-y-auto space-y-3">
-          {/* Instancia actual (ejemplo dinámico) */}
-          {instances.map((instancia, index) => (
+          {Object.values(groupedInstances).map((group) => (
             <div
-              key={instancia.id}
+              key={`${group.division}-${group.module}`}
               className="cursor-pointer bg-gray-50 dark:bg-[#252530] rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-sm"
             >
               <div className="flex items-center justify-between p-4">
                 <div>
                   <div className="flex items-center">
                     <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {division.charAt(0).toUpperCase() + division.slice(1)}
+                      {group.division.charAt(0).toUpperCase() + group.division.slice(1)}
                     </span>
                     <span className="mx-2 text-gray-400 dark:text-gray-600">›</span>
                     <span className="text-sm text-gray-800 dark:text-white">
-                      {moduleParam.charAt(0).toUpperCase() + moduleParam.slice(1)}
+                      {group.module.charAt(0).toUpperCase() + group.module.slice(1)}
                     </span>
                   </div>
                   <div className="flex items-center mt-1">
@@ -51,7 +73,7 @@ export default function InstanceModal({
                       className="flex items-center justify-center w-5 h-5 text-xs text-white rounded-md"
                       style={{ backgroundColor: primaryColor }}
                     >
-                      {instances.length}
+                      {group.instances.length}
                     </span>
                     <span className="ml-2 text-sm font-medium text-blue-600 dark:text-blue-400">
                       Instancias abiertas
