@@ -63,6 +63,9 @@ export default function IntegratorFilesPage() {
     totalPages: 0
   });
 
+  // Estado para controlar errores expandidos
+  const [expandedErrors, setExpandedErrors] = useState(new Set());
+
   // Estado para notificaciones
   const [toast, setToast] = useState({
     visible: false,
@@ -226,6 +229,19 @@ export default function IntegratorFilesPage() {
       visible: true,
       message: message,
       type: 'error'
+    });
+  };
+
+  // Función para alternar la expansión de errores
+  const toggleErrorExpansion = (fileId) => {
+    setExpandedErrors(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(fileId)) {
+        newSet.delete(fileId);
+      } else {
+        newSet.add(fileId);
+      }
+      return newSet;
     });
   };
 
@@ -543,14 +559,31 @@ export default function IntegratorFilesPage() {
                     </tr>
                   ) : (
                     files.map(file => {
-                      // Extraer la primera palabra como estado y el resto como descripción
+                      // Usar el campo integrationResult para determinar el estado
+                      const isSuccess = file.integrationResult === true;
                       const description = file.integrationResultDescription || '';
-                      const parts = description.split(/[.:](.+)/); // Split en el primer . o :
-                      const statusWord = parts[0]?.trim() || '';
-                      const restDescription = parts[1]?.trim() || '';
+                      const isExpanded = expandedErrors.has(file.idFile);
                       
-                      // Determinar si es exitoso basado en la primera palabra
-                      const isSuccess = statusWord.toLowerCase() === 'ok';
+                      // Procesar la descripción según el estado
+                      let statusWord = '';
+                      let processedDescription = '';
+                      
+                      if (isSuccess) {
+                        // Para casos exitosos, extraer la primera palabra (usualmente "OK")
+                        const parts = description.split(/[.:](.+)/);
+                        statusWord = parts[0]?.trim() || 'Exitoso';
+                        processedDescription = parts[1]?.trim() || '';
+                      } else {
+                        // Para casos con errores, mostrar todos los errores
+                        statusWord = 'Error';
+                        processedDescription = description.trim();
+                      }
+                      
+                      // Dividir errores múltiples en líneas separadas
+                      const errorLines = processedDescription
+                        .split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line.length > 0);
                       
                       return (
                         <tr key={file.idFile} className="hover:bg-gray-50 dark:hover:bg-[#262636] transition">
@@ -579,13 +612,66 @@ export default function IntegratorFilesPage() {
                                     ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
                                     : "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200"
                                 )}>
-                                  {statusWord || (isSuccess ? 'Exitoso' : 'Error')}
+                                  {statusWord}
                                 </span>
+                                {!isSuccess && errorLines.length > 1 && (
+                                  <span className="text-xs px-2 py-1 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300">
+                                    {errorLines.length} errores
+                                  </span>
+                                )}
                               </div>
-                              {restDescription && (
-                                <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md" title={description}>
-                                  {restDescription}
-                                </p>
+                              {processedDescription && (
+                                <div className="text-sm text-gray-600 dark:text-gray-400 max-w-md">
+                                  {isSuccess ? (
+                                    // Para casos exitosos, mostrar descripción simple
+                                    <p title={description}>{processedDescription}</p>
+                                  ) : (
+                                    // Para casos con errores, mostrar lista expandible/colapsable
+                                    <div className="space-y-1">
+                                      {errorLines.length === 1 ? (
+                                        // Si solo hay un error, mostrarlo directamente
+                                        <p className="text-sm leading-relaxed" title={errorLines[0]}>
+                                          {errorLines[0]}
+                                        </p>
+                                      ) : (
+                                        // Si hay múltiples errores, hacer expandible
+                                        <>
+                                          {/* Mostrar primer error siempre */}
+                                          <p className="text-sm leading-relaxed" title={errorLines[0]}>
+                                            • {errorLines[0]}
+                                          </p>
+                                          
+                                          {/* Mostrar errores adicionales si está expandido */}
+                                          {isExpanded && errorLines.slice(1).map((error, index) => (
+                                            <p key={index + 1} className="text-sm leading-relaxed" title={error}>
+                                              • {error}
+                                            </p>
+                                          ))}
+                                          
+                                          {/* Botón para expandir/colapsar */}
+                                          {errorLines.length > 1 && (
+                                            <button
+                                              onClick={() => toggleErrorExpansion(file.idFile)}
+                                              className="text-xs text-primary hover:text-primary/80 font-medium mt-1 flex items-center gap-1"
+                                            >
+                                              {isExpanded ? (
+                                                <>
+                                                  <ChevronRight className="w-3 h-3 rotate-90" />
+                                                  Mostrar menos
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <ChevronRight className="w-3 h-3" />
+                                                  Ver {errorLines.length - 1} errores más
+                                                </>
+                                              )}
+                                            </button>
+                                          )}
+                                        </>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
                               )}
                             </div>
                           </td>

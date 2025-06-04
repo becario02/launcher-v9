@@ -128,15 +128,17 @@ export default function AdminIntegradoresPage() {
   };
 
   // Función para procesar el formulario del integrador
-  const handleSubmitIntegrator = async (formData) => {
-    // El modal ya maneja el envío, aquí solo cerramos y refrescamos si es necesario
+  const handleSubmitIntegrator = async (result) => {
+    // Mostrar toast con el resultado real del proceso
     setToast({
       visible: true,
-      message: 'Archivo procesado exitosamente',
-      type: 'success'
+      message: result.message || (result.success ? 'Archivo procesado exitosamente' : 'Error al procesar archivo'),
+      type: result.success ? 'success' : 'error'
     });
     
-    handleCloseModal();
+    if (!result.success) {
+      handleCloseModal();
+    }
   };
 
   // Limpiar búsqueda
@@ -357,7 +359,7 @@ export default function AdminIntegradoresPage() {
                   <div className="flex items-center gap-2">
                     <Import className="w-6 h-6 text-primary" />
                     <h1 className="text-[26px] leading-[39px] font-semibold text-[#44444f] dark:text-[#e2e2ea]">
-                      Integrador de Archivos
+                      Integrador de Cargas
                     </h1>
                   </div>
                   <p className="text-sm text-[#696974] dark:text-[#92929d] mt-1 ml-8">

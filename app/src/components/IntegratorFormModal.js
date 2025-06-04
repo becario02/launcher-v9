@@ -596,7 +596,9 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
         // No cerrar automáticamente, dejar que el usuario lo haga manualmente
 
       } else {
-        throw new Error(result.message || 'Error desconocido en el servidor');
+        // Error del servidor o validación
+        setSubmitSuccess(false);
+        setSubmitMessage(result.message || 'Error desconocido en el servidor');
       }
 
     } catch (error) {
@@ -659,25 +661,38 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
           </button>
         </div>
 
-        {/* Mensaje de resultado */}
+        {        /* Mensaje de resultado */}
         {submitMessage && (
-          <div className={`mx-6 mt-4 p-4 rounded-lg flex items-center gap-3 ${
+          <div className={`mx-6 mt-4 p-4 rounded-lg border ${
             submitSuccess 
-              ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' 
-              : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
+              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
           }`}>
-            {submitSuccess ? (
-              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
-            ) : (
-              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-            )}
-            <p className={`text-sm ${
-              submitSuccess 
-                ? 'text-green-800 dark:text-green-200' 
-                : 'text-red-800 dark:text-red-200'
-            }`}>
-              {submitMessage}
-            </p>
+            <div className="flex items-start gap-3">
+              {submitSuccess ? (
+                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              )}
+              <div className="flex-1 min-w-0">
+                {submitSuccess ? (
+                  <p className="text-sm text-green-800 dark:text-green-200">
+                    {submitMessage}
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                      Error al procesar el archivo:
+                    </p>
+                    <div className="bg-red-100 dark:bg-red-900/30 rounded-md p-3 max-h-40 overflow-y-auto custom-scrollbar">
+                      <pre className="text-xs text-red-700 dark:text-red-300 whitespace-pre-wrap font-mono">
+                        {submitMessage.replace(/^Error:\s*/, '')}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
