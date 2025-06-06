@@ -15,7 +15,8 @@ import {
   Shield,
   Settings,
   Bell,
-  Import  // ← NUEVO: Ícono para el integrador
+  Import,  // ← NUEVO: Ícono para el integrador
+  FileText  // ← NUEVO: Ícono para addendas
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -46,8 +47,10 @@ function getActiveItemFromPath(pathname) {
     return 'AdminVideos';
   } else if (pathname.includes('/admin/notifications')) {
     return 'AdminNotifications';
-  } else if (pathname.includes('/admin/integradores')) {  // ← NUEVO
+  } else if (pathname.includes('/admin/integradores')) {
     return 'AdminIntegradores';
+  } else if (pathname.includes('/admin/addendas')) {  // ← NUEVO
+    return 'AdminAddendas';
   } else if (pathname.includes('/nucleares')) {
     return 'NUCLEARES';
   } else if (pathname.includes('/financieros')) {
@@ -164,8 +167,8 @@ export default function Sidebar({ onClose }) {
   };
 
   const isDivisionActive = ['NUCLEARES', 'FINANCIAL', 'AUXILIARES'].includes(activeItem);
-  // ← MODIFICADO: Agregamos 'AdminIntegradores' a la lista de ítems admin activos
-  const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminMenus', 'AdminNotifications', 'AdminIntegradores'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
+  // ← MODIFICADO: Agregamos 'AdminAddendas' a la lista de ítems admin activos
+  const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminMenus', 'AdminNotifications', 'AdminIntegradores', 'AdminAddendas'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
 
   function formatServer(server) {
     if (!server) return '';
@@ -299,13 +302,20 @@ export default function Sidebar({ onClose }) {
               active={activeItem === 'AdminNotifications'}
               onClick={() => navigateTo('/admin/notifications', 'AdminNotifications')}
             />
-            {/* ← NUEVO: Ítem del Integrador */}
             <SidebarItem
               icon={Import}
               text="Integrador"
               indent
               active={activeItem === 'AdminIntegradores'}
               onClick={() => navigateTo('/admin/integradores', 'AdminIntegradores')}
+            />
+            {/* ← NUEVO: Ítem de Addendas */}
+            <SidebarItem
+              icon={FileText}
+              text="Addendas"
+              indent
+              active={activeItem === 'AdminAddendas'}
+              onClick={() => navigateTo('/admin/addendas', 'AdminAddendas')}
             />
             {/* Uncomment this if needed later
             <SidebarItem
