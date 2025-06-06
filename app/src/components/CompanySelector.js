@@ -102,7 +102,7 @@ export default function CompanySelector() {
           <div className="flex-shrink-0">
             <div className="w-9 h-9 flex items-center justify-center rounded-[50px] bg-white dark:bg-primary border border-gray-200 dark:border-gray-600 overflow-hidden">
               <Image 
-                //src="/assets/company-selector/truck-icon.png" 
+                src="/assets/company-selector/truck-icon.png" 
                 alt="Company logo" 
                 width={36} 
                 height={36}
