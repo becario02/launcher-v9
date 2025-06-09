@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -15,8 +15,9 @@ import {
   Shield,
   Settings,
   Bell,
-  Import,  // ← NUEVO: Ícono para el integrador
-  FileText  // ← NUEVO: Ícono para addendas
+  Import,
+  FileText,
+  Gift
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -49,8 +50,10 @@ function getActiveItemFromPath(pathname) {
     return 'AdminNotifications';
   } else if (pathname.includes('/admin/integradores')) {
     return 'AdminIntegradores';
-  } else if (pathname.includes('/admin/addendas')) {  // ← NUEVO
+  } else if (pathname.includes('/admin/addendas')) {
     return 'AdminAddendas';
+  } else if (pathname.includes('/admin/promociones')) {
+    return 'AdminPromociones';
   } else if (pathname.includes('/nucleares')) {
     return 'NUCLEARES';
   } else if (pathname.includes('/financieros')) {
@@ -60,7 +63,6 @@ function getActiveItemFromPath(pathname) {
   } else if (pathname.startsWith('/custom/')) {
     return pathname;
   }
-  // Default fallback
   return 'Dashboard';
 }
 
@@ -87,7 +89,7 @@ const SidebarItem = ({ icon: Icon, text, active = false, onClick, indent = false
 const ExpandableItem = ({ icon: Icon, text, children, defaultOpen = false, isChildActive = false }) => {
   const [open, setOpen] = useState(defaultOpen || isChildActive);
 
-  // Si algún hijo está activo, asegurarse de que este grupo esté abierto
+  // Optimizar el efecto para evitar re-renders innecesarios
   useEffect(() => {
     if (isChildActive && !open) {
       setOpen(true);
@@ -150,25 +152,32 @@ export default function Sidebar({ onClose }) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const { selectedCompany } = useCompany();
-  const { user, isAdmin } = useAuth();
-  const { isAdvan } = useAuth();
+  const { user, isAdmin, isAdvan } = useAuth();
   const [customParents, setCustomParents] = useState([]);
   const [activeItem, setActiveItem] = useState(() => getActiveItemFromPath(pathname));
 
+  // Optimizar el efecto que actualiza activeItem
   useEffect(() => {
-    const ai = getActiveItemFromPath(pathname);
-    if (ai !== activeItem) setActiveItem(ai);
-  }, [pathname, activeItem]);
+    const newActiveItem = getActiveItemFromPath(pathname);
+    setActiveItem(newActiveItem);
+  }, [pathname]);
 
-  const navigateTo = (route, itemName) => {
+  // Usar useCallback para evitar re-creaciones innecesarias de la función
+  const navigateTo = useCallback((route, itemName) => {
+    // Evitar navegación si ya estamos en la ruta
+    if (pathname === route) {
+      if (onClose) onClose();
+      return;
+    }
+
     setActiveItem(itemName);
     router.push(route);
     if (onClose) onClose();
-  };
+  }, [pathname, router, onClose]);
 
+  // Optimizar el cálculo de estados activos usando useMemo o directamente en render
   const isDivisionActive = ['NUCLEARES', 'FINANCIAL', 'AUXILIARES'].includes(activeItem);
-  // ← MODIFICADO: Agregamos 'AdminAddendas' a la lista de ítems admin activos
-  const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminMenus', 'AdminNotifications', 'AdminIntegradores', 'AdminAddendas'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
+  const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminMenus', 'AdminNotifications', 'AdminIntegradores', 'AdminAddendas', 'AdminPromociones'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
 
   function formatServer(server) {
     if (!server) return '';
@@ -214,7 +223,6 @@ export default function Sidebar({ onClose }) {
           defaultOpen={true}
           isChildActive={isDivisionActive}
         >
-          {/* Ítems estáticos predefinidos */}
           <SidebarItem
             icon={({ size }) => (
               <IconNucleares
@@ -272,7 +280,7 @@ export default function Sidebar({ onClose }) {
             icon={Settings}
             text="Administración"
             defaultOpen={false}
-            isChildActive={isAdminActive || (isAdmin && activeItem === 'Noticias')}
+            isChildActive={isAdminActive}
           >
             <SidebarItem
               icon={Newspaper}
@@ -309,7 +317,6 @@ export default function Sidebar({ onClose }) {
               active={activeItem === 'AdminIntegradores'}
               onClick={() => navigateTo('/admin/integradores', 'AdminIntegradores')}
             />
-            {/* ← NUEVO: Ítem de Addendas */}
             <SidebarItem
               icon={FileText}
               text="Addendas"
@@ -317,15 +324,13 @@ export default function Sidebar({ onClose }) {
               active={activeItem === 'AdminAddendas'}
               onClick={() => navigateTo('/admin/addendas', 'AdminAddendas')}
             />
-            {/* Uncomment this if needed later
             <SidebarItem
-              icon={Menu}
-              text="Menús"
+              icon={Gift}
+              text="Promociones"
               indent
-              active={activeItem === 'AdminMenus'}
-              onClick={() => navigateTo('/admin/menus', 'AdminMenus')}
+              active={activeItem === 'AdminPromociones'}
+              onClick={() => navigateTo('/admin/promociones', 'AdminPromociones')}
             />
-            */}
           </ExpandableItem>
         )}
 
@@ -347,7 +352,6 @@ export default function Sidebar({ onClose }) {
           <InfoItem label="Versión de licencia" value="12345" />
           <InfoItem label="Versión de BD" value="12345" />
           <InfoItem label="IP" value={formatServer(selectedCompany?.serverErpDb) || 'Desconocido'} />
-          {/* Display user profile if available */}
           {user && user.profileName && (
             <InfoItem label="Perfil" value={user.profileName} />
           )}
