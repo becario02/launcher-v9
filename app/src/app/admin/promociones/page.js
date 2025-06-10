@@ -9,8 +9,9 @@ import { usePrimaryColor } from '@/context/primaryColor';
 import { useTheme } from '@/context/ThemeContext';
 import Toast from '@/components/Toast';
 
-// Importar el modal unificado
+// Importar el modal unificado y el visor de imágenes
 import PromotionFormModal from '@/components/PromotionFormModal';
+import ImageViewerModal from '@/components/ImageViewerModal';
 // import ViewPromotionModal from '@/components/ViewPromotionModal';
 
 export default function AdminPromotionsPage() {
@@ -23,7 +24,9 @@ export default function AdminPromotionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [promotionModalOpen, setPromotionModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [selectedPromotion, setSelectedPromotion] = useState(null);
+  const [selectedImage, setSelectedImage] = useState({ src: '', alt: '' });
   const [updatingStatus, setUpdatingStatus] = useState({}); // Para manejar loading individual de switches
 
   // Estados para la tabla de promociones
@@ -197,6 +200,23 @@ export default function AdminPromotionsPage() {
   const handleCloseViewModal = () => {
     setViewModalOpen(false);
     setSelectedPromotion(null);
+  };
+
+  // Función para abrir el visor de imágenes
+  const handleViewImage = (promotion) => {
+    if (promotion.image) {
+      setSelectedImage({
+        src: `data:image/jpeg;base64,${promotion.image}`,
+        alt: promotion.description
+      });
+      setImageViewerOpen(true);
+    }
+  };
+
+  // Función para cerrar el visor de imágenes
+  const handleCloseImageViewer = () => {
+    setImageViewerOpen(false);
+    setSelectedImage({ src: '', alt: '' });
   };
 
   // Función unificada para manejar el éxito del modal (crear/editar)
@@ -400,11 +420,17 @@ export default function AdminPromotionsPage() {
                             <div className="flex items-center gap-3">
                               <div className="relative">
                                 {promotion.image ? (
-                                  <img
-                                    src={`data:image/jpeg;base64,${promotion.image}`}
-                                    alt={promotion.description}
-                                    className="w-12 h-12 rounded-lg object-cover"
-                                  />
+                                  <button
+                                    onClick={() => handleViewImage(promotion)}
+                                    className="block rounded-lg overflow-hidden hover:opacity-75 transition-opacity cursor-pointer"
+                                    title="Clic para ver imagen"
+                                  >
+                                    <img
+                                      src={`data:image/jpeg;base64,${promotion.image}`}
+                                      alt={promotion.description}
+                                      className="w-12 h-12 object-cover"
+                                    />
+                                  </button>
                                 ) : (
                                   <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                                     <Image className="w-6 h-6 text-gray-400 dark:text-gray-500" />
@@ -544,9 +570,9 @@ export default function AdminPromotionsPage() {
                           <td className="px-6 py-4">
                             <div className="flex gap-2">
                               <button
-                                onClick={() => handleViewPromotion(promotion)}
+                                onClick={() => handleViewImage(promotion)}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                                title="Ver promoción"
+                                title="Ver imagen"
                               >
                                 <Eye className="w-3.5 h-3.5" />
                                 <span className="text-xs font-medium">Ver</span>
@@ -616,6 +642,14 @@ export default function AdminPromotionsPage() {
           onClose={handleClosePromotionModal}
           promotion={selectedPromotion} // null = crear, objeto = editar
           onSuccess={handlePromotionFormSuccess}
+        />
+
+        {/* Modal Visor de Imágenes */}
+        <ImageViewerModal
+          isOpen={imageViewerOpen}
+          onClose={handleCloseImageViewer}
+          imageSrc={selectedImage.src}
+          imageAlt={selectedImage.alt}
         />
 
         {/* Modal de Ver Promoción */}
