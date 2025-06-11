@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
-import { Gift, Upload, Search, ChevronLeft, ChevronRight, Image, CheckCircle, XCircle, Calendar, Eye, Edit, Plus, Star } from 'lucide-react';
+import { Gift, Upload, Search, ChevronLeft, ChevronRight, Image, CheckCircle, XCircle, Calendar, Eye, Edit, Plus, Star, ExternalLink } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import { usePrimaryColor } from '@/context/primaryColor';
@@ -219,6 +219,26 @@ export default function AdminPromotionsPage() {
     setSelectedImage({ src: '', alt: '' });
   };
 
+  // Función para abrir la URL de la promoción
+  const handleOpenPromotionUrl = (promotion) => {
+    if (promotion.urlReference) {
+      // Validar que la URL tenga protocolo
+      let url = promotion.urlReference;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+      
+      // Abrir en nueva pestaña
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      setToast({
+        visible: true,
+        message: 'Esta promoción no tiene una URL de referencia configurada',
+        type: 'error'
+      });
+    }
+  };
+
   // Función unificada para manejar el éxito del modal (crear/editar)
   const handlePromotionFormSuccess = (result) => {
     if (result.success) {
@@ -291,6 +311,7 @@ export default function AdminPromotionsPage() {
       </td>
       <td className="px-6 py-4">
         <div className="flex gap-2">
+          <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
           <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
           <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
@@ -585,6 +606,16 @@ export default function AdminPromotionsPage() {
                                 <Edit className="w-3.5 h-3.5" />
                                 <span className="text-xs font-medium">Editar</span>
                               </button>
+                              {promotion.urlReference && (
+                                <button
+                                  onClick={() => handleOpenPromotionUrl(promotion)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                                  title={`Ir a: ${promotion.urlReference}`}
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                  <span className="text-xs font-medium">URL</span>
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>

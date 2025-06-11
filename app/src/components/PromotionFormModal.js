@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import clsx from 'clsx';
-import { X, Image, Gift, AlertCircle, Edit, Plus, Star } from 'lucide-react';
+import { X, Image, Gift, AlertCircle, Edit, Plus, Star, Link } from 'lucide-react';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -24,6 +24,7 @@ export default function PromotionFormModal({
   const [formData, setFormData] = useState({
     description: '',
     imageBase64: '',
+    urlReference: '',
     expirationDate: ''
   });
 
@@ -46,6 +47,7 @@ export default function PromotionFormModal({
         setFormData({
           description: promotion.description || '',
           imageBase64: promotion.image || '',
+          urlReference: promotion.urlReference || '',
           expirationDate: expirationDate
         });
 
@@ -62,6 +64,7 @@ export default function PromotionFormModal({
         setFormData({
           description: '',
           imageBase64: '',
+          urlReference: '',
           expirationDate: ''
         });
         setImagePreview('');
@@ -78,15 +81,16 @@ export default function PromotionFormModal({
   const isFormValid = () => {
     const hasDescription = formData.description.trim().length > 0;
     const hasImage = formData.imageBase64.length > 0;
+    const hasUrl = formData.urlReference.trim().length > 0;
     
     // Para promociones por defecto en edición, no requerir fecha
     const isDefaultPromotion = isEditMode && promotion?.isDefault;
     const hasDate = isDefaultPromotion || formData.expirationDate.length > 0;
     
     if (isEditMode) {
-      return hasDescription && hasImage && hasDate && hasChanges();
+      return hasDescription && hasImage && hasUrl && hasDate && hasChanges();
     } else {
-      return hasDescription && hasImage && hasDate;
+      return hasDescription && hasImage && hasUrl && hasDate;
     }
   };
 
@@ -95,6 +99,7 @@ export default function PromotionFormModal({
     setFormData({
       description: '',
       imageBase64: '',
+      urlReference: '',
       expirationDate: ''
     });
     setErrors({});
@@ -157,6 +162,24 @@ export default function PromotionFormModal({
     }
 
     return null;
+  };
+
+  // Validar URL
+  const validateUrl = (url) => {
+    if (!url.trim()) {
+      return 'La URL de referencia es requerida';
+    }
+
+    try {
+      const urlObj = new URL(url);
+      // Verificar que tenga un protocolo válido
+      if (!['http:', 'https:'].includes(urlObj.protocol)) {
+        return 'La URL debe comenzar con http:// o https://';
+      }
+      return null;
+    } catch (error) {
+      return 'Ingresa una URL válida (ejemplo: https://ejemplo.com)';
+    }
   };
 
   // Manejar selección de archivo
@@ -257,6 +280,12 @@ export default function PromotionFormModal({
       newErrors.image = 'La imagen es requerida';
     }
 
+    // Validar URL
+    const urlError = validateUrl(formData.urlReference);
+    if (urlError) {
+      newErrors.urlReference = urlError;
+    }
+
     // Solo validar fecha si NO es promoción por defecto
     const isDefaultPromotion = isEditMode && promotion?.isDefault;
     if (!isDefaultPromotion) {
@@ -291,6 +320,7 @@ export default function PromotionFormModal({
 
     return (
       formData.description !== promotion.description ||
+      formData.urlReference !== (promotion.urlReference || '') ||
       formData.expirationDate !== originalDate ||
       imageChanged
     );
@@ -321,12 +351,15 @@ export default function PromotionFormModal({
       const requestBody = {
         description: formData.description.trim(),
         imageBase64: formData.imageBase64,
+        urlReference: formData.urlReference.trim(),
       };
 
       // Solo agregar fecha si NO es promoción por defecto
       const isDefaultPromotion = isEditMode && promotion?.isDefault;
       if (!isDefaultPromotion) {
-        requestBody.expirationDate = formData.expirationDate; // Formato YYYY-MM-DD
+        // Convertir fecha a formato ISO para el backend
+        const dateObj = new Date(formData.expirationDate + 'T23:59:59.999Z');
+        requestBody.expirationDate = dateObj.toISOString();
       }
 
       // Determinar URL y método según el modo
@@ -361,6 +394,7 @@ export default function PromotionFormModal({
             ...promotion,
             description: formData.description.trim(),
             image: formData.imageBase64,
+            urlReference: formData.urlReference.trim(),
             expirationDate: formData.expirationDate
           };
         }
@@ -377,6 +411,12 @@ export default function PromotionFormModal({
             setErrors(prev => ({
               ...prev,
               description: result.message,
+              server: result.message
+            }));
+          } else if (result.message.toLowerCase().includes('url')) {
+            setErrors(prev => ({
+              ...prev,
+              urlReference: result.message,
               server: result.message
             }));
           } else {
@@ -484,6 +524,42 @@ export default function PromotionFormModal({
                   {formData.description.length}/255
                 </span>
               </div>
+            </div>
+
+            {/* URL de Referencia */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                URL de referencia *
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Link className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                </div>
+                <input
+                  type="url"
+                  name="urlReference"
+                  value={formData.urlReference}
+                  onChange={handleInputChange}
+                  placeholder="https://ejemplo.com"
+                  disabled={isSubmitting}
+                  className={clsx(
+                    "w-full pl-10 pr-3 py-2 border rounded-md bg-white dark:bg-[#13131a] text-gray-900 dark:text-white focus:ring-2 focus:ring-opacity-50",
+                    errors.urlReference
+                      ? "border-red-300 dark:border-red-500"
+                      : "border-gray-300 dark:border-[#2C2C38]"
+                  )}
+                  style={!errors.urlReference ? { '--tw-ring-color': primaryColor } : {}}
+                />
+              </div>
+              {errors.urlReference && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.urlReference}
+                </p>
+              )}
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                URL donde se redirigirá al usuario al hacer clic en la promoción
+              </p>
             </div>
 
             {/* Imagen */}
