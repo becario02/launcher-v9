@@ -23,6 +23,28 @@ const NotificationFilters = ({
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
 
+  // Categorías disponibles actualizadas
+  const categoryOptions = [
+    { value: 'VERSION_RELEASE', label: 'Lanzamiento de Versión' },
+    { value: 'MAINTENANCE_WINDOW', label: 'Ventana de Mantenimiento' },
+    { value: 'ERP_UPDATE', label: 'Actualización ERP' },
+    { value: 'NEWS', label: 'Noticias' },
+    { value: 'NEWVIDEO', label: 'Nuevo Video' },
+    { value: 'NEWARTICLE', label: 'Nuevo Artículo' },
+    { value: 'NEWEVENT', label: 'Nuevo Evento' },
+    { value: 'HOLIDAY', label: 'Días Festivos' },
+    { value: 'CHANGELOG', label: 'Registro de Cambios' },
+    // Mantener categorías legacy para compatibilidad
+    { value: 'SYSTEMUPDATE', label: 'Actualización del Sistema (Legacy)' },
+    { value: 'NA', label: 'Sin Categoría' }
+  ];
+
+  // Función para obtener la etiqueta de categoría
+  const getCategoryLabel = (categoryValue) => {
+    const category = categoryOptions.find(cat => cat.value === categoryValue);
+    return category ? category.label : categoryValue;
+  };
+
   // Count active filters
   useEffect(() => {
     let count = 0;
@@ -121,10 +143,11 @@ const NotificationFilters = ({
                 className="h-full appearance-none px-3 py-1.5 pr-8 text-xs font-medium rounded-lg border border-gray-200 dark:border-[#2C2C38] bg-white dark:bg-[#262631] text-gray-700 dark:text-gray-300 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               >
                 <option value="">Todas las categorías</option>
-                <option value="SYSTEMUPDATE">Actualización del Sistema</option>
-                <option value="NEWVIDEO">Nuevo Video</option>
-                <option value="NEWARTICLE">Nuevo Artículo</option>
-                <option value="NA">Sin Categoría</option>
+                {categoryOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                 <ChevronDown className="w-4 h-4" />
@@ -254,12 +277,7 @@ const NotificationFilters = ({
 
                   {category && (
                     <span className="inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400">
-                      Categoría: {
-                        category === 'SYSTEMUPDATE' ? 'Actualización del Sistema' :
-                        category === 'NEWVIDEO' ? 'Nuevo Video' :
-                        category === 'NEWARTICLE' ? 'Nuevo Artículo' :
-                        'Sin Categoría'
-                      }
+                      Categoría: {getCategoryLabel(category)}
                       <button 
                         onClick={() => setCategory('')}
                         className="ml-1.5 text-purple-400 hover:text-purple-600 dark:text-purple-300 dark:hover:text-purple-200"

@@ -30,10 +30,24 @@ export default function NewsFilters({
 
   const toggleFilters = () => setShowFilters(prev => !prev);
   const filterBg = showFilters ? `${primaryColor}33` : 'transparent';
+  
+  // Traducciones actualizadas para las nuevas categorías de noticias
   const categoryTranslations = {
-    NEWS: 'Noticias',
-    ADVICE: 'Consejo',
-    NOTIFICATION: 'Notificación'
+    // Nuevas categorías
+    'COMMUNICATION': 'Comunicados',
+    'MAINTENANCE_EXTERNAL': 'Mantenimiento Externo',
+    'GENERAL_NEWS': 'Noticias',
+    'LEGAL_NEWS': 'Noticias Normativas',
+    'BLOG': 'Blog',
+    'PRODUCTS_SERVICES': 'Productos y Servicios',
+    'SUCCESS_STORY': 'Casos de Éxito',
+    'PROMOTIONAL': 'Promocional',
+    'CLOUD_PROMO': 'Nube Promocional',
+    'UPCOMING_EVENTS': 'Eventos Próximos',
+    // Categorías legacy (por compatibilidad)
+    'NEWS': 'Noticias',
+    'ADVICE': 'Consejo',
+    'NOTIFICATION': 'Notificación'
   };
 
   return (
@@ -200,34 +214,34 @@ export default function NewsFilters({
             </div>
 
             <div className="flex flex-col gap-1 sm:gap-2 md:items-end">
-        <span
-          style={{ color: primaryColor }}
-          className="text-xs font-medium block md:mb-1 dark:text-gray-2"
-        >
-          Categoría:
-        </span>
-        <select
-          value={categoryFilter}
-          onChange={e => { setCurrentPage(1); setCategoryFilter(e.target.value); }}
-          style={{
-            border: `1px solid ${primaryColor}`,
-            color: primaryColor
-          }}
-          className="
-            appearance-none pl-3 sm:pl-4 pr-8 sm:pr-10 py-1.5 sm:py-2 rounded-full
-            bg-gray-1 dark:bg-gray-6
-            focus:outline-none focus:ring-0
-            transition-all duration-200
-          "
-        >
-          <option value="all">Todas las categorías</option>
-          {categories.filter(cat => cat !== 'all').map(category => (
-            <option key={category} value={category}>
-              {categoryTranslations[category]}
-            </option>
-          ))}
-        </select>
-      </div>
+              <span
+                style={{ color: primaryColor }}
+                className="text-xs font-medium block md:mb-1 dark:text-gray-2"
+              >
+                Categoría:
+              </span>
+              <select
+                value={categoryFilter}
+                onChange={e => { setCurrentPage(1); setCategoryFilter(e.target.value); }}
+                style={{
+                  border: `1px solid ${primaryColor}`,
+                  color: primaryColor
+                }}
+                className="
+                  appearance-none pl-3 sm:pl-4 pr-8 sm:pr-10 py-1.5 sm:py-2 rounded-full
+                  bg-gray-1 dark:bg-gray-6
+                  focus:outline-none focus:ring-0
+                  transition-all duration-200
+                "
+              >
+                <option value="all">Todas las categorías</option>
+                {categories.filter(cat => cat !== 'all').map(category => (
+                  <option key={category} value={category}>
+                    {categoryTranslations[category] || category}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>

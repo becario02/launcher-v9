@@ -23,6 +23,20 @@ export default function NewsModal({
     message: ''
   });
 
+  // Nuevas categorías de noticias
+  const newsCategories = [
+    { value: 'COMMUNICATION', label: 'Comunicados' },
+    { value: 'MAINTENANCE_EXTERNAL', label: 'Ventana de mantenimiento externas' },
+    { value: 'GENERAL_NEWS', label: 'Noticias' },
+    { value: 'LEGAL_NEWS', label: 'Noticias normativas y fiscales' },
+    { value: 'BLOG', label: 'Blog' },
+    { value: 'PRODUCTS_SERVICES', label: 'Productos y servicios Advan' },
+    { value: 'SUCCESS_STORY', label: 'Casos de éxito - Productos o servicios Advan' },
+    { value: 'PROMOTIONAL', label: 'Promocional' },
+    { value: 'CLOUD_PROMO', label: 'Nube - Promocional' },
+    { value: 'UPCOMING_EVENTS', label: 'Eventos próximos' }
+  ];
+
   // Reset notification & preview on close
   useEffect(() => {
     if (!isOpen) {
@@ -197,9 +211,11 @@ export default function NewsModal({
                   ${isView ? 'cursor-not-allowed opacity-60' : ''}
                 `}
               >
-                <option value="NEWS">NOTICIAS</option>
-                <option value="ADVICE">CONSEJO</option>
-                <option value="NOTIFICATION">NOTIFICACIÓN</option>
+                {newsCategories.map(category => (
+                  <option key={category.value} value={category.value}>
+                    {category.label}
+                  </option>
+                ))}
               </select>
             </div>
 

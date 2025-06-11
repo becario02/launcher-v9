@@ -3,7 +3,20 @@
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
-import { Bell, Video, FileText, Info, RefreshCw } from 'lucide-react';
+import { 
+  Bell, 
+  Info,
+  Rocket, 
+  Settings, 
+  RefreshCw, 
+  Newspaper, 
+  Video, 
+  FileText, 
+  Calendar, 
+  Coffee,
+  GitBranch,
+  HelpCircle 
+} from 'lucide-react';
 import Toast from '@/components/Toast';
 import clsx from 'clsx';
 import { usePrimaryColor } from '@/context/primaryColor';
@@ -127,25 +140,74 @@ export default function NotificationsPage() {
     }
   };
 
-  // Función para renderizar el icono según la categoría de notificación
+  // Función para renderizar el icono según la categoría de notificación (ACTUALIZADA)
   const renderNotificationIcon = (category) => {
     switch (category) {
-      case 'SYSTEMUPDATE':
+      case 'VERSION_RELEASE':
         return (
-          <div className="w-8 h-8 rounded-md bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-            <RefreshCw className="w-4 h-4 text-red-500" />
+          <div className="w-8 h-8 rounded-md bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+            <Rocket className="w-4 h-4 text-purple-600" />
+          </div>
+        );
+      case 'MAINTENANCE_WINDOW':
+        return (
+          <div className="w-8 h-8 rounded-md bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+            <Settings className="w-4 h-4 text-orange-600" />
+          </div>
+        );
+      case 'ERP_UPDATE':
+        return (
+          <div className="w-8 h-8 rounded-md bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+            <RefreshCw className="w-4 h-4 text-blue-600" />
+          </div>
+        );
+      case 'NEWS':
+        return (
+          <div className="w-8 h-8 rounded-md bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+            <Newspaper className="w-4 h-4 text-green-600" />
           </div>
         );
       case 'NEWVIDEO':
         return (
-          <div className="w-8 h-8 rounded-md bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-            <Video className="w-4 h-4 text-blue-500" />
+          <div className="w-8 h-8 rounded-md bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+            <Video className="w-4 h-4 text-red-600" />
           </div>
         );
       case 'NEWARTICLE':
         return (
-          <div className="w-8 h-8 rounded-md bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-            <FileText className="w-4 h-4 text-green-500" />
+          <div className="w-8 h-8 rounded-md bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+            <FileText className="w-4 h-4 text-indigo-600" />
+          </div>
+        );
+      case 'NEWEVENT':
+        return (
+          <div className="w-8 h-8 rounded-md bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+            <Calendar className="w-4 h-4 text-pink-600" />
+          </div>
+        );
+      case 'HOLIDAY':
+        return (
+          <div className="w-8 h-8 rounded-md bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+            <Coffee className="w-4 h-4 text-yellow-600" />
+          </div>
+        );
+      case 'CHANGELOG':
+        return (
+          <div className="w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-900/30 flex items-center justify-center">
+            <GitBranch className="w-4 h-4 text-gray-600" />
+          </div>
+        );
+      // Mantener categorías legacy para compatibilidad
+      case 'SYSTEMUPDATE':
+        return (
+          <div className="w-8 h-8 rounded-md bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+            <RefreshCw className="w-4 h-4 text-blue-600" />
+          </div>
+        );
+      case 'NA':
+        return (
+          <div className="w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-900/30 flex items-center justify-center">
+            <HelpCircle className="w-4 h-4 text-gray-500" />
           </div>
         );
       default:
