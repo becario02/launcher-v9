@@ -16,6 +16,7 @@ import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function LoginForm() {
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://advan-gateway-51wn5q29.uc.gateway.dev';
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState('login'); // 'login' | 'method' | 'token'
@@ -90,7 +91,7 @@ export default function LoginForm() {
 
     try {
       const res = await axios.post(
-        'http://localhost:5173/mslauncher/api/v1/login',
+        `${API_BASE_URL}/mslauncher/api/v1/login`,
         {
           username: formData.username,
           password: formData.password,
@@ -153,7 +154,7 @@ export default function LoginForm() {
     setError('');
     try {
       const res = await axios.post(
-        'http://localhost:5173/mslauncher/api/v1/login',
+        `${API_BASE_URL}/mslauncher/api/v1/login`,
         {
           username: formData.username,
           password: formData.password,

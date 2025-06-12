@@ -30,14 +30,12 @@ export const NotificationProvider = ({ children }) => {
   const fetchUnreadCount = async () => {
     setIsLoadingCount(true);
     try {
-      const response = await axios.get(
-        `http://localhost:5173/mslauncher/api/v1/notifications/user/${userId}/unread/count`,
-        {
+      const response = await axios.get('/api/notifications/unread-count', {
+          params: { userId },
           headers: {
-            'Accept-Language': 'es'
+            'Accept-Language': 'es-MX'
           }
-        }
-      );
+      });
       
       if (response.data && response.data.data) {
         setUnreadCount(response.data.data.count);
@@ -52,15 +50,15 @@ export const NotificationProvider = ({ children }) => {
   // Función para marcar una notificación como leída
   const markNotificationAsRead = async (notificationId) => {
     try {
-      await axios.post(
-        `http://localhost:5173/mslauncher/api/v1/notification/${notificationId}/read/${userId}`,
-        {},
-        {
-          headers: {
-            'Accept-Language': 'es'
-          }
+      await axios.post('/api/notifications/read', {}, {
+        params: {
+          notificationId,
+          userId
+        },
+        headers: {
+          'Accept-Language': 'es-MX'
         }
-      );
+      });
       
       // Actualizar el contador inmediatamente (optimista)
       if (unreadCount > 0) {

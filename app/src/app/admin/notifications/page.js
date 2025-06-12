@@ -14,7 +14,7 @@ import NotificationFormModal from '@/components/NotificationFormModal';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import CategoryBadge from '@/components/CategoryBadge';
 import NotificationFilters from '@/components/NotificationFilters';
-import Switch from '@/components/Switch'; // Importar el nuevo componente Switch
+import Switch from '@/components/Switch';
 
 export default function AdminNotificationsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -56,8 +56,7 @@ export default function AdminNotificationsPage() {
 
   const fetchNotifications = () => {
     setIsLoading(true);
-
-    // Construir los parámetros para la petición
+   
     const params = {
       page,
       pageSize,
@@ -67,15 +66,14 @@ export default function AdminNotificationsPage() {
       companyId: companyId || undefined
     };
 
-    // Añadir fechas solo si están definidas
     if (startDate) params.startDate = startDate.toISOString();
     if (endDate) params.endDate = endDate.toISOString();
 
     axios
-      .get('http://localhost:5173/mslauncher/api/v1/notifications', {
+      .get('/api/notifications', {
         params,
         headers: {
-          'Accept-Language': 'es' // Requerido según el controlador
+          'Accept-Language': 'es-MX'
         }
       })
       .then(res => {
@@ -98,9 +96,9 @@ export default function AdminNotificationsPage() {
   // Cargar lista de compañías para el filtro
   const fetchCompanies = () => {
     axios
-      .get('http://localhost:5173/mslauncher/api/v1/companies', {
+      .get('/api/companies', {
         headers: {
-          'Accept-Language': 'es'
+          'Accept-Language': 'es-MX'
         }
       })
       .then(res => {
@@ -144,9 +142,9 @@ export default function AdminNotificationsPage() {
         companyIds: notification.companies?.map(c => c.idCompany) || []
       };
 
-      const response = await axios.put('http://localhost:5173/mslauncher/api/v1/notification', payload, {
+      const response = await axios.put('/api/notifications', payload, {
         headers: {
-          'Accept-Language': 'es'
+          'Accept-Language': 'es-MX'
         }
       });
 
@@ -190,12 +188,12 @@ export default function AdminNotificationsPage() {
 
       if (editingNotification) {
         // Update
-        const response = await axios.put('http://localhost:5173/mslauncher/api/v1/notification', {
+        const response = await axios.put('/api/notifications', {
           ...payload,
           id: editingNotification.idNotification
         }, {
           headers: {
-            'Accept-Language': 'es'
+            'Accept-Language': 'es-MX'
           }
         });
 
@@ -209,9 +207,9 @@ export default function AdminNotificationsPage() {
         }
       } else {
         // Create
-        const response = await axios.post('http://localhost:5173/mslauncher/api/v1/notification', payload, {
+        const response = await axios.post('/api/notifications', payload, {
           headers: {
-            'Accept-Language': 'es'
+            'Accept-Language': 'es-MX'
           }
         });
 
@@ -233,7 +231,8 @@ export default function AdminNotificationsPage() {
     if (!notificationToDelete) return;
 
     try {
-      const response = await axios.delete(`http://localhost:5173/mslauncher/api/v1/notification/${notificationToDelete}`, {
+      const response = await axios.delete('/api/notifications', {
+        params: { id: notificationToDelete },
         headers: {
           'Accept-Language': 'es'
         }

@@ -22,25 +22,23 @@ const NotificationsPopup = ({ isOpen, onClose }) => {
   // Función para obtener las notificaciones no leídas
   const fetchNotifications = async () => {
     if (!isOpen) return;
-    
+
     setLoading(true);
     try {
-      const response = await axios.get(
-        `http://localhost:5173/mslauncher/api/v1/notifications/user/${userId}`,
-        {
-          params: { 
-            page: 1, 
-            pageSize: 4, 
-            isRead: false 
-          },
-          headers: {
-            'Accept-Language': 'es'
-          }
-        }
-      );
-      
+      const response = await axios.get('/api/notificaciones', {
+        params: {
+          userId,
+          page: 1,
+          pageSize: 4,
+          isRead: false,
+        },
+        headers: {
+          'Accept-Language': 'es-MX',
+        },
+      });
+
       if (response.data && response.data.data) {
-        setNotifications(response.data.data.slice(0, 4)); // Tomar solo las primeras 4
+        setNotifications(response.data.data.slice(0, 4));
       }
     } catch (error) {
       console.error('Error al obtener notificaciones:', error);

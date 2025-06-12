@@ -50,7 +50,7 @@ export default function FileContentModal({
 
     try {
       const response = await fetch(
-        `http://localhost:5173/mslauncher/api/v1/integrator/files/${file.idFile}/content`,
+        `/api/integrator/file-content?idFile=${file.idFile}`,
         {
           headers: {
             'accept': '*/*'

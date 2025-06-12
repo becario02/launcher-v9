@@ -42,7 +42,7 @@ export default function SettingsPage() {
         const userId = Cookies.get('idUser');
         if (!userId) throw new Error('No se encontró el ID de usuario');
 
-        const response = await fetch(`http://localhost:5173/mslauncher/api/v1/profile?userId=${userId}`);
+        const response = await fetch(`/api/profile?userId=${userId}`); 
         const data = await response.json();
 
         if (data.statusCode === '200') {
@@ -102,7 +102,7 @@ export default function SettingsPage() {
       const userId = Cookies.get('idUser');
       if (!userId) throw new Error('No se encontró el ID de usuario');
 
-      const response = await fetch('http://localhost:5173/mslauncher/api/v1/profile/update', {
+      const response = await fetch('/api/profile/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

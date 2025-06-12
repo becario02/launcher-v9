@@ -153,7 +153,7 @@ export default function CreateAddendaModal({ isOpen, onClose, onSuccess }) {
         dataToSend.structureCreditNote = formData.structureCreditNote.trim();
       }
 
-      const response = await fetch('http://localhost:5173/mslauncher/api/v1/addenda', {
+      const response = await fetch('/api/addenda', {
         method: 'POST',
         headers: {
           'accept': 'application/json',

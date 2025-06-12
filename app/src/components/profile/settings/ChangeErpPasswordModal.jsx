@@ -167,7 +167,7 @@ export default function ChangeErpPasswordModal({
 
       try {
           
-          const configRes = await fetch('http://localhost:5173/mslauncher/api/v1/configurations');
+          const configRes = await fetch('/api/configurations');
           const configJson = await configRes.json();
 
           const configuraciones = configJson.data || [];
@@ -216,7 +216,7 @@ export default function ChangeErpPasswordModal({
               const retryData = await retryResponse.json();
               showNotification('success', retryData.message, 'toast');
 
-              await fetch('http://localhost:5173/mslauncher/api/v1/UpdatePasswordErpDb', {
+              await fetch('/api/update-password-erpdb', {
                   method: 'PUT',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
@@ -231,7 +231,7 @@ export default function ChangeErpPasswordModal({
               const data = await response.json();
               showNotification('success', data.message, 'toast');
 
-              await fetch('http://localhost:5173/mslauncher/api/v1/UpdatePasswordErpDb', {
+              await fetch('/api/update-password-erpdb', {
                   method: 'PUT',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({

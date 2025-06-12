@@ -40,11 +40,12 @@ export default function NotificationsPage() {
     try {
       setLoading(true);
       const response = await axios.get(
-        `http://localhost:5173/mslauncher/api/v1/notifications/user/${userId}`,
+        '/api/notificaciones/user',
         {
           params: {
+            userId,
             page: 1,
-            pageSize: 50, // Un número grande para obtener todas
+            pageSize: 50, 
           },
           headers: {
             'Accept-Language': 'es'

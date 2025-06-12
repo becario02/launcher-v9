@@ -1,4 +1,3 @@
-// hooks/useSyncModules.js - Versión mejorada
 import { useState, useCallback, useRef } from 'react';
 
 export const useSyncModules = () => {
@@ -74,7 +73,6 @@ export const useSyncModules = () => {
     setError(null);
 
     try {
-      console.log('🔐 Obteniendo token para:', company.name);
       let token = await login(company.urlErp);
       
       if (!token) {
@@ -87,39 +85,34 @@ export const useSyncModules = () => {
         accessToken: token
       };
 
-      console.log('🔄 Sincronizando módulos para:', company.name);
-      console.log('🆔 Request ID:', requestId);
-
-      let response = await fetch('http://localhost:5173/mslauncher/api/v1/SyncCompanyModules', {
+      let response = await fetch('/api/sync-company-modules', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
-          'Accept-Language': 'es-MX' // ✅ AGREGAR HEADER REQUERIDO
+          'Accept-Language': 'es-MX'
         },
         body: JSON.stringify(payload)
       });
 
       // ✅ VERIFICAR SI ESTE REQUEST FUE CANCELADO
       if (activeRequestRef.current !== requestId) {
-        console.log('🚫 Request cancelado (otro más reciente en progreso)');
         return null;
       }
 
       if (response.status === 401 || response.status === 404) {
-        console.log('🔄 Token expirado, refrescando...');
         
         token = await refreshToken(company.urlErp);
         if (!token) {
           throw new Error('Error al refrescar token');
         }
 
-        response = await fetch('http://localhost:5173/mslauncher/api/v1/SyncCompanyModules', {
+        response = await fetch('/api/sync-company-modules', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
-            'Accept-Language': 'es-MX' // ✅ AGREGAR HEADER REQUERIDO
+            'Accept-Language': 'es-MX'
           },
           body: JSON.stringify(payload)
         });
@@ -135,20 +128,16 @@ export const useSyncModules = () => {
       
       // ✅ VERIFICAR NUEVAMENTE SI EL REQUEST FUE CANCELADO
       if (activeRequestRef.current !== requestId) {
-        console.log('🚫 Request completado pero cancelado (otro más reciente)');
         return null;
       }
       
       if (data.statusCode === '200') {
-        console.log('✅ Módulos sincronizados exitosamente para:', company.name);
       } else {
-        console.warn('⚠️ Problema en sincronización:', data.message);
       }
       
       return data;
 
     } catch (err) {
-      console.error('❌ Error sincronizando módulos:', err);
       setError(err.message);
       return null;
     } finally {
@@ -163,7 +152,6 @@ export const useSyncModules = () => {
   // ✅ FUNCIÓN PARA CANCELAR REQUESTS PENDIENTES
   const cancelPendingRequests = useCallback(() => {
     if (activeRequestRef.current) {
-      console.log('🚫 Cancelando request pendiente:', activeRequestRef.current);
       activeRequestRef.current = null;
       setIsLoading(false);
     }
@@ -173,6 +161,6 @@ export const useSyncModules = () => {
     syncModules,
     isLoading,
     error,
-    cancelPendingRequests // ✅ Nueva función para cancelar
+    cancelPendingRequests
   };
 };

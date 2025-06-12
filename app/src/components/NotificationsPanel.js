@@ -14,29 +14,29 @@ const NotificationsPanel = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { panelRefresh } = useNotifications();
 
-  // Obtener el ID de usuario de las cookies
-  const userId = Cookies.get('idUser') || '2'; // Fallback a 2 si no hay cookie
+  const userId = Cookies.get('idUser') || '2'; 
 
   // Función para obtener las notificaciones no leídas
   const fetchNotifications = async () => {
     setIsLoading(true);
     try {
       const response = await axios.get(
-        `http://localhost:5173/mslauncher/api/v1/notifications/user/${userId}`,
+        '/api/notificaciones',
         {
           params: { 
+            userId,
             page: 1, 
             pageSize: 4, 
             isRead: false 
           },
           headers: {
-            'Accept-Language': 'es'
+            'Accept-Language': 'es-MX'
           }
         }
       );
       
       if (response.data && response.data.data) {
-        setNotifications(response.data.data.slice(0, 4)); // Tomar solo las primeras 4
+        setNotifications(response.data.data.slice(0, 4));
       } else {
         setNotifications([]);
       }
@@ -48,15 +48,13 @@ const NotificationsPanel = () => {
     }
   };
 
-  // Cargar notificaciones al montar el componente y cuando cambie panelRefresh
   useEffect(() => {
     fetchNotifications();
     
-    // Configurar un intervalo para actualizar las notificaciones cada 2 minutos
     const interval = setInterval(fetchNotifications, 120000);
     
     return () => clearInterval(interval);
-  }, [panelRefresh]); // Añadir panelRefresh como dependencia para que se actualice cuando cambie
+  }, [panelRefresh]);
 
   // Función para obtener el icono y el color de fondo según la categoría
   const getNotificationStyles = (category) => {

@@ -36,7 +36,7 @@ export default function IntegratorCompaniesModal({
   const fetchAllCompanies = async () => {
     setIsLoadingCompanies(true);
     try {
-      const response = await axios.get('http://localhost:5173/mslauncher/api/v1/companies', {
+      const response = await axios.get('/api/companies', {
         headers: {
           'accept': '*/*'
         }
@@ -60,7 +60,8 @@ export default function IntegratorCompaniesModal({
     if (!integrator?.idIntegrator) return;
     
     try {
-      const response = await axios.get(`http://localhost:5173/mslauncher/api/v1/integrator/${integrator.idIntegrator}/companies`, {
+      const response = await axios.get('/api/integrator/companies', {
+        params: { idIntegrator: integrator.idIntegrator },
         headers: {
           'accept': '*/*'
         }
@@ -94,7 +95,7 @@ export default function IntegratorCompaniesModal({
   const searchCompanies = async (query) => {
     setIsLoadingCompanies(true);
     try {
-      const response = await axios.get('http://localhost:5173/mslauncher/api/v1/companies', {
+      const response = await axios.get('/api/companies', {
         params: { search: query },
         headers: {
           'accept': '*/*'
@@ -205,7 +206,7 @@ export default function IntegratorCompaniesModal({
     setIsSubmitting(true);
     
     try {
-      const response = await axios.post('http://localhost:5173/mslauncher/api/v1/integrator/assign-companies', {
+      const response = await axios.post('/api/integrator/assign-companies', {
         idIntegrator: integrator.idIntegrator,
         companyIds: formData.companyIds
       }, {

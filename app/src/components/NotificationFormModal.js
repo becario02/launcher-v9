@@ -12,13 +12,14 @@ export default function NotificationFormModal({
   initialData = null,
   companies = []
 }) {
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://advan-gateway-51wn5q29.uc.gateway.dev';
   const { primaryColor } = usePrimaryColor();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     category: 'INFO',
     expirationDate: '',
-    status: 'ACTIVE', // Mantenemos el status en el formData pero no lo mostramos en el formulario
+    status: 'ACTIVE',
     companyIds: []
   });
   const [errors, setErrors] = useState({});
@@ -97,10 +98,10 @@ export default function NotificationFormModal({
   const searchCompanies = async (query) => {
     setIsLoadingCompanies(true);
     try {
-      const response = await axios.get('http://localhost:5173/mslauncher/api/v1/companies', {
+      const response = await axios.get('/api/companies', {
         params: { search: query },
         headers: {
-          'Accept-Language': 'es'
+          'Accept-Language': 'es-MX'
         }
       });
       

@@ -39,8 +39,8 @@ export default function CategoryPermissionsModal({
       try {
         const url =
           type === 'custom'
-            ? 'http://localhost:5173/mslauncher/api/v1/GetUserCustomOptionByUser'
-            : 'http://localhost:5173/mslauncher/api/v1/GetUserdashboardByUser';
+            ? '/api/user-custom-option-by-user'
+            : '/api/user-dashboard-by-user';
 
         const response = await axios.post(url, { IdUser: userId });
         const data = response.data?.data?.permisos || [];
@@ -99,13 +99,13 @@ export default function CategoryPermissionsModal({
 
     const addEndpoint =
       type === 'custom'
-        ? 'http://localhost:5173/mslauncher/api/v1/AddUserCustomOption'
-        : 'http://localhost:5173/mslauncher/api/v1/addProfileDashboard';
+        ? '/api/add-user-custom-option'
+        : '/api/add-profile-dashboard';
 
     const deleteEndpoint =
       type === 'custom'
-        ? 'http://localhost:5173/mslauncher/api/v1/DeleteUserCustomOptionByUser'
-        : 'http://localhost:5173/mslauncher/api/v1/DeleteUserDashboardByUser';
+        ? '/api/delete-user-custom-option-by-user'
+        : '/api/delete-user-dashboard-by-user';
 
     const original = permissions[userId] || {};
     const current = localPerms;
@@ -159,7 +159,6 @@ export default function CategoryPermissionsModal({
     } catch (err) {
       console.error('Error al guardar cambios:', err);
       alert('Ocurrió un error al guardar los permisos.');
-    } finally {
     }
   };
 

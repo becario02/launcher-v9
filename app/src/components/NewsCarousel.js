@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Cookies from 'js-cookie';
 
 const NewsCarousel = () => {
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://advan-gateway-51wn5q29.uc.gateway.dev';
   const [news, setNews] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(2);
@@ -16,7 +17,7 @@ const NewsCarousel = () => {
       if (!idUser) return;
 
       try {
-        const res = await fetch(`http://localhost:5173/mslauncher/api/v1/news/unread?idUser=${idUser}`, {
+        const res = await fetch(`/api/news?idUser=${idUser}`, {
           headers: {
             'Accept-Language': 'es-MX'
           }
@@ -70,7 +71,7 @@ const NewsCarousel = () => {
 
   const markAsRead = async (idNews, url) => {
     try {
-      await fetch('http://localhost:5173/mslauncher/api/v1/news/mark-as-read', {
+      await fetch('/api/news', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -83,7 +84,7 @@ const NewsCarousel = () => {
       });
 
       if (url) {
-        window.open(url, '_blank'); // Redirige a la noticia en una nueva pestaña
+        window.open(url, '_blank');
       }
 
       setNews((prev) => prev.filter((n) => n.idNews !== idNews));

@@ -39,9 +39,9 @@ export function useModulePage() {
     message: "",
     style: "toast",
   });
-  
+
   // Nuevos estados para privilegios
-  const [hasPrivilege, setHasPrivilege] = useState(false);
+  const [hasPrivilege, setHasPrivilege] = useState(true);
   const [menuPermissions, setMenuPermissions] = useState([]);
   const [idCompanyModule, setIdCompanyModule] = useState(null);
 
@@ -51,7 +51,7 @@ export function useModulePage() {
     }
 
     try {
-      const storedModuleData = localStorage.getItem('currentModuleData');
+      const storedModuleData = localStorage.getItem("currentModuleData");
       if (storedModuleData) {
         const moduleData = JSON.parse(storedModuleData);
         return moduleData.idModule;
@@ -69,7 +69,7 @@ export function useModulePage() {
     }
 
     try {
-      const storedModuleData = localStorage.getItem('currentModuleData');
+      const storedModuleData = localStorage.getItem("currentModuleData");
       if (storedModuleData) {
         const moduleData = JSON.parse(storedModuleData);
         return moduleData.acronym;
@@ -83,12 +83,12 @@ export function useModulePage() {
 
   const getExeName = useCallback(() => {
     let exeName = null;
-    
+
     if (currentModule?.exeName) {
       exeName = currentModule.exeName;
     } else {
       try {
-        const storedModuleData = localStorage.getItem('currentModuleData');
+        const storedModuleData = localStorage.getItem("currentModuleData");
         if (storedModuleData) {
           const moduleData = JSON.parse(storedModuleData);
           exeName = moduleData.exeName;
@@ -99,7 +99,7 @@ export function useModulePage() {
     }
 
     // Quitar la extensión .exe si existe
-    return exeName ? exeName.replace(/\.exe$/i, '') : null;
+    return exeName ? exeName.replace(/\.exe$/i, "") : null;
   }, [currentModule]);
 
   const getIdCompanyModule = useCallback(() => {
@@ -108,7 +108,7 @@ export function useModulePage() {
     }
 
     try {
-      const storedModuleData = localStorage.getItem('currentModuleData');
+      const storedModuleData = localStorage.getItem("currentModuleData");
       if (storedModuleData) {
         const moduleData = JSON.parse(storedModuleData);
         return moduleData.idCompanyModule;
@@ -172,57 +172,62 @@ export function useModulePage() {
   // Función para obtener permisos de menú
   const fetchMenuPermissions = useCallback(async () => {
     if (!idCompanyModule) return;
-    
+
     try {
       const response = await fetch(
-        "http://localhost:5173/mslauncher/api/v1/GetMenuPermissions",
+        '/api/menu-permissions',
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ idCompanyModule }),
         }
       );
-      
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        setMenuPermissions([]);
+        return;
       }
-      
+
       const data = await response.json();
       setMenuPermissions(data.data || []);
     } catch (error) {
-      console.error("Error getting menu permissions:", error);
       setMenuPermissions([]);
     }
   }, [idCompanyModule]);
 
   // Función para verificar si un menú tiene permisos
-  const hasMenuPermission = useCallback((idMenu) => {
-    // Esta función siempre verifica si el menú tiene permisos, independientemente del estado hasPrivilege
-    return menuPermissions.some(permission => permission.idMenu === idMenu);
-  }, [menuPermissions]);
+  const hasMenuPermission = useCallback(
+    (idMenu) => {
+      // Esta función siempre verifica si el menú tiene permisos, independientemente del estado hasPrivilege
+      return menuPermissions.some((permission) => permission.idMenu === idMenu);
+    },
+    [menuPermissions]
+  );
 
   // Función recursiva para verificar permisos en jerarquía de menús
-  const hasAnyChildPermission = useCallback((item) => {
-    // Esta función siempre verifica permisos, independientemente del estado hasPrivilege
-    
-    // Si el item actual tiene permiso, retorna true
-    if (hasMenuPermission(item.idMenu)) {
-      return true;
-    }
-    
-    // Si tiene hijos, verifica recursivamente
-    if (item.children && item.children.length > 0) {
-      return item.children.some(child => hasAnyChildPermission(child));
-    }
-    
-    return false;
-  }, [hasMenuPermission]);
+  const hasAnyChildPermission = useCallback(
+    (item) => {
+      // Esta función siempre verifica permisos, independientemente del estado hasPrivilege
+
+      // Si el item actual tiene permiso, retorna true
+      if (hasMenuPermission(item.idMenu)) {
+        return true;
+      }
+
+      // Si tiene hijos, verifica recursivamente
+      if (item.children && item.children.length > 0) {
+        return item.children.some((child) => hasAnyChildPermission(child));
+      }
+
+      return false;
+    },
+    [hasMenuPermission]
+  );
 
   useEffect(() => {
     try {
-      const storedModuleData = localStorage.getItem('currentModuleData');
+      const storedModuleData = localStorage.getItem("currentModuleData");
     } catch (error) {
-      console.log("❌ Error reading localStorage:", error);
     }
   }, [currentModule, selectedCompany, moduleId, acronym, exeName]);
 
@@ -238,44 +243,52 @@ export function useModulePage() {
     if (searchTerm && searchTerm.trim() !== "") {
       const expandMatchingItems = (items) => {
         const newExpanded = {};
-        
+
         const searchInItems = (itemList, parentKey = null) => {
-          itemList.forEach(item => {
-            const itemText = (item.textOption || item.idName || "").toLowerCase();
+          itemList.forEach((item) => {
+            const itemText = (
+              item.textOption ||
+              item.idName ||
+              ""
+            ).toLowerCase();
             const searchLower = searchTerm.toLowerCase().trim();
-            
+
             // Si el item coincide con la búsqueda, expandir su padre
             if (itemText.includes(searchLower) && parentKey) {
               newExpanded[parentKey] = true;
             }
-            
+
             // Si tiene hijos, buscar recursivamente
             if (item.children && item.children.length > 0) {
               searchInItems(item.children, item.keyValue);
-              
+
               // Si algún hijo coincide, expandir este item también
-              const hasMatchingChild = item.children.some(child => {
-                const childText = (child.textOption || child.idName || "").toLowerCase();
+              const hasMatchingChild = item.children.some((child) => {
+                const childText = (
+                  child.textOption ||
+                  child.idName ||
+                  ""
+                ).toLowerCase();
                 return childText.includes(searchLower);
               });
-              
+
               if (hasMatchingChild) {
                 newExpanded[item.keyValue] = true;
               }
             }
           });
         };
-        
+
         // Buscar en todos los submenus
-        Object.values(subMenuItems).forEach(items => {
+        Object.values(subMenuItems).forEach((items) => {
           searchInItems(items);
         });
-        
+
         return newExpanded;
       };
-      
+
       const matchingExpanded = expandMatchingItems();
-      setExpandedItems(prev => ({ ...prev, ...matchingExpanded }));
+      setExpandedItems((prev) => ({ ...prev, ...matchingExpanded }));
     }
   }, [searchTerm, subMenuItems]);
 
@@ -474,7 +487,7 @@ export function useModulePage() {
     if (!selectedCompany?.idUser) return;
     try {
       const response = await fetch(
-        "http://localhost:5173/mslauncher/api/v1/GetMenuShorcutsByUser",
+        '/api/menu-shortcuts-by-user',
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -521,7 +534,7 @@ export function useModulePage() {
       );
       return;
     }
-    
+
     const payload = {
       idMenu:
         item.originalData.moduleGroup === "CUSTOM"
@@ -535,7 +548,7 @@ export function useModulePage() {
     };
     try {
       const res = await fetch(
-        "http://localhost:5173/mslauncher/api/v1/AddMenuShortcuts",
+        '/api/menu-shortcuts/add',
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -609,26 +622,26 @@ export function useModulePage() {
     if (!selectedCompany?.idCompany) {
       return;
     }
-    
+
     if (!moduleId) {
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       const payload = { idModule: moduleId };
-      
-      const res = await fetch("http://localhost:5173/mslauncher/api/v1/menus", {
+
+      const res = await fetch('/api/menus', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      
+
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-      
+
       const response = await res.json();
 
       const allOptions = response.data || [];
@@ -681,13 +694,18 @@ export function useModulePage() {
         });
       };
       expandAll(hierarchy);
-      
     } catch (error) {
       showNotification("error", "Error al cargar los datos del menú", "toast");
     } finally {
       setIsLoading(false);
     }
-  }, [selectedCompany, moduleId, selectedMenuItem, showNotification, menuOrdenado]);
+  }, [
+    selectedCompany,
+    moduleId,
+    selectedMenuItem,
+    showNotification,
+    menuOrdenado,
+  ]);
 
   useEffect(() => {
     if (moduleId && selectedCompany?.idCompany && instances.length > 0) {
@@ -700,7 +718,13 @@ export function useModulePage() {
         setIsLoading(false);
       }
     }
-  }, [moduleId, selectedCompany?.idCompany, instances.length, activeInstance, loadMenuData]);
+  }, [
+    moduleId,
+    selectedCompany?.idCompany,
+    instances.length,
+    activeInstance,
+    loadMenuData,
+  ]);
 
   useEffect(() => {
     fetchShortcuts();
@@ -713,21 +737,42 @@ export function useModulePage() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const handleModuleClick = async () => {
-    try {
-      const parsedData = JSON.parse(localStorage.getItem("currentModuleData"));
+  const addNewInstance = async () => {
+    const newId = instances.length
+      ? Math.max(...instances.map((i) => i.id)) + 1
+      : 1;
+    const newInst = { id: newId, name: `Instancia ${newId}`, active: true };
 
+    setInstances((prevInstances) => [...prevInstances, newInst]);
+    setActiveInstance(newId);
+
+    try {
+      // Crear la sesión primero
+      const parsedData = JSON.parse(localStorage.getItem("currentModuleData"));
       const res = await fetch(
-        "http://localhost:5173/mslauncher/api/v1/CreateSessionByModuleAndUser",
+        '/api/session',
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ idCompanyModule: parsedData.idCompanyModule }),
         }
       );
-
       const data = await res.json();
-      console.log("Sesión creada:", data);
+
+      // Crear la instancia con datos de sesión
+      const instanceWithSession = {
+        ...newInst,
+        idCompanyModule: parsedData.idCompanyModule,
+        exeName: exeName,
+        session: data.data.session,
+        idSession: data.data.idSession,
+      };
+
+      // Guardar en instancias globales con datos de sesión
+      saveGlobalInstance(division, moduleParam, instanceWithSession);
+
+      // Guardar sesión en la instancia específica
+      saveInstanceWithSession(newId, data);
 
       const sessionInfo = {
         idCompanyModule: parsedData.idCompanyModule,
@@ -735,7 +780,6 @@ export function useModulePage() {
         session: data.data.session,
       };
       localStorage.setItem("sessionData", JSON.stringify(sessionInfo));
-      saveInstanceWithSession(activeInstance, data);
 
       showNotification(
         "success",
@@ -743,9 +787,25 @@ export function useModulePage() {
         "toast"
       );
 
-      setTimeout(() => {
-        window.location.href = `advanerpconnect://${exeName}`;
-      }, 2500);
+      const idSession = data.data.idSession;
+      const userErpDb = selectedCompany.userErpDb;
+
+      const clipboardString = `?idsession=${idSession}?usererpdb=${userErpDb}`;
+
+      const encoded = btoa(clipboardString);
+
+      navigator.clipboard
+        .writeText(encoded)
+        .then(() => {
+          setTimeout(() => {
+            window.location.href = `advanerpconnect://${exeName}?session=90641?server=${selectedCompany.serverErpDb}?database=${selectedCompany.nameErpDb}?user=${selectedCompany.userErpDb}?password=${selectedCompany.passwordErpDb}`;
+          }, 2500);
+        })
+        .catch((err) => {
+          setTimeout(() => {
+            window.location.href = `advanerpconnect://${exeName}?session=${data.data.session}?server=${selectedCompany.serverErpDb}?database=${selectedCompany.nameErpDb}?user=${selectedCompany.userErpDb}?password=${selectedCompany.passwordErpDb}`;
+          }, 2500);
+        });
     } catch (err) {
       showNotification(
         "error",
@@ -755,91 +815,15 @@ export function useModulePage() {
     }
   };
 
-  const addNewInstance = async () => {
-      const newId = instances.length
-        ? Math.max(...instances.map((i) => i.id)) + 1
-        : 1;
-      const newInst = { id: newId, name: `Instancia ${newId}`, active: true };
-
-      setInstances((prevInstances) => [...prevInstances, newInst]);
-      setActiveInstance(newId);
-
-      try {
-        // Crear la sesión primero
-        const parsedData = JSON.parse(localStorage.getItem("currentModuleData"));
-        const res = await fetch(
-          "http://localhost:5173/mslauncher/api/v1/CreateSessionByModuleAndUser",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ idCompanyModule: parsedData.idCompanyModule }),
-          }
-        );
-        const data = await res.json();
-
-        // Crear la instancia con datos de sesión
-        const instanceWithSession = {
-          ...newInst,
-          idCompanyModule: parsedData.idCompanyModule,
-          exeName: exeName,
-          session: data.data.session,
-          idSession: data.data.idSession
-        };
-
-        // Guardar en instancias globales con datos de sesión
-        saveGlobalInstance(division, moduleParam, instanceWithSession);
-        
-        // Guardar sesión en la instancia específica
-        saveInstanceWithSession(newId, data);
-
-        const sessionInfo = {
-          idCompanyModule: parsedData.idCompanyModule,
-          exeName: exeName,
-          session: data.data.session,
-        };
-        localStorage.setItem("sessionData", JSON.stringify(sessionInfo));
-
-        showNotification(
-          "success",
-          `Nueva instancia de ${moduleParam} creada exitosamente`,
-          "toast"
-        );
-
-        const idSession = data.data.idSession;
-        const userErpDb = selectedCompany.userErpDb;
-
-        const clipboardString = `?idsession=${idSession}?usererpdb=${userErpDb}`;
-
-        const encoded = btoa(clipboardString);
-
-        navigator.clipboard.writeText(encoded)
-          .then(() => {
-            setTimeout(() => {
-              window.location.href = `advanerpconnect://${exeName}?session=${data.data.session}`;
-            }, 2500);
-          })
-          .catch(err => {
-            setTimeout(() => {
-              window.location.href = `advanerpconnect://${exeName}?session=${data.data.session}`;
-            }, 2500);
-          });
-      } catch (err) {
-        showNotification(
-          "error",
-          "Ocurrió un error al crear la instancia",
-          "toast"
-        );
-      }
-  };
-
   const removeInstance = async (id, e) => {
     e.stopPropagation();
 
     const globalInstances = getGlobalInstances();
-    const instanceToRemove = globalInstances.find(inst => 
-      inst.id === id && 
-      inst.division === division && 
-      inst.module === moduleParam
+    const instanceToRemove = globalInstances.find(
+      (inst) =>
+        inst.id === id &&
+        inst.division === division &&
+        inst.module === moduleParam
     );
     const session = instanceToRemove?.session;
     const idSession = instanceToRemove?.idSession;
@@ -858,13 +842,13 @@ export function useModulePage() {
     if (idSession && idCompanyModule) {
       try {
         const response = await fetch(
-          "http://localhost:5173/mslauncher/api/v1/DeleteSessionAndPermissionsMenu",
+          '/api/session',
           {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               idSession: idSession,
-              idCompanyModule: idCompanyModule
+              idCompanyModule: idCompanyModule,          
             }),
           }
         );
@@ -895,7 +879,6 @@ export function useModulePage() {
     }
   };
 
-
   const setInstanceActive = (id) => {
     const storageKey = getStorageKey();
     const storedData = localStorage.getItem(storageKey);
@@ -918,14 +901,15 @@ export function useModulePage() {
 
   const getCurrentSession = useCallback(() => {
     if (!activeInstance) return null;
-    
+
     const globalInstances = getGlobalInstances();
-    const currentInstance = globalInstances.find(inst => 
-      inst.id === activeInstance && 
-      inst.division === division && 
-      inst.module === moduleParam
+    const currentInstance = globalInstances.find(
+      (inst) =>
+        inst.id === activeInstance &&
+        inst.division === division &&
+        inst.module === moduleParam
     );
-    
+
     return currentInstance?.session || null;
   }, [activeInstance, getGlobalInstances, division, moduleParam]);
 

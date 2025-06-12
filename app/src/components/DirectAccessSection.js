@@ -109,7 +109,7 @@ const DirectAccessSection = () => {
     const fetchAccesses = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('http://localhost:5173/mslauncher/api/v1/GetMenuShorcutsByUser', {
+        const response = await fetch('/api/menu-shortcuts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ idUser: selectedCompany.idUser }),
@@ -158,7 +158,7 @@ const DirectAccessSection = () => {
 
         updatedItems.forEach(async (item) => {
           try {
-            await fetch('http://localhost:5173/mslauncher/api/v1/UpdateSequenceMenuShortCuts', {
+            await fetch('/api/menu-shortcuts/sequence', {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -188,10 +188,10 @@ const DirectAccessSection = () => {
   // Función que elimina después de confirmar
   const handleDelete = async () => {
     if (!idToDelete) return;
-    setIsDeleting(true); // Activar estado cargando
+    setIsDeleting(true);
 
     try {
-      await fetch('http://localhost:5173/mslauncher/api/v1/DeleteMenuShortCuts', {
+      await fetch('/api/menu-shortcuts/delete', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idMenuShortCut: idToDelete }),
@@ -214,7 +214,7 @@ const DirectAccessSection = () => {
         style: 'toast'
       });
     } finally {
-      setIsDeleting(false); // Desactivar estado cargando
+      setIsDeleting(false);
       setShowModal(false);
       setIdToDelete(null);
     }
