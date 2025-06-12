@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useCompany } from '@/context/CompanyContext';
 
 const CompanySelectModal = () => {
@@ -19,6 +20,47 @@ const CompanySelectModal = () => {
   // función que genera la clave única
   const generateKey = (company) =>
     `${company.name}-${company.serverErpDb}-${company.nameErpDb}`;
+
+  // Función para obtener el logo en base64
+  const getCompanyLogo = (company) => {
+    if (company?.logo) {
+      return `data:image/png;base64,${company.logo}`;
+    }
+    return null;
+  };
+
+  // Componente para mostrar el logo o inicial
+  const CompanyLogo = ({ company, size = 40, isSelected = false }) => {
+    const logoSrc = getCompanyLogo(company);
+    
+    if (logoSrc) {
+      return (
+        <Image 
+          src={logoSrc} 
+          alt={`${company.name} logo`} 
+          width={size} 
+          height={size}
+          className="object-contain rounded-full"
+          onError={(e) => {
+            // Si falla la carga del logo, mostrar la inicial
+            e.target.style.display = 'none';
+            if (e.currentTarget && e.currentTarget.parentElement) {
+              const textColor = isSelected ? 'text-white' : 'text-[#0080FF] dark:text-white';
+              e.currentTarget.parentElement.innerHTML = `<span class="font-medium text-[14px] ${textColor}">${company.name.charAt(0)}</span>`;
+            }
+          }}
+        />
+      );
+    }
+    
+    // Fallback: mostrar inicial si no hay logo
+    const textColor = isSelected ? 'text-white' : 'text-[#0080FF] dark:text-white';
+    return (
+      <span className={`font-medium text-[14px] ${textColor}`}>
+        {company.name.charAt(0)}
+      </span>
+    );
+  };
 
   // al abrir el modal, preseleccionar si viene una empresa
   useEffect(() => {
@@ -92,14 +134,12 @@ const CompanySelectModal = () => {
                               : 'bg-[#F5F7FA] hover:bg-[#E2E2EA] dark:bg-[#2c2c38] dark:hover:bg-[#44444F] border border-[#E6E8EC] dark:border-[#2C2C38]'}`}
                         >
                           <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 flex-shrink-0
+                            className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden
                               ${isSelected
                                 ? 'bg-primary text-white'
                                 : 'bg-[#0080FF]/10 dark:bg-primary text-[#0080FF] dark:text-white'}`}
                           >
-                            <span className="font-medium text-[14px]">
-                              {company.name.charAt(0)}
-                            </span>
+                            <CompanyLogo company={company} size={40} isSelected={isSelected} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-[14px] text-[#171725] dark:text-white mb-1">
