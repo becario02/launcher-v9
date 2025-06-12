@@ -2,7 +2,19 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import { Bell } from 'lucide-react';
+import { 
+  Bell,
+  Rocket, 
+  Settings, 
+  RefreshCw, 
+  Newspaper, 
+  Video, 
+  FileText, 
+  Calendar, 
+  Coffee,
+  GitBranch,
+  HelpCircle 
+} from 'lucide-react';
 import Cookies from 'js-cookie';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useNotifications } from '@/context/NotificationContext';
@@ -19,6 +31,37 @@ const NotificationBanner = () => {
 
   // Obtener el ID de usuario de las cookies
   const userId = Cookies.get('idUser')
+
+  // Función para obtener el icono según la categoría (NUEVA)
+  const getCategoryIcon = (category) => {
+    switch (category) {
+      case 'VERSION_RELEASE':
+        return Rocket;
+      case 'MAINTENANCE_WINDOW':
+        return Settings;
+      case 'ERP_UPDATE':
+        return RefreshCw;
+      case 'NEWS':
+        return Newspaper;
+      case 'NEWVIDEO':
+        return Video;
+      case 'NEWARTICLE':
+        return FileText;
+      case 'NEWEVENT':
+        return Calendar;
+      case 'HOLIDAY':
+        return Coffee;
+      case 'CHANGELOG':
+        return GitBranch;
+      // Mantener categorías legacy para compatibilidad
+      case 'SYSTEMUPDATE':
+        return RefreshCw;
+      case 'NA':
+        return HelpCircle;
+      default:
+        return Bell; // Icono por defecto
+    }
+  };
 
   // Actualizar el ancho de la ventana
   useEffect(() => {
@@ -135,6 +178,9 @@ const NotificationBanner = () => {
 
   if (isLoading || !currentNotification) return null;
 
+  // Obtener el icono dinámico para la categoría actual
+  const CategoryIcon = getCategoryIcon(currentNotification.category);
+
   return (
     <div 
       className="w-full text-white py-3 px-12 relative" 
@@ -144,7 +190,8 @@ const NotificationBanner = () => {
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3 flex-grow">
-          <Bell size={16} className="text-white shrink-0" />
+          {/* Icono dinámico basado en la categoría */}
+          <CategoryIcon size={16} className="text-white shrink-0" />
           <div className="flex flex-col md:flex-row md:items-center w-full">
             <span className="text-sm font-medium whitespace-nowrap mr-4">{currentNotification.title}</span>
             <span ref={descriptionRef} className="text-xs text-gray-200 hidden md:inline">

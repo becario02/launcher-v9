@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 const modules = [
   {
     name: 'Nucleares',
@@ -25,9 +27,10 @@ const ModuleGridSection = () => {
   return (
     <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {modules.map((mod) => (
-        <div
+        <Link
           key={mod.name}
-          className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer h-[300px] relative"
+          href={`/divisiones/${mod.name.toLowerCase()}`}
+          className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer h-[300px] relative block"
         >
           {/* Icono en esquina superior izquierda con contenedor circular */}
           <div className="absolute top-4 left-4 w-9 h-9 bg-gray-100 dark:bg-[#2C2C38] rounded-full flex items-center justify-center">
@@ -48,7 +51,7 @@ const ModuleGridSection = () => {
               {mod.description}
             </p>
           </div>
-        </div>
+        </Link>
       ))}
     </section>
   );

@@ -1,6 +1,21 @@
 import { Fragment, useEffect, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { X, Calendar, Building, Search, XCircle, RefreshCw, Video, FileText, HelpCircle } from 'lucide-react';
+import { 
+  X, 
+  Calendar, 
+  Building, 
+  Search, 
+  XCircle, 
+  Rocket, 
+  Settings, 
+  RefreshCw, 
+  Newspaper, 
+  Video, 
+  FileText, 
+  Coffee,
+  GitBranch,
+  HelpCircle 
+} from 'lucide-react';
 import { usePrimaryColor } from '@/context/primaryColor';
 import clsx from 'clsx';
 import axios from 'axios';
@@ -17,7 +32,7 @@ export default function NotificationFormModal({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: 'INFO',
+    category: 'VERSION_RELEASE',
     expirationDate: '',
     status: 'ACTIVE',
     companyIds: []
@@ -31,13 +46,24 @@ export default function NotificationFormModal({
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
   const [initialCompanyIds, setInitialCompanyIds] = useState([]);
   
-  // Categorías disponibles
+  // Categorías disponibles actualizadas
   const categories = [
-    { value: 'SYSTEMUPDATE', label: 'Actualización del Sistema', icon: 'refresh' },
-    { value: 'NEWVIDEO', label: 'Nuevo Video', icon: 'video' },
-    { value: 'NEWARTICLE', label: 'Nuevo Artículo', icon: 'file-text' },
-    { value: 'NA', label: 'Sin Categoría', icon: 'help-circle' }
+    { value: 'VERSION_RELEASE', label: 'Lanzamiento de Versión', icon: Rocket },
+    { value: 'MAINTENANCE_WINDOW', label: 'Ventana de Mantenimiento', icon: Settings },
+    { value: 'ERP_UPDATE', label: 'Actualización ERP', icon: RefreshCw },
+    { value: 'NEWS', label: 'Noticias', icon: Newspaper },
+    { value: 'NEWVIDEO', label: 'Nuevo Video', icon: Video },
+    { value: 'NEWARTICLE', label: 'Nuevo Artículo', icon: FileText },
+    { value: 'NEWEVENT', label: 'Nuevo Evento', icon: Calendar },
+    { value: 'HOLIDAY', label: 'Días Festivos', icon: Coffee },
+    { value: 'CHANGELOG', label: 'Registro de Cambios', icon: GitBranch }
   ];
+
+  // Función para obtener el icono de la categoría seleccionada
+  const getCategoryIcon = (categoryValue) => {
+    const category = categories.find(cat => cat.value === categoryValue);
+    return category ? category.icon : HelpCircle;
+  };
 
   // Inicialización del formulario al abrir el modal
   useEffect(() => {
@@ -67,7 +93,7 @@ export default function NotificationFormModal({
       setFormData({
         title: initialData.title || '',
         description: initialData.description || '',
-        category: initialData.category || 'INFO',
+        category: initialData.category || 'VERSION_RELEASE',
         expirationDate: formattedDate,
         status: initialData.status || 'ACTIVE', // Mantenemos el estado actual
         companyIds: companyIds
@@ -78,7 +104,7 @@ export default function NotificationFormModal({
       setFormData({
         title: '',
         description: '',
-        category: 'SYSTEMUPDATE',
+        category: 'VERSION_RELEASE', // Cambiado a la nueva categoría por defecto
         expirationDate: '',
         status: 'ACTIVE', // Por defecto las nuevas notificaciones están activas
         companyIds: []
@@ -278,6 +304,9 @@ export default function NotificationFormModal({
     }
   };
 
+  // Obtener el componente de icono para la categoría actual
+  const CategoryIcon = getCategoryIcon(formData.category);
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -384,10 +413,7 @@ export default function NotificationFormModal({
                           </label>
                           <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              {formData.category === 'SYSTEMUPDATE' && <RefreshCw className="h-4 w-4 text-gray-400" />}
-                              {formData.category === 'NEWVIDEO' && <Video className="h-4 w-4 text-gray-400" />}
-                              {formData.category === 'NEWARTICLE' && <FileText className="h-4 w-4 text-gray-400" />}
-                              {formData.category === 'NA' && <HelpCircle className="h-4 w-4 text-gray-400" />}
+                              <CategoryIcon className="h-4 w-4 text-gray-400" />
                             </div>
                             <select
                               id="category"
@@ -435,8 +461,6 @@ export default function NotificationFormModal({
                           )}
                         </div>
                       </div>
-
-                      {/* Estado eliminado - Ya no necesitamos este campo */}
                     </div>
 
                     {/* Columna derecha - Selección de compañías */}

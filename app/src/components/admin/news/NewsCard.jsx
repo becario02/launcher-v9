@@ -15,10 +15,24 @@ export default function NewsCard({
 
   // Usa la clase 'bg-primary' que apunta a tu CSS variable --primary
   const categoryValueStyle = 'bg-primary text-white rounded-full px-2 py-0.5';
+  
+  // Traducciones actualizadas para las nuevas categorías
   const categoryTranslations = {
-    NEWS: 'Noticias',
-    ADVICE: 'Consejo',
-    NOTIFICATION: 'Notificación'
+    // Nuevas categorías
+    'COMMUNICATION': 'Comunicados',
+    'MAINTENANCE_EXTERNAL': 'Mantenimiento Externo',
+    'GENERAL_NEWS': 'Noticias',
+    'LEGAL_NEWS': 'Noticias Normativas',
+    'BLOG': 'Blog',
+    'PRODUCTS_SERVICES': 'Productos y Servicios',
+    'SUCCESS_STORY': 'Casos de Éxito',
+    'PROMOTIONAL': 'Promocional',
+    'CLOUD_PROMO': 'Nube Promocional',
+    'UPCOMING_EVENTS': 'Eventos Próximos',
+    // Categorías legacy (por compatibilidad)
+    'NEWS': 'Noticias',
+    'ADVICE': 'Consejo',
+    'NOTIFICATION': 'Notificación'
   };
 
   return (

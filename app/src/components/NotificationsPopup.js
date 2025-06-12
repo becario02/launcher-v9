@@ -1,7 +1,19 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { RefreshCw, Video, FileText, HelpCircle, BellOff } from 'lucide-react';
+import { 
+  BellOff, 
+  Rocket, 
+  Settings, 
+  RefreshCw, 
+  Newspaper, 
+  Video, 
+  FileText, 
+  Calendar, 
+  Coffee,
+  GitBranch,
+  HelpCircle 
+} from 'lucide-react';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -62,27 +74,68 @@ const NotificationsPopup = ({ isOpen, onClose }) => {
     return () => timers.forEach(clearTimeout);
   }, [isOpen]);
 
-  // Obtener icono y color de fondo según la categoría
+  // Obtener icono y color de fondo según la categoría (ACTUALIZADA)
   const getNotificationStyles = (category) => {
     switch (category) {
-      case 'SYSTEMUPDATE':
+      case 'VERSION_RELEASE':
         return {
-          icon: <RefreshCw size={20} className="text-red-500" />,
-          bgColor: '#ff000019'
+          icon: <Rocket size={20} className="text-purple-600" />,
+          bgColor: '#a855f719' // purple-600 con transparencia
+        };
+      case 'MAINTENANCE_WINDOW':
+        return {
+          icon: <Settings size={20} className="text-orange-600" />,
+          bgColor: '#ea580c19' // orange-600 con transparencia
+        };
+      case 'ERP_UPDATE':
+        return {
+          icon: <RefreshCw size={20} className="text-blue-600" />,
+          bgColor: '#2563eb19' // blue-600 con transparencia
+        };
+      case 'NEWS':
+        return {
+          icon: <Newspaper size={20} className="text-green-600" />,
+          bgColor: '#16a34a19' // green-600 con transparencia
         };
       case 'NEWVIDEO':
         return {
-          icon: <Video size={20} className="text-blue-500" />,
-          bgColor: '#0080ff19'
+          icon: <Video size={20} className="text-red-600" />,
+          bgColor: '#dc262619' // red-600 con transparencia
         };
       case 'NEWARTICLE':
         return {
-          icon: <FileText size={20} className="text-green-500" />,
-          bgColor: '#0a910119'
+          icon: <FileText size={20} className="text-indigo-600" />,
+          bgColor: '#4f46e519' // indigo-600 con transparencia
+        };
+      case 'NEWEVENT':
+        return {
+          icon: <Calendar size={20} className="text-pink-600" />,
+          bgColor: '#db277719' // pink-600 con transparencia
+        };
+      case 'HOLIDAY':
+        return {
+          icon: <Coffee size={20} className="text-yellow-600" />,
+          bgColor: '#ca8a0419' // yellow-600 con transparencia
+        };
+      case 'CHANGELOG':
+        return {
+          icon: <GitBranch size={20} className="text-gray-600" />,
+          bgColor: '#4b556319' // gray-600 con transparencia
+        };
+      // Mantener categorías legacy para compatibilidad
+      case 'SYSTEMUPDATE':
+        return {
+          icon: <RefreshCw size={20} className="text-blue-600" />,
+          bgColor: '#2563eb19'
+        };
+      case 'NA':
+        return {
+          icon: <HelpCircle size={20} className="text-gray-500" />,
+          bgColor: '#6b728019'
         };
       default:
         return {
-          icon: <HelpCircle size={20} className="text-gray-500" />,
+          icon: <HelpCircle size={20} className="text-amber-500" />,
           bgColor: '#ff740d19'
         };
     }
