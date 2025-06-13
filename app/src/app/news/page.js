@@ -4,137 +4,159 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import { FileText, Tag } from 'lucide-react';
-import Toast from '@/components/Toast';
 import clsx from 'clsx';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useTheme } from '@/context/theme';
 import { formatDistance } from 'date-fns';
 import { es } from 'date-fns/locale';
-
-// Datos integrados de ejemplo
-const mockNews = [
-  {
-    id: 1,
-    title: "Nuevas regulaciones de transporte internacional entran en vigor",
-    description: "Las nuevas normativas afectarán el transporte de mercancías entre México y Estados Unidos, implementando controles más estrictos.",
-    category: "Regulaciones",
-    tags: ["Transnacional", "México", "Logística"],
-    imageUrl: null,
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 horas atrás
-    isRead: false
-  },
-  {
-    id: 2,
-    title: "Avances tecnológicos en sistemas de rastreo GPS",
-    description: "La implementación de nuevos sistemas GPS mejorará la precisión del seguimiento de flotas en tiempo real.",
-    category: "Tecnología",
-    tags: ["Tecnología", "Advan", "Transporte"],
-    imageUrl: null,
-    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 horas atrás
-    isRead: true
-  },
-  {
-    id: 3,
-    title: "Expansión de rutas logísticas en el sureste mexicano",
-    description: "La empresa amplía su cobertura hacia estados del sureste, ofreciendo nuevas oportunidades de negocio.",
-    category: "Expansión",
-    tags: ["México", "Logística", "Novedades"],
-    imageUrl: null,
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 día atrás
-    isRead: false
-  },
-  {
-    id: 4,
-    title: "Optimización de procesos en centros de distribución",
-    description: "Implementación de nuevas tecnologías para mejorar la eficiencia en el manejo de inventarios.",
-    category: "Procesos",
-    tags: ["Logística", "Tecnología", "Interesante"],
-    imageUrl: null,
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 días atrás
-    isRead: true
-  },
-  {
-    id: 5,
-    title: "Alianza estratégica con proveedores nucleares",
-    description: "Nueva asociación que fortalecerá la cadena de suministro especializada en el sector nuclear.",
-    category: "Alianzas",
-    tags: ["Nucleares", "Logística", "Advan"],
-    imageUrl: null,
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 días atrás
-    isRead: false
-  },
-  {
-    id: 6,
-    title: "Resultados financieros del tercer trimestre",
-    description: "Análisis detallado de los indicadores financieros y proyecciones para el último trimestre del año.",
-    category: "Financiero",
-    tags: ["Todos", "Financieros", "Interesante"],
-    imageUrl: null,
-    createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 días atrás
-    isRead: true
-  },
-  {
-    id: 7,
-    title: "Capacitación en seguridad vial para conductores",
-    description: "Programa integral de formación para mejorar la seguridad en carretera y reducir accidentes.",
-    category: "Capacitación",
-    tags: ["Transporte", "México", "Todos"],
-    imageUrl: null,
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 días atrás
-    isRead: false
-  },
-  {
-    id: 8,
-    title: "Sostenibilidad ambiental en operaciones logísticas",
-    description: "Iniciativas verdes implementadas para reducir la huella de carbono en todas las operaciones.",
-    category: "Sostenibilidad",
-    tags: ["Logística", "Novedades", "Todos"],
-    imageUrl: null,
-    createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), // 6 días atrás
-    isRead: true
-  },
-  {
-    id: 9,
-    title: "Actualización de sistemas de gestión empresarial",
-    description: "Mejoras significativas en las plataformas digitales para optimizar la gestión de recursos.",
-    category: "Sistemas",
-    tags: ["Tecnología", "Advan", "Interesante"],
-    imageUrl: null,
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 1 semana atrás
-    isRead: false
-  }
-];
-
-// Filtros disponibles
-const availableFilters = [
-  "Todos",
-  "Novedades", 
-  "Interesante",
-  "Advan",
-  "Tecnología",
-  "México",
-  "Logística",
-  "Transnacional",
-  "Transporte",
-  "Nucleares",
-  "Financieros"
-];
+import axios from 'axios';
+import Cookies from 'js-cookie';
 
 export default function NewsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme } = useTheme();
   const { primaryColor } = usePrimaryColor();
   
-  const [news, setNews] = useState(mockNews);
-  const [loading, setLoading] = useState(false);
+  const [news, setNews] = useState([]);
+  const [unreadNews, setUnreadNews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [availableFilters, setAvailableFilters] = useState(["Todos"]);
   const [selectedFilters, setSelectedFilters] = useState(["Todos"]);
-  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [markingAsRead, setMarkingAsRead] = useState(null);
+
+  // Obtener el ID de usuario de las cookies
+  const userId = Cookies.get('idUser') || '1'; // Fallback a 1 si no hay cookie
+
+  // Cargar noticias desde la API
+  const fetchNews = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        'http://localhost:5173/mslauncher/api/v1/news',
+        {
+          headers: {
+            'accept': '*/*'
+          }
+        }
+      );
+      
+      if (response.data && response.data.data) {
+        const newsData = response.data.data;
+        setNews(newsData);
+        
+        // Extraer categorías únicas de newsType y formatearlas
+        const categories = [...new Set(newsData.map(item => item.newsType))];
+        const formattedFilters = ["Todos", ...categories.map(cat => formatCategoryName(cat))];
+        setAvailableFilters(formattedFilters);
+      } else {
+        setNews([]);
+      }
+      setError(null);
+    } catch (error) {
+      console.error('Error al obtener noticias:', error);
+      setError('Error al cargar las noticias. Por favor intenta nuevamente.');
+      setNews([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar noticias no leídas del usuario
+  const fetchUnreadNews = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5173/mslauncher/api/v1/news/unread?idUser=${userId}`,
+        {
+          headers: {
+            'accept': '*/*'
+          }
+        }
+      );
+      
+      if (response.data && response.data.data) {
+        setUnreadNews(response.data.data);
+      } else {
+        setUnreadNews([]);
+      }
+    } catch (error) {
+      console.error('Error al obtener noticias no leídas:', error);
+      setUnreadNews([]);
+    }
+  };
+
+  // Marcar noticia como leída
+  const markAsRead = async (idNews) => {
+    if (markingAsRead === idNews) return; // Prevenir múltiples clics
+    
+    try {
+      setMarkingAsRead(idNews);
+      
+      const response = await axios.put(
+        'http://localhost:5173/mslauncher/api/v1/news/mark-as-read',
+        {
+          idUser: parseInt(userId),
+          idNews: idNews
+        },
+        {
+          headers: {
+            'accept': '*/*',
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data && response.data.statusCode === "200") {
+        // Actualizar la lista de noticias no leídas
+        setUnreadNews(prev => prev.filter(news => news.idNews !== idNews));
+      }
+    } catch (error) {
+      console.error('Error al marcar como leída:', error);
+    } finally {
+      setMarkingAsRead(null);
+    }
+  };
+
+  // Cargar noticias al montar el componente
+  useEffect(() => {
+    fetchNews();
+    fetchUnreadNews();
+  }, [userId]);
+
+  // Verificar si una noticia está sin leer
+  const isNewsUnread = (idNews) => {
+    return unreadNews.some(unread => unread.idNews === idNews);
+  };
+
+  // Función auxiliar para obtener el newsType original desde el nombre formateado
+  const getOriginalNewsType = (formattedName) => {
+    const reverseMapping = {
+      'Comunicados': 'COMMUNICATION',
+      'Ventana de mantenimiento externas': 'MAINTENANCE_EXTERNAL',
+      'General': 'GENERAL_NEWS',
+      'Noticias normativas y fiscales': 'LEGAL_NEWS',
+      'Blog': 'BLOG',
+      'Productos y servicios Advan': 'PRODUCTS_SERVICES',
+      'Casos de éxito - Productos o servicios Advan': 'SUCCESS_STORY',
+      'Promocional': 'PROMOTIONAL',
+      'Nube - Promocional': 'CLOUD_PROMO',
+      'Eventos próximos': 'UPCOMING_EVENTS'
+    };
+    
+    return reverseMapping[formattedName] || formattedName;
+  };
 
   // Filtrar noticias basado en los filtros seleccionados
   const filteredNews = news.filter(item => {
     if (selectedFilters.includes("Todos")) return true;
-    return selectedFilters.some(filter => item.tags.includes(filter));
+    return selectedFilters.some(filter => {
+      const originalNewsType = getOriginalNewsType(filter);
+      return item.newsType === originalNewsType;
+    });
   });
+
+  // Contar noticias sin leer en las noticias filtradas
+  const unreadCount = filteredNews.filter(news => isNewsUnread(news.idNews)).length;
 
   // Manejar selección de filtros
   const handleFilterToggle = (filter) => {
@@ -158,7 +180,8 @@ export default function NewsPage() {
     if (!timestamp) return '';
     
     try {
-      return formatDistance(timestamp, new Date(), {
+      const date = new Date(timestamp);
+      return formatDistance(date, new Date(), {
         addSuffix: true,
         locale: es
       });
@@ -168,20 +191,38 @@ export default function NewsPage() {
     }
   };
 
-  // Función para obtener el color de la categoría
-  const getCategoryColor = (category) => {
-    const colors = {
-      'Regulaciones': 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
-      'Tecnología': 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
-      'Expansión': 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
-      'Procesos': 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400',
-      'Alianzas': 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400',
-      'Financiero': 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400',
-      'Capacitación': 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400',
-      'Sostenibilidad': 'bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400',
-      'Sistemas': 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+  // Función para formatear el nombre de la categoría para mostrar
+  const formatCategoryName = (newsType) => {
+    const categoryNames = {
+      'COMMUNICATION': 'Comunicados',
+      'MAINTENANCE_EXTERNAL': 'Ventana de mantenimiento externas',
+      'GENERAL_NEWS': 'General',
+      'LEGAL_NEWS': 'Noticias normativas y fiscales',
+      'BLOG': 'Blog',
+      'PRODUCTS_SERVICES': 'Productos y servicios Advan',
+      'SUCCESS_STORY': 'Casos de éxito - Productos o servicios Advan',
+      'PROMOTIONAL': 'Promocional',
+      'CLOUD_PROMO': 'Nube - Promocional',
+      'UPCOMING_EVENTS': 'Eventos próximos'
     };
-    return colors[category] || 'bg-gray-100 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400';
+    
+    return categoryNames[newsType] || newsType.replace(/_/g, ' ').toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Función para abrir la noticia en una nueva pestaña y marcarla como leída
+  const handleNewsClick = (newsItem) => {
+    // Marcar como leída si está sin leer
+    if (isNewsUnread(newsItem.idNews)) {
+      markAsRead(newsItem.idNews);
+    }
+    
+    // Abrir la URL si existe
+    if (newsItem.referenceUrl) {
+      window.open(newsItem.referenceUrl, '_blank');
+    }
   };
 
   return (
@@ -202,24 +243,37 @@ export default function NewsPage() {
       <div className="flex-1 md:ml-60">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
-        {/* Toast notification */}
-        {toast.show && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast({ ...toast, show: false })}
-          />
-        )}
-
         <main className="min-h-screen bg-[#F2F6FD] dark:bg-[#13131a] pt-14 pb-14">
           <div className="w-full max-w-4xl px-4 md:px-12 lg:px-6 mx-auto md:ml-0 lg:ml-24 xl:ml-32 space-y-12">
             
-            {/* TÍTULO PRINCIPAL */}
-            <div className="flex items-center mb-6 pt-4">
-              <FileText className="w-6 h-6 mr-3 text-primary" />
-              <h1 className="text-xl md:text-2xl font-semibold font-poppins text-[#44444f] dark:text-[#e2e2ea]">
-                Noticias
-              </h1>
+            {/* TÍTULO PRINCIPAL CON ESTADÍSTICAS */}
+            <div className="flex items-center justify-between mb-6 pt-4">
+              <div className="flex items-center">
+                <FileText className="w-6 h-6 mr-3 text-primary" />
+                <h1 className="text-xl md:text-2xl font-semibold font-poppins text-[#44444f] dark:text-[#e2e2ea]">
+                  Noticias
+                </h1>
+              </div>
+              
+              {/* Información estadística */}
+              <div className="text-right">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {filteredNews.length} {filteredNews.length === 1 ? 'noticia' : 'noticias'}
+                  {!loading && news.length > 0 && (
+                    <>
+                      {' • '}
+                      <span className="text-blue-600 dark:text-blue-400">
+                        {unreadCount} sin leer
+                      </span>
+                    </>
+                  )}
+                </p>
+                {selectedFilters.length > 0 && !selectedFilters.includes("Todos") && (
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    Filtrado por: {selectedFilters.join(', ')}
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -280,16 +334,17 @@ export default function NewsPage() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {filteredNews.map((article) => (
+                      {filteredNews.map((article, index) => (
                         <div
-                          key={article.id}
-                          className="border border-gray-200 dark:border-[#2C2C38] rounded-[8px] overflow-hidden w-[188px] h-[200px] flex flex-col items-start justify-start pt-[12px] bg-white dark:bg-[#1C1C24] cursor-pointer hover:shadow-md transition-shadow duration-200"
+                          key={article.idNews}
+                          onClick={() => handleNewsClick(article)}
+                          className="relative border border-gray-200 dark:border-[#2C2C38] rounded-[8px] overflow-hidden w-[188px] h-[200px] flex flex-col items-start justify-start pt-[12px] bg-white dark:bg-[#1C1C24] cursor-pointer hover:shadow-md transition-shadow duration-200"
                         >
                           {/* Imagen */}
-                          <div className="w-[168px] h-[100px] mb-[8px] mx-auto bg-gray-100 dark:bg-gray-800 rounded-[6px] flex items-center justify-center">
-                            {article.imageUrl ? (
+                          <div className="w-[168px] h-[100px] mb-[8px] mx-auto bg-gray-100 dark:bg-gray-800 rounded-[6px] flex items-center justify-center overflow-hidden">
+                            {article.imageContent ? (
                               <img
-                                src={article.imageUrl}
+                                src={article.imageContent}
                                 alt={article.title}
                                 className="w-full h-full object-cover rounded-[6px]"
                               />
@@ -299,9 +354,16 @@ export default function NewsPage() {
                           </div>
                           
                           {/* Título */}
-                          <p className="text-[12px] leading-[18px] text-[#171725] dark:text-gray-200 text-left font-medium font-[Poppins] px-[12px]">
+                          <p className="text-[12px] leading-[18px] text-[#171725] dark:text-gray-200 text-left font-medium font-[Poppins] px-[12px] line-clamp-3">
                             {article.title}
                           </p>
+
+                          {/* Indicador de no leída */}
+                          {isNewsUnread(article.idNews) && (
+                            <div className="absolute bottom-2 right-2">
+                              <span className="w-2 h-2 bg-blue-500 rounded-full block"></span>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

@@ -1,20 +1,26 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Newspaper } from 'lucide-react';
 import Cookies from 'js-cookie';
+import Link from 'next/link';
 
 const NewsCarousel = () => {
   const [news, setNews] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(2);
+  const [isLoading, setIsLoading] = useState(true);
 
   const idUser = Cookies.get('idUser');
 
   useEffect(() => {
     const fetchUnreadNews = async () => {
-      if (!idUser) return;
+      if (!idUser) {
+        setIsLoading(false);
+        return;
+      }
 
+      setIsLoading(true);
       try {
         const res = await fetch(`http://localhost:5173/mslauncher/api/v1/news/unread?idUser=${idUser}`, {
           headers: {
@@ -32,6 +38,9 @@ const NewsCarousel = () => {
         }
       } catch (error) {
         console.error('Error al obtener noticias no leídas:', error);
+        setNews([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -98,13 +107,38 @@ const NewsCarousel = () => {
         <h2 className="text-[14px] leading-[21px] text-black dark:text-gray-200 font-semibold font-[Poppins]">
           Noticias recientes
         </h2>
-        <button className="text-[12px] leading-[18px] text-black dark:text-gray-200 font-medium font-[Poppins] text-right">
-          Ver todo
-        </button>
+        <Link href="/news">
+          <button className="text-[12px] leading-[18px] text-black dark:text-gray-200 font-medium font-[Poppins] text-right hover:underline">
+            Ver todo
+          </button>
+        </Link>
       </div>
 
-      {news.length === 0 ? (
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400">No hay noticias por mostrar.</p>
+      {isLoading ? (
+        // Skeleton loading state 
+        <div className="flex justify-center gap-[12px]">
+          {Array(visibleCount).fill(0).map((_, index) => (
+            <div key={index} className="w-[188px] h-[200px] border border-gray-200 dark:border-[#2C2C38] rounded-[8px] overflow-hidden bg-white dark:bg-[#1C1C24] p-[12px]">
+              {/* Skeleton para imagen */}
+              <div className="w-[168px] h-[100px] bg-gray-200 dark:bg-gray-700 rounded-[6px] mb-[8px] mx-auto animate-pulse"></div>
+              {/* Skeleton para título */}
+              <div className="px-[0px]">
+                <div className="h-[18px] bg-gray-200 dark:bg-gray-700 rounded w-full mb-2 animate-pulse"></div>
+                <div className="h-[18px] bg-gray-100 dark:bg-gray-800 rounded w-3/4 animate-pulse"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : news.length === 0 ? (
+        <div className="flex flex-col items-center justify-center text-center" style={{ height: 'calc(100% - 60px)' }}>
+          <Newspaper size={48} className="text-gray-300 dark:text-gray-600 mb-4" />
+          <p className="text-[16px] md:text-[14px] text-gray-500 dark:text-gray-400 font-medium font-[Poppins]">
+            No tienes noticias sin leer
+          </p>
+          <p className="text-[14px] md:text-[12px] text-gray-400 dark:text-gray-500 mt-2 font-[Poppins]">
+            Las nuevas noticias aparecerán en este carrusel
+          </p>
+        </div>
       ) : (
         <div className="relative overflow-hidden">
           {/* Flecha izquierda */}

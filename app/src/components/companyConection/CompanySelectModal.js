@@ -45,7 +45,7 @@ const CompanySelectModal = () => {
             // Si falla la carga del logo, mostrar la inicial
             e.target.style.display = 'none';
             if (e.currentTarget && e.currentTarget.parentElement) {
-              const textColor = isSelected ? 'text-white' : 'text-[#0080FF] dark:text-white';
+              const textColor = 'text-[#0080FF] dark:text-white'; // Color fijo sin cambio
               e.currentTarget.parentElement.innerHTML = `<span class="font-medium text-[14px] ${textColor}">${company.name.charAt(0)}</span>`;
             }
           }}
@@ -53,8 +53,8 @@ const CompanySelectModal = () => {
       );
     }
     
-    // Fallback: mostrar inicial si no hay logo
-    const textColor = isSelected ? 'text-white' : 'text-[#0080FF] dark:text-white';
+    // Fallback: mostrar inicial si no hay logo - color fijo sin cambio
+    const textColor = 'text-[#0080FF] dark:text-white';
     return (
       <span className={`font-medium text-[14px] ${textColor}`}>
         {company.name.charAt(0)}
@@ -133,12 +133,7 @@ const CompanySelectModal = () => {
                               ? 'bg-[#0080FF]/10 dark:bg-[#0080FF]/20 border border-primary'
                               : 'bg-[#F5F7FA] hover:bg-[#E2E2EA] dark:bg-[#2c2c38] dark:hover:bg-[#44444F] border border-[#E6E8EC] dark:border-[#2C2C38]'}`}
                         >
-                          <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden
-                              ${isSelected
-                                ? 'bg-primary text-white'
-                                : 'bg-[#0080FF]/10 dark:bg-primary text-[#0080FF] dark:text-white'}`}
-                          >
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden bg-[#0080FF]/10 dark:bg-primary">
                             <CompanyLogo company={company} size={40} isSelected={isSelected} />
                           </div>
                           <div className="flex-1 min-w-0">
