@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { callApiGateway } from "@/lib/serverApi";
+import { callApiGateway } from "@/utils/serverApi";
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);

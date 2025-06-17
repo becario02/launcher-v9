@@ -9,7 +9,7 @@ export const newsService = {
      */
     async obtenerNoticias() {
         try {
-            const response = await fetchApi('getAdminNews', {
+            const response = await fetchApi('/mslauncher/api/v1/getAdminNews', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -30,7 +30,7 @@ export const newsService = {
      */
     async agregarNoticia(data) {
         try {
-            const response = await fetchApi('news', {
+            const response = await fetchApi('/mslauncher/api/v1/news', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -51,7 +51,7 @@ export const newsService = {
      */
     async actualizarNoticia( data    ) {
         try {
-            const response = await fetchApi('updateNews', {
+            const response = await fetchApi('/mslauncher/api/v1/updateNews', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ export const newsService = {
      */
     async desactivarNoticia( data ) {
         try {
-            const response = await fetchApi('news/deactivate', {
+            const response = await fetchApi('/mslauncher/api/v1/news/deactivate', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ export const newsService = {
      */
     async activarNoticia( data ) {
         try {
-            const response = await fetchApi('news/activate', {
+            const response = await fetchApi('/mslauncher/api/v1/news/activate', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

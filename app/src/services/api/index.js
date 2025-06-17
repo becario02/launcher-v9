@@ -23,6 +23,7 @@ export async function fetchApi(endpoint, options = {}) {
   try {
     const response = await fetch(url, {
       headers: {
+        'x-api-key': process.env.API_KEY,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         ...(typeof window !== 'undefined' && localStorage.getItem('token') 

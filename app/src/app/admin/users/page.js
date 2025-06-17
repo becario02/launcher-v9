@@ -92,16 +92,26 @@ export default function AdminUsersPage() {
   }, [companies]);
 
   const handleSelectCompany = (company) => {
-    let filteredUsers = company.users || [];
-    if (profileName === 'ADMINADVAN') {
-      filteredUsers = filteredUsers.filter(u => u.profileName.includes('ADMIN'));
+    let filteredUsers = [];
+
+    if (company?.isAdvan) {
+      const allUsers = companies.flatMap((c) => c.users || []);
+      filteredUsers = allUsers.filter((u) => u.profileName?.toUpperCase().includes('ADVAN'));
+      setSelectedCompany({ companyName: 'Usuarios Advan' });
+    } else {
+      filteredUsers = company.users || [];
+      if (profileName === 'ADMINADVAN') {
+        filteredUsers = filteredUsers.filter((u) => u.profileName?.toUpperCase().includes('ADMIN'));
+      }
+      setSelectedCompany(company);
     }
-    setSelectedCompany(company);
+
     setUsers(filteredUsers);
     setTotalUsers(filteredUsers.length);
     setShowCompanyModal(false);
     setPage(1);
   };
+
 
   const showNotification = (type, message, style = 'toast') => {
     setNotification({ visible: false, type: 'info', message: '', style: 'inline' });

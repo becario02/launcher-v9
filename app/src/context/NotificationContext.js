@@ -23,8 +23,7 @@ export const NotificationProvider = ({ children }) => {
   const [bannerRefresh, setBannerRefresh] = useState(Date.now());
   const [panelRefresh, setPanelRefresh] = useState(Date.now());
 
-  // Obtener el ID de usuario de las cookies
-  const userId = Cookies.get('idUser') || '2'; // Fallback a 2 si no hay cookie
+  const userId = Cookies.get('idUser');
 
   // Función para obtener el conteo de notificaciones no leídas
   const fetchUnreadCount = async () => {
@@ -41,7 +40,6 @@ export const NotificationProvider = ({ children }) => {
         setUnreadCount(response.data.data.count);
       }
     } catch (error) {
-      console.error('Error al obtener conteo de notificaciones:', error);
     } finally {
       setIsLoadingCount(false);
     }
@@ -69,8 +67,6 @@ export const NotificationProvider = ({ children }) => {
       setBannerRefresh(Date.now());
       setPanelRefresh(Date.now());
     } catch (error) {
-      console.error('Error al marcar notificación como leída:', error);
-      // Si hay error, refrescar para obtener el contador actualizado
       fetchUnreadCount();
     }
   };
