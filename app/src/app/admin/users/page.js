@@ -40,7 +40,7 @@ export default function AdminUsersPage() {
 
   const fetchCustomAndDashboard = async () => {
     try {
-      const response = await axios.get('http://localhost:5173/mslauncher/api/v1/GetCustomAndDashboard');
+      const response = await axios.get('/api/custom-and-dashboard');
       const data = response.data?.data || { custom: [], dashboards: [] };
       setCustomOptionsData(data);
     } catch (error) {
@@ -51,7 +51,7 @@ export default function AdminUsersPage() {
   const fetchCompanies = () => {
     setIsLoading(true);
     axios
-      .get('http://localhost:5173/mslauncher/api/v1/users')
+      .get('/api/users')
       .then(res => {
         setCompanies(res.data.data || []);
       })
@@ -92,16 +92,26 @@ export default function AdminUsersPage() {
   }, [companies]);
 
   const handleSelectCompany = (company) => {
-    let filteredUsers = company.users || [];
-    if (profileName === 'ADMINADVAN') {
-      filteredUsers = filteredUsers.filter(u => u.profileName.includes('ADMIN'));
+    let filteredUsers = [];
+
+    if (company?.isAdvan) {
+      const allUsers = companies.flatMap((c) => c.users || []);
+      filteredUsers = allUsers.filter((u) => u.profileName?.toUpperCase().includes('ADVAN'));
+      setSelectedCompany({ companyName: 'Usuarios Advan' });
+    } else {
+      filteredUsers = company.users || [];
+      if (profileName === 'ADMINADVAN') {
+        filteredUsers = filteredUsers.filter((u) => u.profileName?.toUpperCase().includes('ADMIN'));
+      }
+      setSelectedCompany(company);
     }
-    setSelectedCompany(company);
+
     setUsers(filteredUsers);
     setTotalUsers(filteredUsers.length);
     setShowCompanyModal(false);
     setPage(1);
   };
+
 
   const showNotification = (type, message, style = 'toast') => {
     setNotification({ visible: false, type: 'info', message: '', style: 'inline' });
@@ -113,7 +123,11 @@ export default function AdminUsersPage() {
   const handleUserSubmit = async (data) => {
     try {
       if (editingUser) {
-        const response = await axios.put(`http://localhost:5173/mslauncher/api/v1/users/${editingUser.idUser}`, data);
+        // EDITAR USUARIO
+        const response = await axios.put('/api/users', {
+          idUser: editingUser.idUser,
+          ...data
+        });
         if (response.data?.statusCode === "409") {
           showNotification('error', response.data.message || 'El nombre de usuario ya está en uso', 'toast');
           return;
@@ -122,7 +136,8 @@ export default function AdminUsersPage() {
         setModalOpen(false);
         setEditingUser(null);
       } else {
-        const response = await axios.post('http://localhost:5173/mslauncher/api/v1/users/admin', data);
+        // CREAR USUARIO
+        const response = await axios.post('/api/users', data);
         if (response.data?.statusCode === "409") {
           showNotification('error', response.data.message || 'El nombre de usuario ya está en uso', 'toast');
           return;

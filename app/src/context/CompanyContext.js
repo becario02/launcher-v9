@@ -1,4 +1,3 @@
-// context/CompanyContext.js
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
@@ -14,28 +13,22 @@ export function CompanyProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [hasInitialized, setHasInitialized] = useState(false);
 
-  // REF PARA CONTROLAR SINCRONIZACIONES
   const syncingRef = useRef(false);
   const lastSyncedCompanyRef = useRef(null);
 
-  // Hook para sincronización de módulos
   const { syncModules, isLoading: syncingModules, error: syncError } = useSyncModules();
 
-  // FUNCIÓN PARA SINCRONIZAR
   const handleSyncModules = useCallback(async (company) => {
     if (!company || !company.urlErp || !company.idUserCompanyConnection) {
-      console.warn('⚠️ Datos de empresa incompletos para sincronización');
       return;
     }
 
     if (syncingRef.current) {
-      console.log('⏳ Sincronización ya en curso, omitiendo...');
       return;
     }
 
     const companyKey = `${company.idUserCompanyConnection}-${company.name}`;
     if (lastSyncedCompanyRef.current === companyKey) {
-      console.log('⏭️ Empresa ya sincronizada recientemente, omitiendo...');
       return;
     }
 
@@ -43,10 +36,8 @@ export function CompanyProvider({ children }) {
       syncingRef.current = true;
       lastSyncedCompanyRef.current = companyKey;
       
-      console.log('🔄 Iniciando sincronización para:', company.name);
       await syncModules(company);
     } catch (error) {
-      console.error('❌ Error en sincronización:', error);
     } finally {
       syncingRef.current = false;
       setTimeout(() => {
@@ -55,7 +46,6 @@ export function CompanyProvider({ children }) {
     }
   }, [syncModules]);
 
-  // ✅ USEEFFECT SIN SINCRONIZACIÓN AL RELOAD
   useEffect(() => {
     if (hasInitialized) return;
 
@@ -72,42 +62,32 @@ export function CompanyProvider({ children }) {
           const savedCompany = localStorage.getItem('selectedCompany');
 
           if (savedCompany) {
-            // ✅ CASO 1: EMPRESA YA GUARDADA (RELOAD) - NO SINCRONIZAR
             const company = JSON.parse(savedCompany);
             setSelectedCompany(company);
-            console.log('🏢 Empresa cargada desde localStorage (NO se sincroniza automáticamente):', company.name);
             
           } else if (parsedData.data.length === 1) {
-            // ✅ CASO 2: SOLO UNA EMPRESA - AUTO-CONECTAR Y SINCRONIZAR
             const onlyCompany = parsedData.data[0];
             setSelectedCompany(onlyCompany);
             localStorage.setItem('selectedCompany', JSON.stringify(onlyCompany));
-            console.log('🏢 Auto-conectando única empresa con sincronización:', onlyCompany.name);
             
-            // SINCRONIZAR porque es la primera vez que se auto-conecta
             setTimeout(() => {
               handleSyncModules(onlyCompany);
             }, 1000);
             
           } else if (parsedData.data.length > 1) {
-            // ✅ CASO 3: MÚLTIPLES EMPRESAS - MOSTRAR MODAL
             setShowCompanyModal(true);
           }
         }
       } catch (error) {
-        console.error('Error al cargar datos de empresas:', error);
       }
     } else {
-      console.warn('No se encontraron datos de usuario en localStorage');
     }
     
     setLoading(false);
     setHasInitialized(true);
-  }, [handleSyncModules]);
+  }, [handleSyncModules, hasInitialized]);
 
-  // FUNCIÓN PARA SELECCIONAR EMPRESA (sin sincronización)
   const selectCompany = useCallback((company) => {
-    console.log('🏢 Seleccionando empresa (sin sincronización):', company.name);
     
     setSelectedCompany(company);
     setShowCompanyModal(false);
@@ -115,56 +95,45 @@ export function CompanyProvider({ children }) {
     localStorage.setItem('selectedCompany', JSON.stringify(company));
   }, []);
 
-  // ✅ FUNCIÓN PARA CONECTAR DESDE MODAL (CON SINCRONIZACIÓN)
   const connectAndSync = useCallback((company) => {
-    console.log('🔗 Conectando desde modal CON sincronización:', company.name);
     
     setSelectedCompany(company);
     setShowCompanyModal(false);
     setPreselectedCompany(null);
     localStorage.setItem('selectedCompany', JSON.stringify(company));
     
-    // SINCRONIZAR porque el usuario hizo clic en "Conectar"
     setTimeout(() => {
       handleSyncModules(company);
     }, 500);
   }, [handleSyncModules]);
 
-  // Función para abrir el selector de empresas
   const openCompanySelector = useCallback(() => {
     setShowCompanyModal(true);
   }, []);
 
-  // FUNCIÓN PARA SINCRONIZACIÓN MANUAL
   const manualSync = useCallback(() => {
     if (selectedCompany) {
-      console.log('🔄 Sincronización manual solicitada');
       handleSyncModules(selectedCompany);
     } else {
-      console.warn('No hay empresa seleccionada para sincronizar');
     }
   }, [selectedCompany, handleSyncModules]);
 
   return (
     <CompanyContext.Provider
       value={{
-        // Estados de empresas
         companies,
         selectedCompany,
         preselectedCompany,
         setPreselectedCompany,
         
-        // Control del modal
         showCompanyModal,
         setShowCompanyModal,
         
-        // Funciones principales
-        selectCompany,        // Solo seleccionar, sin sincronizar
-        connectAndSync,       // ✅ Conectar CON sincronización (para modal)
+        selectCompany,
+        connectAndSync,    
         openCompanySelector,
-        manualSync,          // Sincronización manual
+        manualSync,     
         
-        // Estados de carga y sincronización
         loading,
         syncingModules,
         syncError,

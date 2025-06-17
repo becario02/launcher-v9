@@ -362,10 +362,9 @@ export default function PromotionFormModal({
         requestBody.expirationDate = dateObj.toISOString();
       }
 
-      // Determinar URL y método según el modo
       const url = isEditMode 
-        ? `http://localhost:5173/mslauncher/api/v1/promotions/${promotion.idPromotion}`
-        : 'http://localhost:5173/mslauncher/api/v1/promotions';
+        ? `/api/promotions?id=${promotion.idPromotion}`
+        : '/api/promotions';
       
       const method = isEditMode ? 'PUT' : 'POST';
       const expectedStatusCode = isEditMode ? "200" : "201";

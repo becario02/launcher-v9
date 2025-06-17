@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { Building2, Check, X } from 'lucide-react';
+import { Building2, Check, X, Shield } from 'lucide-react';
 import { Fragment } from 'react';
 
 export default function SelectCompanyModal({ isOpen, companies, onSelect, onClose, isLoading }) {
@@ -47,8 +47,8 @@ export default function SelectCompanyModal({ isOpen, companies, onSelect, onClos
               </button>
 
               {/* Title */}
-              <Dialog.Title className="text-xl font-semibold text-center text-gray-900 dark:text-white mb-6">
-                Selecciona una empresa
+              <Dialog.Title className="text-xl font-semibold text-center text-gray-900 dark:text-white mb-6 pt-5">
+                Selecciona una empresa para ver a sus usuarios administradores
               </Dialog.Title>
 
               {/* Search */}
@@ -62,9 +62,23 @@ export default function SelectCompanyModal({ isOpen, companies, onSelect, onClos
 
               {/* Content */}
               <div className="space-y-3 max-h-64 overflow-y-auto">
-                {isLoading ? (
-                  <ul className="space-y-2">
-                    {Array.from({ length: 4 }).map((_, idx) => (
+                <ul className="space-y-2">
+                  <li
+                    onClick={() => onSelect({ isAdvan: true })}
+                    className="flex items-center justify-between px-4 py-3 bg-semantic.blue dark:bg-semantic.blue rounded-lg cursor-pointer hover:bg-primary-blue dark:hover:bg-primary-blue transition-all group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Shield className="w-5 h-5 text-primary dark:text-primary" />
+                      <span className="text-primary dark:text-white font-medium">
+                        Ver usuarios Advan
+                      </span>
+                    </div>
+                    <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-300 opacity-0 group-hover:opacity-100 transition" />
+                  </li>
+
+                  {/* Lista de empresas */}
+                  {isLoading ? (
+                    Array.from({ length: 4 }).map((_, idx) => (
                       <li
                         key={idx}
                         className="flex items-center justify-between px-4 py-3 bg-gray-200 dark:bg-[#2C2C38] rounded-lg animate-pulse"
@@ -75,15 +89,13 @@ export default function SelectCompanyModal({ isOpen, companies, onSelect, onClos
                         </div>
                         <div className="w-4 h-4 bg-gray-400 dark:bg-gray-600 rounded" />
                       </li>
-                    ))}
-                  </ul>
-                ) : filteredCompanies.length === 0 ? (
-                  <p className="text-sm text-center text-gray-500 dark:text-gray-400">
-                    No se encontraron empresas.
-                  </p>
-                ) : (
-                  <ul className="space-y-2">
-                    {filteredCompanies.map((company) => (
+                    ))
+                  ) : filteredCompanies.length === 0 ? (
+                    <p className="text-sm text-center text-gray-500 dark:text-gray-400">
+                      No se encontraron empresas.
+                    </p>
+                  ) : (
+                    filteredCompanies.map((company) => (
                       <li
                         key={company.idCompany}
                         onClick={() => onSelect(company)}
@@ -97,9 +109,9 @@ export default function SelectCompanyModal({ isOpen, companies, onSelect, onClos
                         </div>
                         <Check className="w-4 h-4 text-primary opacity-0 group-hover:opacity-100 transition" />
                       </li>
-                    ))}
-                  </ul>
-                )}
+                    ))
+                  )}
+                </ul>
               </div>
             </Dialog.Panel>
           </Transition.Child>

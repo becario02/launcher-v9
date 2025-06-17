@@ -18,7 +18,7 @@ import { v4 as uuidv4 } from 'uuid';
 export default function LoginForm() {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState('login'); // 'login' | 'method' | 'token'
+  const [step, setStep] = useState('login');
   const [error, setError] = useState('');
   const [deviceId, setDeviceId] = useState('');
   const [formData, setFormData] = useState({ username: '', password: '' });
@@ -90,7 +90,7 @@ export default function LoginForm() {
 
     try {
       const res = await axios.post(
-        'http://localhost:5173/mslauncher/api/v1/login',
+        '/api/login',
         {
           username: formData.username,
           password: formData.password,
@@ -153,7 +153,7 @@ export default function LoginForm() {
     setError('');
     try {
       const res = await axios.post(
-        'http://localhost:5173/mslauncher/api/v1/login',
+        '/api/login',
         {
           username: formData.username,
           password: formData.password,

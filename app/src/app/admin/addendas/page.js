@@ -81,7 +81,7 @@ export default function AdminAddendasPage() {
         params.append('Status', statusFilter);
       }
 
-      const response = await fetch(`http://localhost:5173/mslauncher/api/v1/addenda?${params.toString()}`, {
+      const response = await fetch(`/api/addenda?${params.toString()}`, {
         headers: {
           'accept': 'application/json'
         }
@@ -149,7 +149,7 @@ export default function AdminAddendasPage() {
     setUpdatingStatus(prev => ({ ...prev, [addendaId]: true }));
 
     try {
-      const response = await fetch('http://localhost:5173/mslauncher/api/v1/addenda/status', {
+      const response = await fetch('/api/addenda/status', {
         method: 'PUT',
         headers: {
           'accept': 'application/json',

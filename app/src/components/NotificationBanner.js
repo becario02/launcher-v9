@@ -112,15 +112,16 @@ const NotificationBanner = () => {
     setIsLoading(true);
     try {
       const response = await axios.get(
-        `http://localhost:5173/mslauncher/api/v1/notifications/user/${userId}`,
+        '/api/notificaciones',
         {
           params: { 
+            userId,
             page: 1, 
             pageSize: 10, 
             isRead: false 
           },
           headers: {
-            'Accept-Language': 'es'
+            'Accept-Language': 'es-MX'
           }
         }
       );

@@ -28,7 +28,7 @@ export default function AdminIntegradoresPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedIntegrator, setSelectedIntegrator] = useState(null);
-  const [updatingStatus, setUpdatingStatus] = useState({}); // Para manejar loading individual de switches
+  const [updatingStatus, setUpdatingStatus] = useState({});
 
   // Estados para la tabla de integradores
   const [integradores, setIntegradores] = useState([]);
@@ -75,7 +75,7 @@ export default function AdminIntegradoresPage() {
   const fetchIntegradores = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5173/mslauncher/api/v1/integrator?includeInactive=true', {
+      const response = await fetch('/api/integrator/includeInactive', {
         headers: {
           'accept': 'application/json'
         }
@@ -157,7 +157,7 @@ export default function AdminIntegradoresPage() {
     setUpdatingStatus(prev => ({ ...prev, [integradorId]: true }));
 
     try {
-      const response = await fetch(`http://localhost:5173/mslauncher/api/v1/integrator/${integradorId}/status`, {
+      const response = await fetch(`/api/integrator/status?idIntegrator=${integradorId}`, {
         method: 'PUT',
         headers: {
           'accept': '*/*',

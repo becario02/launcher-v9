@@ -23,27 +23,23 @@ export const NotificationProvider = ({ children }) => {
   const [bannerRefresh, setBannerRefresh] = useState(Date.now());
   const [panelRefresh, setPanelRefresh] = useState(Date.now());
 
-  // Obtener el ID de usuario de las cookies
-  const userId = Cookies.get('idUser') || '2'; // Fallback a 2 si no hay cookie
+  const userId = Cookies.get('idUser');
 
   // Función para obtener el conteo de notificaciones no leídas
   const fetchUnreadCount = async () => {
     setIsLoadingCount(true);
     try {
-      const response = await axios.get(
-        `http://localhost:5173/mslauncher/api/v1/notifications/user/${userId}/unread/count`,
-        {
+      const response = await axios.get('/api/notifications/unread-count', {
+          params: { userId },
           headers: {
-            'Accept-Language': 'es'
+            'Accept-Language': 'es-MX'
           }
-        }
-      );
+      });
       
       if (response.data && response.data.data) {
         setUnreadCount(response.data.data.count);
       }
     } catch (error) {
-      console.error('Error al obtener conteo de notificaciones:', error);
     } finally {
       setIsLoadingCount(false);
     }
@@ -52,15 +48,15 @@ export const NotificationProvider = ({ children }) => {
   // Función para marcar una notificación como leída
   const markNotificationAsRead = async (notificationId) => {
     try {
-      await axios.post(
-        `http://localhost:5173/mslauncher/api/v1/notification/${notificationId}/read/${userId}`,
-        {},
-        {
-          headers: {
-            'Accept-Language': 'es'
-          }
+      await axios.post('/api/notifications/read', {}, {
+        params: {
+          notificationId,
+          userId
+        },
+        headers: {
+          'Accept-Language': 'es-MX'
         }
-      );
+      });
       
       // Actualizar el contador inmediatamente (optimista)
       if (unreadCount > 0) {
@@ -71,8 +67,6 @@ export const NotificationProvider = ({ children }) => {
       setBannerRefresh(Date.now());
       setPanelRefresh(Date.now());
     } catch (error) {
-      console.error('Error al marcar notificación como leída:', error);
-      // Si hay error, refrescar para obtener el contador actualizado
       fetchUnreadCount();
     }
   };

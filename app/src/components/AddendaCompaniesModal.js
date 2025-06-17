@@ -36,7 +36,7 @@ export default function AddendaCompaniesModal({
   const fetchAllCompanies = async () => {
     setIsLoadingCompanies(true);
     try {
-      const response = await axios.get('http://localhost:5173/mslauncher/api/v1/companies', {
+      const response = await axios.get('/api/companies', {
         headers: {
           'accept': '*/*'
         }
@@ -60,7 +60,8 @@ export default function AddendaCompaniesModal({
     if (!addenda?.idAddenda) return;
     
     try {
-      const response = await axios.get(`http://localhost:5173/mslauncher/api/v1/addenda/${addenda.idAddenda}/companies`, {
+      const response = await axios.get('/api/addenda-companies', {
+        params: { idAddenda: addenda.idAddenda },
         headers: {
           'accept': 'application/json'
         }
@@ -94,7 +95,7 @@ export default function AddendaCompaniesModal({
   const searchCompanies = async (query) => {
     setIsLoadingCompanies(true);
     try {
-      const response = await axios.get('http://localhost:5173/mslauncher/api/v1/companies', {
+      const response = await axios.get('/api/companies', {
         params: { search: query },
         headers: {
           'accept': '*/*'
@@ -194,7 +195,7 @@ export default function AddendaCompaniesModal({
     setIsSubmitting(true);
     
     try {
-      const response = await axios.post('http://localhost:5173/mslauncher/api/v1/addenda/assign-companies', {
+      const response = await axios.post('/api/addenda-assign-companies', {
         idAddenda: addenda.idAddenda,
         companyIds: formData.companyIds
       }, {

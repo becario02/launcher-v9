@@ -54,7 +54,7 @@ export default function CreateIntegratorModal({
     setSubmitSuccess(false);
 
     try {
-      const response = await fetch('http://localhost:5173/mslauncher/api/v1/integrator', {
+      const response = await fetch('/api/integrator', {
         method: 'POST',
         headers: {
           'accept': '*/*',

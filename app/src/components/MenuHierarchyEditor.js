@@ -104,7 +104,7 @@ export default function MenuHierarchyEditor() {
   const loadMenuData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('http://localhost:5173/mslauncher/api/v1/MenuCustomOption', {
+      const res = await fetch('/api/menu-custom-option', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idCompany: selectedCompany.idCompany })
@@ -163,7 +163,7 @@ export default function MenuHierarchyEditor() {
     const toSave = flat.filter(i => i.moduleGroup === 'PERSONALIZADOS' && changedItems.has(i.keyValue));
     for (const i of toSave) {
       const p = flat.find(x => x.keyValue === i.pKey);
-      await fetch('http://localhost:5173/mslauncher/api/v1/UpdateMenuCustomOption', {
+      await fetch('/api/menu-custom-option/update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -177,7 +177,7 @@ export default function MenuHierarchyEditor() {
   };
 
   const handleAdd = async () => {
-    await fetch('http://localhost:5173/mslauncher/api/v1/AddMenuOption', {
+    await fetch('/api/menu-custom-option/add', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

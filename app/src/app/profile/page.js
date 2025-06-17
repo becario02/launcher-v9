@@ -30,7 +30,7 @@ export default function ProfilePage() {
           throw new Error('No se encontró el ID de usuario');
         }
         
-        const response = await fetch(`http://localhost:5173/mslauncher/api/v1/profile?userId=${userId}`);
+        const response = await fetch(`/api/profile?userId=${userId}`); 
         
         if (!response.ok) {
           throw new Error('Error al obtener los datos del perfil');

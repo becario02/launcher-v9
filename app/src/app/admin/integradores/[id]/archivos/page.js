@@ -92,7 +92,7 @@ export default function IntegratorFilesPage() {
   // Función para cargar información del integrador
   const fetchIntegrator = async () => {
     try {
-      const response = await fetch(`http://localhost:5173/mslauncher/api/v1/integrator/${integratorId}`, {
+      const response = await fetch(`/api/integrator/detail?idIntegrator=${integratorId}`, {
         headers: {
           'accept': 'application/json'
         }
@@ -112,7 +112,7 @@ export default function IntegratorFilesPage() {
   // Función para cargar compañías del integrador
   const fetchCompanies = async () => {
     try {
-      const response = await fetch(`http://localhost:5173/mslauncher/api/v1/integrator/${integratorId}/companies`, {
+      const response = await fetch(`/api/integrator/companies?idIntegrator=${integratorId}`, {
         headers: {
           'accept': '*/*'
         }
@@ -151,7 +151,7 @@ export default function IntegratorFilesPage() {
         }
       });
 
-      const response = await fetch('http://localhost:5173/mslauncher/api/v1/integrator/files', {
+      const response = await fetch('/api/integrator/files', {
         method: 'POST',
         headers: {
           'accept': '*/*',

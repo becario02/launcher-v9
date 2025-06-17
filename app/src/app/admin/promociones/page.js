@@ -71,7 +71,7 @@ export default function AdminPromotionsPage() {
         params.append('Status', statusFilter);
       }
 
-      const response = await fetch(`http://localhost:5173/mslauncher/api/v1/promotions?${params}`, {
+      const response = await fetch(`/api/promotions?${params}`, {
         headers: {
           'accept': 'application/json'
         }
@@ -141,12 +141,12 @@ export default function AdminPromotionsPage() {
 
       if (newStatus === 'ACTIVE') {
         // Activar promoción
-        endpoint = `http://localhost:5173/mslauncher/api/v1/promotions/${promotionId}/activate`;
+        endpoint = `/api/promotions/activate?id=${promotionId}`;
         method = 'PUT';
         successMessage = 'Promoción activada correctamente. Las demás promociones se han desactivado automáticamente.';
       } else {
         // Desactivar promoción
-        endpoint = `http://localhost:5173/mslauncher/api/v1/promotions/${promotionId}/deactivate`;
+        endpoint = `/api/promotions/deactivate?id=${promotionId}`;
         method = 'PUT';
         successMessage = 'Promoción desactivada correctamente.';
       }

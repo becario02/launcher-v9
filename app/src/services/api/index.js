@@ -4,7 +4,7 @@
  * Este archivo centraliza la configuración y funciones comunes
  * para consumir APIs externas
  */
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5173/mslauncher/api/v1';
+export const API_BASE_URL = process.env.API_BASE_URL;
 
 const DEFAULT_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
 
@@ -23,6 +23,7 @@ export async function fetchApi(endpoint, options = {}) {
   try {
     const response = await fetch(url, {
       headers: {
+        'x-api-key': process.env.API_KEY,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         ...(typeof window !== 'undefined' && localStorage.getItem('token') 

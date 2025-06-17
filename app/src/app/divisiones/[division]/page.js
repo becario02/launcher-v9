@@ -67,7 +67,7 @@ export default function DivisionPage() {
     const fetchModules = async () => {
       try {
         const res = await fetch(
-          "http://localhost:5173/mslauncher/api/v1/GetModulosCompany",
+          '/api/modules-company',
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

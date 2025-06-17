@@ -77,7 +77,7 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
   const fetchIntegradores = async () => {
     setLoadingIntegradores(true);
     try {
-      const response = await fetch('http://localhost:5173/mslauncher/api/v1/integrator', {
+      const response = await fetch('/api/integrator', {
         method: 'GET',
         headers: {
           'accept': 'application/json'
@@ -427,7 +427,7 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
   const fetchCompanias = async (integradorId) => {
     setLoadingCompanias(true);
     try {
-      const response = await fetch(`http://localhost:5173/mslauncher/api/v1/integrator/${integradorId}/companies`, {
+      const response = await fetch(`/api/integrator/companies?idIntegrator=${integradorId}`, {
         method: 'GET',
         headers: {
           'accept': '*/*'
@@ -569,13 +569,13 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
       uploadData.append('IdCliente', formData.cliente);
 
       // Enviar al endpoint
-      const response = await fetch('http://localhost:5173/mslauncher/api/v1/integrator/upload', {
+      const response = await fetch('/api/integrator/upload', {
         method: 'POST',
         headers: {
           'accept': '*/*',
-          'Authorization': `Bearer ${accessToken}` // Usar el token que tenemos
+          'Authorization': `Bearer ${accessToken}`
         },
-        body: uploadData
+        body: uploadData // FormData con el archivo
       });
 
       const result = await response.json();

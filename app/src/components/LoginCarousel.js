@@ -7,10 +7,10 @@ import Image from 'next/image';
 const LoginCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const images = [
-    '/LogoCarousel.png',
-    '/LogoCarousel.png',
-    '/LogoCarousel.png',
-    '/LogoCarousel.png',
+    '/loginCarousel/IMAGEN-1.jpg',
+    '/loginCarousel/IMAGEN-2.jpg',
+    '/loginCarousel/IMAGEN-3.jpg',
+    '/loginCarousel/IMAGEN-4.jpg',
   ];
 
   useEffect(() => {

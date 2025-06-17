@@ -125,11 +125,11 @@ const HelpCenterModal = ({ isOpen, onClose }) => {
     setIsLoadingVideos(true);
     setError(null);
     try {
-      const response = await axios.get('http://localhost:5173/mslauncher/api/v1/videos', {
+      const response = await axios.get('/api/videos', {
         params: {
           status: 'ACTIVE',
           page: 1,
-          pageSize: 100 // Obtener una gran cantidad de videos activos
+          pageSize: 100
         }
       });
       

@@ -60,7 +60,7 @@ export default function EditIntegratorModal({
     setSubmitSuccess(false);
 
     try {
-      const response = await fetch(`http://localhost:5173/mslauncher/api/v1/integrator/${integrator.idIntegrator}`, {
+      const response = await fetch(`/api/integrator?idIntegrator=${integrator.idIntegrator}`, {
         method: 'PUT',
         headers: {
           'accept': '*/*',

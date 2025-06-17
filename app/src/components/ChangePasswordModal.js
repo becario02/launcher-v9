@@ -231,7 +231,7 @@ export default function ChangePasswordModal({ onClose, onSuccess }) {
         throw new Error('No se encontró el ID de usuario');
       }
       
-      const response = await fetch('http://localhost:5173/mslauncher/api/v1/profile/change-password', {
+      const response = await fetch('/api/profile/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -271,9 +271,7 @@ export default function ChangePasswordModal({ onClose, onSuccess }) {
          style={{ opacity: isVisible ? 1 : 0 }}>
       <div 
         ref={modalRef}
-        className={`bg-white dark:bg-[#1C1C24] rounded-xl shadow-lg w-full max-w-md relative overflow-hidden transition-all duration-300 transform ${
-          isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-        }`}
+        className={`bg-white dark:bg-[#1C1C24] rounded-xl shadow-lg w-full max-w-md relative overflow-hidden transition-all duration-300 transform ${isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
       >
         {/* Header */}
         <div className="flex justify-between items-center p-6 pb-2 border-gray-200 dark:border-[#2C2C38]">

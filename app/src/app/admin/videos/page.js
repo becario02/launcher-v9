@@ -53,7 +53,7 @@ export default function AdminVideosPage() {
   const fetchVideos = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://localhost:5173/mslauncher/api/v1/videos', {
+      const response = await axios.get('/api/videos', {
         params: {
           page,
           pageSize,
@@ -64,8 +64,8 @@ export default function AdminVideosPage() {
 
       // Acceder correctamente a los datos en la respuesta
       const responseData = response.data;
-      setVideos(responseData.data || []); // 'data' en minúsculas
-      setTotalVideos(responseData.total || 0); // 'total' en minúsculas
+      setVideos(responseData.data || []);
+      setTotalVideos(responseData.total || 0);
     } catch (error) {
       console.error('Error al cargar videos:', error);
       setToast({
@@ -110,7 +110,7 @@ export default function AdminVideosPage() {
   const handleSaveVideo = async (data) => {
     try {
       if (modalType === 'edit' && currentVideo) {
-        await axios.put('http://localhost:5173/mslauncher/api/v1/video', {
+        await axios.put('/api/videos', {
           idVideo: currentVideo.idVideo,
           ...data
         });
@@ -120,7 +120,7 @@ export default function AdminVideosPage() {
           type: 'success'
         });
       } else {
-        await axios.post('http://localhost:5173/mslauncher/api/v1/video', data);
+        await axios.post('/api/videos', data);
         setToast({
           visible: true,
           message: 'Video creado exitosamente',
@@ -142,7 +142,9 @@ export default function AdminVideosPage() {
   // Eliminar video
   const handleDeleteVideo = async (idVideo) => {
     try {
-      await axios.delete(`http://localhost:5173/mslauncher/api/v1/video/${idVideo}`);
+      await axios.delete('/api/videos', {
+        params: { idVideo }
+      });
       setToast({
         visible: true,
         message: 'Video eliminado exitosamente',
