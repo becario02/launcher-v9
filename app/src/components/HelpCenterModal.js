@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { X, Bookmark, PlayCircle, FileText, HelpCircle, ExternalLink } from 'lucide-react';
 
 // Estilos personalizados para scrollbar
@@ -28,26 +29,6 @@ const scrollbarStyles = `
     scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
   }
 `;
-
-// Datos manuales de documentos guardados (mantenemos estos como mock por ahora)
-const mockSavedDocuments = [
-  {
-    id: 1,
-    title: "Guía de Inicio Rápido",
-    description: "Aprende los conceptos básicos para comenzar a usar la plataforma",
-    category: "Primeros Pasos",
-    pdfUrl: "https://ia801408.us.archive.org/8/items/in.ernet.dli.2015.140992/2015.140992.Mathematical-Programming_text.pdf",
-    savedDate: "2024-01-12"
-  },
-  {
-    id: 3,
-    title: "API de Integración",
-    description: "Documentación técnica para desarrolladores",
-    category: "Desarrollo",
-    pdfUrl: "https://ia801408.us.archive.org/8/items/in.ernet.dli.2015.140992/2015.140992.Mathematical-Programming_text.pdf",
-    savedDate: "2024-01-18"
-  }
-];
 
 // Componente para mostrar un video de YouTube
 const YouTubeVideoCard = ({ videoUrl, title, videoId, favoriteVideos, onToggleFavorite, isTogglingFavorite }) => {
@@ -463,17 +444,15 @@ const HelpCenterModal = ({ isOpen, onClose }) => {
     setIsLoadingVideos(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:5173/mslauncher/api/v1/videos?' + new URLSearchParams({
-        status: 'ACTIVE',
-        page: '1',
-        pageSize: '100'
-      }));
+      const response = await axios.get('/api/videos', {
+        params: {
+          status: 'ACTIVE',
+          page: 1,
+          pageSize: 100
+        }
+      });
       
-      if (!response.ok) {
-        throw new Error('Error en la respuesta del servidor');
-      }
-      
-      const responseData = await response.json();
+      const responseData = response.data;
       setVideos(responseData.data || []);
     } catch (err) {
       console.error('Error al cargar videos:', err);
@@ -488,13 +467,9 @@ const HelpCenterModal = ({ isOpen, onClose }) => {
     setIsLoadingDocuments(true);
     setDocumentsError(null);
     try {
-      const response = await fetch('http://localhost:5173/mslauncher/api/v1/documents');
+      const response = await axios.get('/api/documents');
       
-      if (!response.ok) {
-        throw new Error('Error en la respuesta del servidor');
-      }
-      
-      const responseData = await response.json();
+      const responseData = response.data;
       setDocuments(responseData.data || []);
     } catch (err) {
       console.error('Error al cargar documentos:', err);
@@ -508,13 +483,13 @@ const HelpCenterModal = ({ isOpen, onClose }) => {
   const fetchFavoriteVideos = async () => {
     setIsLoadingFavorites(true);
     try {
-      const response = await fetch(`http://localhost:5173/mslauncher/api/v1/videos/favorites?idUser=${userId}`);
+      const response = await axios.get('/api/videos/favorites', {
+        params: {
+          idUser: userId
+        }
+      });
       
-      if (!response.ok) {
-        throw new Error('Error al obtener videos favoritos');
-      }
-      
-      const responseData = await response.json();
+      const responseData = response.data;
       setFavoriteVideos(responseData.data || []);
     } catch (err) {
       console.error('Error al cargar videos favoritos:', err);
@@ -528,13 +503,13 @@ const HelpCenterModal = ({ isOpen, onClose }) => {
   const fetchFavoriteDocuments = async () => {
     setIsLoadingFavoriteDocuments(true);
     try {
-      const response = await fetch(`http://localhost:5173/mslauncher/api/v1/documents/favorites?idUser=${userId}`);
+      const response = await axios.get('/api/documents/favorites', {
+        params: {
+          idUser: userId
+        }
+      });
       
-      if (!response.ok) {
-        throw new Error('Error al obtener documentos favoritos');
-      }
-      
-      const responseData = await response.json();
+      const responseData = response.data;
       setFavoriteDocuments(responseData.data || []);
     } catch (err) {
       console.error('Error al cargar documentos favoritos:', err);
@@ -547,20 +522,10 @@ const HelpCenterModal = ({ isOpen, onClose }) => {
   // Función para agregar documento a favoritos
   const addDocumentToFavorites = async (documentId) => {
     try {
-      const response = await fetch('http://localhost:5173/mslauncher/api/v1/documents/favorite', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          idUser: userId,
-          idDocument: documentId
-        })
+      const response = await axios.post('/api/documents/favorites', {
+        idUser: userId,
+        idDocument: documentId
       });
-
-      if (!response.ok) {
-        throw new Error('Error al agregar documento a favoritos');
-      }
 
       // Actualizar la lista de favoritos
       await fetchFavoriteDocuments();
@@ -574,20 +539,12 @@ const HelpCenterModal = ({ isOpen, onClose }) => {
   // Función para quitar documento de favoritos
   const removeDocumentFromFavorites = async (documentId) => {
     try {
-      const response = await fetch('http://localhost:5173/mslauncher/api/v1/documents/favorite', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await axios.delete('/api/documents/favorites', {
+        data: {
           idUser: userId,
           idDocument: documentId
-        })
+        }
       });
-
-      if (!response.ok) {
-        throw new Error('Error al quitar documento de favoritos');
-      }
 
       // Actualizar la lista de favoritos
       await fetchFavoriteDocuments();
@@ -631,20 +588,10 @@ const HelpCenterModal = ({ isOpen, onClose }) => {
   // Función para agregar video a favoritos
   const addToFavorites = async (videoId) => {
     try {
-      const response = await fetch('http://localhost:5173/mslauncher/api/v1/videos/favorites', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          idUser: userId,
-          idVideo: videoId
-        })
+      const response = await axios.post('/api/videos/favorites', {
+        idUser: userId,
+        idVideo: videoId
       });
-
-      if (!response.ok) {
-        throw new Error('Error al agregar a favoritos');
-      }
 
       // Actualizar la lista de favoritos
       await fetchFavoriteVideos();
@@ -658,13 +605,12 @@ const HelpCenterModal = ({ isOpen, onClose }) => {
   // Función para quitar video de favoritos
   const removeFromFavorites = async (videoId) => {
     try {
-      const response = await fetch(`http://localhost:5173/mslauncher/api/v1/videos/favorites?idUser=${userId}&idVideo=${videoId}`, {
-        method: 'DELETE'
+      const response = await axios.delete('/api/videos/favorites', {
+        params: {
+          idUser: userId,
+          idVideo: videoId
+        }
       });
-
-      if (!response.ok) {
-        throw new Error('Error al quitar de favoritos');
-      }
 
       // Actualizar la lista de favoritos
       await fetchFavoriteVideos();
