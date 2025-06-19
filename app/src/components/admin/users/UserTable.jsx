@@ -27,6 +27,10 @@ export default function UserTable({
     setConnectionsForUser([]);
   };
 
+  // ✅ Aplica paginación local a los usuarios mostrados en la tabla
+  const paginatedUsers = users.slice((page - 1) * pageSize, page * pageSize);
+
+
   const TableRowSkeleton = () => (
     <tr className="animate-pulse">
       <td className="px-6 py-4">
@@ -93,7 +97,7 @@ export default function UserTable({
                 </td>
               </tr>
             ) : (
-              users.map((user) => (
+              paginatedUsers.map((user) => (
                 <tr key={user.idUser} className="hover:bg-gray-50 dark:hover:bg-[#262636] transition">
                   <td className="px-6 py-4">{user.fullname}</td>
                   <td className="px-6 py-4">{user.email}</td>
