@@ -1,6 +1,6 @@
-import { fetchApi } from "./index";
-
-const mainLanguage = navigator.language.split('-')[0];
+const mainLanguage = typeof navigator !== 'undefined' 
+  ? navigator.language.split('-')[0] 
+  : 'en';
 const languageToUse = mainLanguage === "es" ? "es-MX" : mainLanguage;
 
 export const audienciaService = {
@@ -10,14 +10,20 @@ export const audienciaService = {
      */
     async obtenerAudiencia() {
         try {
-            const response = await fetchApi('allClients/allUsers', {
+            const response = await fetch('/api/news/audiencia?action=obtenerAudiencia', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept-Language': languageToUse
                 }
-            })
-            return response;
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
         }
         catch (error) {
             throw error;
@@ -30,14 +36,20 @@ export const audienciaService = {
      */
     async obtenerAplicaciones() {
         try {
-            const response = await fetchApi('apps', {
+            const response = await fetch('/api/news/audiencia?action=obtenerAplicaciones', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept-Language': languageToUse
                 }
-            })
-            return response;
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
         }
         catch (error) {
             throw error;
@@ -50,15 +62,24 @@ export const audienciaService = {
      */
     async insertarAudienciaLauncher(data) {
         try {
-            const response = await fetchApi('news/audienceLauncher', {
+            const response = await fetch('/api/news/audiencia', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept-Language': languageToUse
                 },
-                body: JSON.stringify(data)
-            })
-            return response;
+                body: JSON.stringify({
+                    action: 'insertarAudienciaLauncher',
+                    ...data
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
         }
         catch (error) {
             throw error;
@@ -71,15 +92,24 @@ export const audienciaService = {
      */
     async insertarAudiencia(data) {
         try {
-            const response = await fetchApi('news/audienceApps', {
+            const response = await fetch('/api/news/audiencia', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept-Language': languageToUse
                 },
-                body: JSON.stringify(data)
-            })
-            return response;
+                body: JSON.stringify({
+                    action: 'insertarAudiencia',
+                    ...data
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
         }
         catch (error) {
             throw error;
@@ -93,15 +123,24 @@ export const audienciaService = {
      */
     async obtenerAudienciaLauncher(data) {
         try {
-            const response = await fetchApi(`news/getAudienceLauncher`, {
+            const response = await fetch('/api/news/audiencia', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept-Language': languageToUse
                 },
-                body: JSON.stringify(data)
-            })
-            return response;
+                body: JSON.stringify({
+                    action: 'obtenerAudienciaLauncher',
+                    ...data
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
         }
         catch (error) {
             throw error;
@@ -115,15 +154,24 @@ export const audienciaService = {
      */
     async obtenerAudienciaApps(data) {
         try {
-            const response = await fetchApi(`news/getAudienceApps`, {
+            const response = await fetch('/api/news/audiencia', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept-Language': languageToUse
                 },
-                body: JSON.stringify(data)
-            })
-            return response;
+                body: JSON.stringify({
+                    action: 'obtenerAudienciaApps',
+                    ...data
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
         }
         catch (error) {
             throw error;

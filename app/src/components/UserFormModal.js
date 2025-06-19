@@ -9,12 +9,14 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }
   const { primaryColor } = usePrimaryColor();
   const modalRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     fullname: '',
     email: '',
     username: '',
-    password: ''
+    password: '',
+    role: 'NORMAL'
   });
   
   const [showPassword, setShowPassword] = useState(false);
@@ -33,7 +35,13 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }
           fullname: initialData.fullname || '',
           email: initialData.email || '',
           username: initialData.username || '',
-          password: ''
+          password: '',
+          role:
+            initialData.role === 'ADMINADVAN'
+              ? 'ADMIN'
+              : initialData.role === 'USERADVAN'
+              ? 'NORMAL'
+              : 'NORMAL'
         });
       } else {
         setFormData({
@@ -304,7 +312,7 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }
           return false;
         }
       }
-    } else if (formData.password) { // Si es edición y hay contraseña, validarla
+    } else if (formData.password) { 
       const passwordErrors = validatePassword(formData.password);
       if (passwordErrors.length > 0) {
         setErrors({ password: passwordErrors[0] });
@@ -315,16 +323,25 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }
       }
     }
     
-    // Si llegamos aquí, no hay errores
     return true;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validar todos los campos antes de enviar
+
     if (validateForm()) {
-      onSubmit(formData);
+      setIsSubmitting(true);
+      const mappedRole = formData.role === 'ADMIN' ? 'ADMINADVAN' : 'USERADVAN';
+      const finalForm = {
+        ...formData,
+        type: mappedRole
+      };
+
+      try {
+        await onSubmit(finalForm);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -441,6 +458,19 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }
             )}
           </div>
 
+          <div>
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">Tipo de usuario</label>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="w-full rounded-md bg-white dark:bg-[#1C1C24] border border-gray-300 dark:border-[#2C2C38] px-3 py-2 text-gray-800 dark:text-white"
+            >
+              <option value="NORMAL">Normal</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          </div>
+
           <div className="flex justify-end pt-2">
             <button
               type="button"
@@ -451,13 +481,17 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }
             </button>
             <button
               type="submit"
+              disabled={isSubmitting}
               className={clsx(
                 'px-5 py-2 rounded-md text-white font-medium text-sm shadow',
                 'hover:opacity-90 transition',
+                isSubmitting && 'opacity-50 cursor-not-allowed'
               )}
               style={{ backgroundColor: primaryColor }}
             >
-              {initialData ? 'Guardar cambios' : 'Crear usuario'}
+              {isSubmitting
+                ? (initialData ? 'Guardando...' : 'Creando...')
+                : (initialData ? 'Guardar cambios' : 'Crear usuario')}
             </button>
           </div>
         </form>

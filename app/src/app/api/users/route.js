@@ -25,11 +25,12 @@ export async function POST(req) {
 
 export async function PUT(req) {
   const body = await req.json();
+  const { idUser, ...rest } = body;
 
   const data = await callApiGateway({
-    endpoint: "/mslauncher/api/v1/users",
+    endpoint: `/mslauncher/api/v1/users/${idUser}`,
     method: "PUT",
-    body,
+    body: rest,
     headers: { "Content-Type": "application/json" },
   });
 

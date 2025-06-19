@@ -1,7 +1,8 @@
-import { fetchApi } from "./index";
-
-const mainLanguage = navigator.language.split('-')[0];
+const mainLanguage = typeof navigator !== 'undefined' 
+  ? navigator.language.split('-')[0] 
+  : 'en';
 const languageToUse = mainLanguage === "es" ? "es-MX" : mainLanguage;
+
 export const newsService = {
     /**
      * Fetch get news
@@ -9,14 +10,20 @@ export const newsService = {
      */
     async obtenerNoticias() {
         try {
-            const response = await fetchApi('/mslauncher/api/v1/getAdminNews', {
+            const response = await fetch('/api/news/admin', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept-Language': languageToUse
                 }
-            })
-            return response;
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
         }
         catch (error) {
             throw error;
@@ -30,7 +37,7 @@ export const newsService = {
      */
     async agregarNoticia(data) {
         try {
-            const response = await fetchApi('/mslauncher/api/v1/news', {
+            const response = await fetch('/api/news/admin', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -38,7 +45,13 @@ export const newsService = {
                 },
                 body: JSON.stringify(data)
             });
-            return response;
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
         } catch (error) {
             throw error;
         }
@@ -49,37 +62,55 @@ export const newsService = {
      * @param {Object} data - Data to send
      * @returns {Promise} - Promise with the response
      */
-    async actualizarNoticia( data    ) {
+    async actualizarNoticia(data) {
         try {
-            const response = await fetchApi('/mslauncher/api/v1/updateNews', {
+            const response = await fetch('/api/news/admin', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept-Language': languageToUse
                 },
-                body: JSON.stringify(   data   )
+                body: JSON.stringify({
+                    action: 'update',
+                    ...data
+                })
             });
-            return response;
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
         } catch (error) {
             throw error;
         }
     },
 
     /**
-     * Fetch desactiar news
+     * Fetch desactivar news
      * @param {Object} data - Data to send
      */
-    async desactivarNoticia( data ) {
+    async desactivarNoticia(data) {
         try {
-            const response = await fetchApi('/mslauncher/api/v1/news/deactivate', {
+            const response = await fetch('/api/news/admin', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept-Language': languageToUse
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify({
+                    action: 'deactivate',
+                    ...data
+                })
             });
-            return response;
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
         } catch (error) {
             throw error;
         }
@@ -89,17 +120,26 @@ export const newsService = {
      * Fetch activar news
      * @param {Object} data - Data to send
      */
-    async activarNoticia( data ) {
+    async activarNoticia(data) {
         try {
-            const response = await fetchApi('/mslauncher/api/v1/news/activate', {
+            const response = await fetch('/api/news/admin', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept-Language': languageToUse
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify({
+                    action: 'activate',
+                    ...data
+                })
             });
-            return response;
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
         } catch (error) {
             throw error;
         }

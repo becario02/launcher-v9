@@ -50,14 +50,16 @@ export default function UserHeader({
           <Shield className="w-4 h-4" />
           Configurar permisos
         </button>
-        <button
-          onClick={onAddUser}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 text-p font-medium text-white px-4 py-2 rounded-md"
-          style={{ backgroundColor: primaryColor }}
-        >
-          <PlusCircle className="w-4 h-4" />
-          Nuevo usuario
-        </button>
+        {profileName === 'ADMINADVAN' && (
+          <button
+            onClick={onAddUser}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 text-p font-medium text-white px-4 py-2 rounded-md"
+            style={{ backgroundColor: primaryColor }}
+          >
+            <PlusCircle className="w-4 h-4" />
+            Nuevo usuario
+          </button>
+        )}
       </div>
       <PermissionsModal
         isOpen={showPermissionsModal}
