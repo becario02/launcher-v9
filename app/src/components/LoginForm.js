@@ -107,9 +107,9 @@ export default function LoginForm() {
       );
       
       // Handle different scenarios based on response
-      if (res.data.statusCode === '401' && 
-          (res.data.message.includes('Has excedido el número de intentos') || 
-           res.data.message.includes('You have exceeded the allowed number'))) {
+      if (res.data.statusCode === '401' && (
+            res.data.message.includes('Has excedido el número de intentos') || 
+            res.data.message.includes('You have exceeded the allowed number'))) {
         // Handle exceeded login attempts - move to verification method
         // Save the message to display to the user
         const securityMessage = res.data.message;
