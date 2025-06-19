@@ -50,7 +50,7 @@ export default function FileContentModal({
 
     try {
       const response = await fetch(
-        `/api/integrator/file-content?idFile=${file.idFile}`,
+        `/api/file-content?idFile=${file.idFile}`,
         {
           headers: {
             'accept': '*/*'
