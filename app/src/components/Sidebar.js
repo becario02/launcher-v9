@@ -155,6 +155,72 @@ export default function Sidebar({ onClose }) {
   const { user, isAdmin, isAdvan } = useAuth();
   const [customParents, setCustomParents] = useState([]);
   const [activeItem, setActiveItem] = useState(() => getActiveItemFromPath(pathname));
+  const [launcherVersion, setLauncherVersion] = useState(() => {
+    // Intentar obtener la versión del localStorage al inicializar
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('launcherVersion');
+      const cacheTime = localStorage.getItem('launcherVersionTime');
+      
+      // Verificar si el cache es válido (menos de 5 minutos)
+      if (cached && cacheTime) {
+        const fiveMinutes = 5 * 60 * 1000;
+        const now = Date.now();
+        if (now - parseInt(cacheTime) < fiveMinutes) {
+          return cached;
+        }
+      }
+    }
+    return '---';
+  });
+
+  // Función para obtener la versión del launcher
+  const fetchLauncherVersion = useCallback(async () => {
+    // Verificar si el cache es válido antes de hacer la petición
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('launcherVersion');
+      const cacheTime = localStorage.getItem('launcherVersionTime');
+      
+      if (cached && cacheTime) {
+        const fiveMinutes = 5 * 60 * 1000;
+        const now = Date.now();
+        if (now - parseInt(cacheTime) < fiveMinutes) {
+          return; // Cache aún válido
+        }
+      }
+    }
+
+    try {
+      const response = await fetch('http://localhost:5173/mslauncher/api/v1/configurations');
+      const data = await response.json();
+      
+      if (data.statusCode === "200" && data.data) {
+        const versionConfig = data.data.find(config => config.configName === "VERSION_LAUNCHER");
+        if (versionConfig) {
+          setLauncherVersion(versionConfig.configValue);
+          localStorage.setItem('launcherVersion', versionConfig.configValue);
+          localStorage.setItem('launcherVersionTime', Date.now().toString());
+        } else {
+          setLauncherVersion('No disponible');
+          localStorage.setItem('launcherVersion', 'No disponible');
+          localStorage.setItem('launcherVersionTime', Date.now().toString());
+        }
+      } else {
+        setLauncherVersion('Error');
+        localStorage.setItem('launcherVersion', 'Error');
+        localStorage.setItem('launcherVersionTime', Date.now().toString());
+      }
+    } catch (error) {
+      console.error('Error fetching launcher version:', error);
+      setLauncherVersion('No disponible');
+      localStorage.setItem('launcherVersion', 'No disponible');
+      localStorage.setItem('launcherVersionTime', Date.now().toString());
+    }
+  }, []);
+
+  // Cargar la versión del launcher al montar el componente
+  useEffect(() => {
+    fetchLauncherVersion();
+  }, [fetchLauncherVersion]);
 
   // Optimizar el efecto que actualiza activeItem
   useEffect(() => {
@@ -351,6 +417,7 @@ export default function Sidebar({ onClose }) {
         <div className="bg-white dark:bg-[#1c1c24] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 space-y-3">
           <InfoItem label="Versión de licencia" value="12345" />
           <InfoItem label="Versión de BD" value="12345" />
+          <InfoItem label="Versión Launcher" value={launcherVersion} />
           <InfoItem label="IP" value={formatServer(selectedCompany?.serverErpDb) || 'Desconocido'} />
           {user && user.profileName && (
             <InfoItem label="Perfil" value={user.profileName} />

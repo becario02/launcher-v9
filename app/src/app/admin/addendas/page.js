@@ -305,6 +305,9 @@ export default function AdminAddendasPage() {
   const TableRowSkeleton = () => (
     <tr className="animate-pulse">
       <td className="px-6 py-4">
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12"></div>
+      </td>
+      <td className="px-6 py-4">
         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
       </td>
       <td className="px-6 py-4">
@@ -414,7 +417,7 @@ export default function AdminAddendasPage() {
               <table className="w-full text-sm text-left">
                 <thead className="bg-[#F9FAFB] dark:bg-[#2C2C38] text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">
                   <tr>
-                    {['Nombre', 'Estado', 'Estructuras', 'Acciones'].map((label, i) => (
+                    {['ID', 'Nombre', 'Estado', 'Estructuras', 'Acciones'].map((label, i) => (
                       <th key={i} className="px-6 py-4 whitespace-nowrap">{label}</th>
                     ))}
                   </tr>
@@ -428,7 +431,7 @@ export default function AdminAddendasPage() {
                     </>
                   ) : currentAddendas.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-6 py-4">
+                      <td colSpan={5} className="px-6 py-4">
                         <EmptyState />
                       </td>
                     </tr>
@@ -438,6 +441,9 @@ export default function AdminAddendasPage() {
                       
                       return (
                         <tr key={addenda.idAddenda} className="hover:bg-gray-50 dark:hover:bg-[#262636] transition">
+                          <td className="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-400">
+                            {addenda.idAddenda}
+                          </td>
                           <td className="px-6 py-4 font-medium">{addenda.name}</td>
                           <td className="px-6 py-4">
                             <div className="flex items-center">
@@ -615,11 +621,6 @@ export default function AdminAddendasPage() {
           onClose={handleCloseViewModal}
           addenda={selectedAddenda}
         />
-
-        {/* Próximos modales - Descomentar cuando estén creados */}
-        {/*
-        
-        */}
 
         {/* Toast */}
         {toast.visible && (

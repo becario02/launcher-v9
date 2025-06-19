@@ -308,7 +308,7 @@ export default function EditAddendaModal({ isOpen, onClose, onSuccess, addenda }
                       : "border-gray-300 dark:border-[#2C2C38]"
                   )}
                   style={!errors.structureTravel ? { '--tw-ring-color': primaryColor } : {}}
-                  rows={4}
+                  rows={12}
                   placeholder="<xml>...</xml>"
                   disabled={isSubmitting}
                 />
@@ -335,7 +335,7 @@ export default function EditAddendaModal({ isOpen, onClose, onSuccess, addenda }
                       : "border-gray-300 dark:border-[#2C2C38]"
                   )}
                   style={!errors.structureAdditionalInvoice ? { '--tw-ring-color': primaryColor } : {}}
-                  rows={4}
+                  rows={12}
                   placeholder="<xml>...</xml>"
                   disabled={isSubmitting}
                 />
@@ -362,7 +362,7 @@ export default function EditAddendaModal({ isOpen, onClose, onSuccess, addenda }
                       : "border-gray-300 dark:border-[#2C2C38]"
                   )}
                   style={!errors.structureCreditNote ? { '--tw-ring-color': primaryColor } : {}}
-                  rows={4}
+                  rows={12}
                   placeholder="<xml>...</xml>"
                   disabled={isSubmitting}
                 />

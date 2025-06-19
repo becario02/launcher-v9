@@ -31,6 +31,45 @@ export default function CompanySelector() {
   const generateKey = (c) => `${c.name}-${c.serverErpDb}-${c.nameErpDb}`;
   const selectedKey = selectedCompany ? generateKey(selectedCompany) : null;
 
+  // Función para obtener el logo en base64
+  const getCompanyLogo = (company) => {
+    if (company?.logo) {
+      return `data:image/png;base64,${company.logo}`;
+    }
+    return null;
+  };
+
+  // Componente para mostrar el logo o inicial
+  const CompanyLogo = ({ company, size = 36 }) => {
+    const logoSrc = getCompanyLogo(company);
+    
+    if (logoSrc) {
+      return (
+        <Image 
+          src={logoSrc} 
+          alt={`${company.name} logo`} 
+          width={size} 
+          height={size}
+          className="object-contain rounded-full"
+          onError={(e) => {
+            // Si falla la carga del logo, mostrar la inicial
+            e.target.style.display = 'none';
+            if (e.currentTarget && e.currentTarget.parentElement) {
+              e.currentTarget.parentElement.innerHTML = `<span class="text-[13px] font-medium text-[#0080FF] dark:text-white">${company.name.charAt(0)}</span>`;
+            }
+          }}
+        />
+      );
+    }
+    
+    // Fallback: mostrar inicial si no hay logo
+    return (
+      <span className="text-[13px] font-medium text-[#0080FF] dark:text-white">
+        {company.name.charAt(0)}
+      </span>
+    );
+  };
+
   if (loading) {
     return (
       <div className="font-[Poppins] relative w-[567px] text-sm font-medium text-gray-700 dark:text-gray-200">
@@ -101,23 +140,7 @@ export default function CompanySelector() {
           {/* Company logo/icon */}
           <div className="flex-shrink-0">
             <div className="w-9 h-9 flex items-center justify-center rounded-[50px] bg-white dark:bg-primary border border-gray-200 dark:border-gray-600 overflow-hidden">
-              <Image 
-                src="/assets/company-selector/truck-icon.png" 
-                alt="Company logo" 
-                width={36} 
-                height={36}
-                className="object-contain"
-                onError={(e) => {
-                  try {
-                    e.target.style.display = 'none';
-                    if (e.currentTarget && e.currentTarget.parentElement) {
-                      e.currentTarget.parentElement.innerHTML = selectedCompany.name.charAt(0);
-                    }
-                  } catch (error) {
-                    console.error("Error handling image load failure:", error);
-                  }
-                }}
-              />
+              <CompanyLogo company={selectedCompany} size={36} />
             </div>
           </div>
           
@@ -188,27 +211,27 @@ export default function CompanySelector() {
                   }}
                   className="cursor-pointer px-3 py-2 hover:bg-gray-100 dark:hover:bg-[#2c2c38] flex items-center gap-2"
                 >
-                  <div className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0080FF]/10 dark:bg-primary text-[#0080FF] dark:text-white border">
-                    <span className="text-[13px] font-medium">{company.name.charAt(0)}</span>
+                  <div className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0080FF]/10 dark:bg-primary text-[#0080FF] dark:text-white border overflow-hidden">
+                    <CompanyLogo company={company} size={36} />
                   </div>
-                    <div className="flex flex-col items-start overflow-hidden">
-                      <span className="text-[14px] font-medium text-gray-700 dark:text-gray-200">
-                        {company.name}
+                  <div className="flex flex-col items-start overflow-hidden">
+                    <span className="text-[14px] font-medium text-gray-700 dark:text-gray-200">
+                      {company.name}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                        {formatServer(company.serverErpDb)} • {company.nameErpDb}
                       </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
-                          {formatServer(company.serverErpDb)} • {company.nameErpDb}
-                        </span>
-                        {/* Añadido tipo de BD (environment) */}
-                        <span className={`inline-flex px-2 py-0.5 text-white text-[10px] rounded-[25px] flex-shrink-0 font-medium ${
-                          company.environment === 'TEST' 
-                            ? 'bg-gray-500 dark:bg-gray-600' 
-                            : 'bg-primary'
-                        }`}>
-                          {company.environment === 'TEST' ? 'PRUEBAS' : 'PRODUCCIÓN'}
-                        </span>
-                      </div>
+                      {/* Añadido tipo de BD (environment) */}
+                      <span className={`inline-flex px-2 py-0.5 text-white text-[10px] rounded-[25px] flex-shrink-0 font-medium ${
+                        company.environment === 'TEST' 
+                          ? 'bg-gray-500 dark:bg-gray-600' 
+                          : 'bg-primary'
+                      }`}>
+                        {company.environment === 'TEST' ? 'PRUEBAS' : 'PRODUCCIÓN'}
+                      </span>
                     </div>
+                  </div>
                 </li>
               );
             })}
