@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -11,7 +11,7 @@ const CompanySelectModal = () => {
     selectCompany,
     setShowCompanyModal,
     preselectedCompany,
-    connectAndSync  // ✅ AGREGAR ESTA LÍNEA
+    connectAndSync, // ✅ AGREGAR ESTA LÍNEA
   } = useCompany();
 
   // estado con la "clave" única de la empresa seleccionada
@@ -79,9 +79,7 @@ const CompanySelectModal = () => {
 
   const handleConnect = () => {
     if (!selectedCompanyId) return;
-    const company = companies.find(
-      (c) => generateKey(c) === selectedCompanyId
-    );
+    const company = companies.find((c) => generateKey(c) === selectedCompanyId);
     if (company) {
       // ✅ USAR LA NUEVA FUNCIÓN QUE CONECTA Y SINCRONIZA
       connectAndSync(company); // En lugar de selectCompany(company)
@@ -89,20 +87,20 @@ const CompanySelectModal = () => {
   };
 
   function formatServer(server) {
-    if (!server) return '';
+    if (!server) return "";
     let hostPart = server;
-    let portOrInstance = '';
-    if (server.includes(':')) {
-      [hostPart, portOrInstance] = server.split(':');
-      portOrInstance = ':' + portOrInstance;
-    } else if (server.includes('\\')) {
-      [hostPart, portOrInstance] = server.split('\\');
-      portOrInstance = '\\' + portOrInstance;
+    let portOrInstance = "";
+    if (server.includes(":")) {
+      [hostPart, portOrInstance] = server.split(":");
+      portOrInstance = ":" + portOrInstance;
+    } else if (server.includes("\\")) {
+      [hostPart, portOrInstance] = server.split("\\");
+      portOrInstance = "\\" + portOrInstance;
     }
-    const parts = hostPart.split('.');
+    const parts = hostPart.split(".");
     const last = parts.pop();
-    const maskedParts = parts.map(part => '*'.repeat(part.length));
-    return maskedParts.concat(last).join('.') + portOrInstance;
+    const maskedParts = parts.map((part) => "*".repeat(part.length));
+    return maskedParts.concat(last).join(".") + portOrInstance;
   }
 
   if (!showCompanyModal) return null;
@@ -112,6 +110,24 @@ const CompanySelectModal = () => {
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="fixed inset-0 bg-[#171725]/50 dark:bg-[#0B0B10]/70 transition-opacity" />
         <div className="relative bg-white dark:bg-[#1c1c24] rounded-[10px] max-w-md w-full mx-auto shadow-xl animate-fadeIn">
+          <button
+            onClick={() => setShowCompanyModal(false)}
+            className="absolute top-3 right-3 text-[#92929D] dark:text-gray-400 hover:text-black dark:hover:text-white transition"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
+
           <div className="p-6">
             <h2 className="text-[20px] font-semibold text-[#171725] dark:text-white mb-6">
               Selecciona una empresa
@@ -129,9 +145,11 @@ const CompanySelectModal = () => {
                         <button
                           onClick={() => handleSelectCompany(company)}
                           className={`w-full text-left p-3 rounded-[10px] transition-all flex items-start
-                            ${isSelected
-                              ? 'bg-[#0080FF]/10 dark:bg-[#0080FF]/20 border border-primary'
-                              : 'bg-[#F5F7FA] hover:bg-[#E2E2EA] dark:bg-[#2c2c38] dark:hover:bg-[#44444F] border border-[#E6E8EC] dark:border-[#2C2C38]'}`}
+                            ${
+                              isSelected
+                                ? "bg-[#0080FF]/10 dark:bg-[#0080FF]/20 border border-primary"
+                                : "bg-[#F5F7FA] hover:bg-[#E2E2EA] dark:bg-[#2c2c38] dark:hover:bg-[#44444F] border border-[#E6E8EC] dark:border-[#2C2C38]"
+                            }`}
                         >
                           <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden bg-[#0080FF]/10 dark:bg-primary">
                             <CompanyLogo company={company} size={40} isSelected={isSelected} />
@@ -142,21 +160,29 @@ const CompanySelectModal = () => {
                             </p>
                             <div className="text-[#696974] dark:text-gray-400 text-[12px] space-y-0.5">
                               <p className="truncate flex items-center">
-                                <span className="font-medium mr-1">Servidor:</span>
+                                <span className="font-medium mr-1">
+                                  Servidor:
+                                </span>
                                 {formatServer(company.serverErpDb)}
                               </p>
                               <div className="flex items-center">
                                 <p className="truncate flex items-center">
-                                  <span className="font-medium mr-1">Base de datos:</span>
+                                  <span className="font-medium mr-1">
+                                    Base de datos:
+                                  </span>
                                   {company.nameErpDb}
                                 </p>
                                 {/* Etiqueta de tipo de base de datos */}
-                                <span className={`inline-flex px-2 py-1 text-white text-[10px] rounded-[25px] flex-shrink-0 font-medium ml-2 ${
-                                  company.environment === 'TEST' 
-                                    ? 'bg-gray-500 dark:bg-gray-600' 
-                                    : 'bg-primary'
-                                }`}>
-                                  {company.environment === 'TEST' ? 'PRUEBAS' : 'PRODUCCIÓN'}
+                                <span
+                                  className={`inline-flex px-2 py-1 text-white text-[10px] rounded-[25px] flex-shrink-0 font-medium ml-2 ${
+                                    company.environment === "TEST"
+                                      ? "bg-gray-500 dark:bg-gray-600"
+                                      : "bg-primary"
+                                  }`}
+                                >
+                                  {company.environment === "TEST"
+                                    ? "PRUEBAS"
+                                    : "PRODUCCIÓN"}
                                 </span>
                               </div>
                             </div>
@@ -184,7 +210,9 @@ const CompanySelectModal = () => {
                 </ul>
               ) : (
                 <div className="py-6 text-center text-[#696974] dark:text-gray-400">
-                  <p className="text-[14px] font-medium">No se encontraron empresas</p>
+                  <p className="text-[14px] font-medium">
+                    No se encontraron empresas
+                  </p>
                 </div>
               )}
             </div>
