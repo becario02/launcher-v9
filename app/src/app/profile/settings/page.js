@@ -31,9 +31,19 @@ export default function SettingsPage() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [formData, setFormData] = useState({ fullname: '', email: '' });
   const [isSaving, setIsSaving] = useState(false);
+  const [avatarSrc, setAvatarSrc] = useState('/assets/navbar/perfil.jpg');
 
   const rawLang = typeof navigator !== 'undefined' ? navigator.language || 'en-US' : 'en-US';
   const language = rawLang.startsWith('es') ? 'es-MX' : 'en-US';
+
+  // Función para detectar el tipo de imagen desde base64
+  const getImageTypeFromBase64 = (base64String) => {
+    if (base64String.startsWith('/9j/')) return 'jpeg';
+    if (base64String.startsWith('iVBORw0KGgo')) return 'png';
+    if (base64String.startsWith('R0lGOD')) return 'gif';
+    if (base64String.startsWith('UklGR')) return 'webp';
+    return 'jpeg'; // Por defecto
+  };
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -51,6 +61,17 @@ export default function SettingsPage() {
             fullname: data.data.fullname || '',
             email: data.data.email || ''
           });
+
+          // Procesar la imagen del avatar si existe
+          if (data.data.avatarImage) {
+            const base64Image = data.data.avatarImage;
+            const imageType = getImageTypeFromBase64(base64Image);
+            const imageUrl = `data:image/${imageType};base64,${base64Image}`;
+            setAvatarSrc(imageUrl);
+            
+            // También actualizar el localStorage para que el navbar use la misma imagen
+            localStorage.setItem('avatarImage', imageUrl);
+          }
         } else {
           throw new Error(data.message || 'Error en la respuesta del servidor');
         }
@@ -66,6 +87,19 @@ export default function SettingsPage() {
   }, []);
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  // Función para actualizar el avatar cuando se cambie
+  const handleAvatarUpdate = (newAvatarUrl) => {
+    setAvatarSrc(newAvatarUrl);
+  };
+
+  // Función para mostrar toast
+  const handleShowToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'success' });
+    }, 5000);
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -189,6 +223,10 @@ export default function SettingsPage() {
                   formErrors={formErrors}
                   onInputChange={handleInputChange}
                   onPasswordClick={() => setShowPasswordModal(true)}
+                  avatarSrc={avatarSrc}
+                  onAvatarError={() => setAvatarSrc('/assets/navbar/perfil.jpg')}
+                  onAvatarUpdate={handleAvatarUpdate}
+                  onShowToast={handleShowToast}
                 />
 
                 <ConnectionsSettings />

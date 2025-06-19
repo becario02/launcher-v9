@@ -20,6 +20,8 @@ const Navbar = ({ onMenuClick }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isHelpCenterOpen, setIsHelpCenterOpen] = useState(false);
+  const [avatarSrc, setAvatarSrc] = useState('/assets/navbar/perfil.jpg'); // Imagen por defecto
+  const [isLoadingAvatar, setIsLoadingAvatar] = useState(false);
   
   const { tabs } = useTabs();
   const { theme, setTheme } = useTheme();
@@ -29,7 +31,7 @@ const Navbar = ({ onMenuClick }) => {
   const showTabs = tabs.length > 0;
 
   // Obtener el ID de usuario de las cookies
-  const userId = Cookies.get('idUser') || '2'; // Fallback a 2 si no hay cookie
+  const userId = Cookies.get('idUser') || '2';
 
   // Obtener nombre + primer apellido directamente de la cookie
   const getUserShortName = () => {
@@ -40,6 +42,82 @@ const Navbar = ({ onMenuClick }) => {
   };
 
   const userShortName = getUserShortName();
+
+  // Función para detectar el tipo de imagen desde base64
+  const getImageTypeFromBase64 = (base64String) => {
+    if (base64String.startsWith('/9j/')) return 'jpeg';
+    if (base64String.startsWith('iVBORw0KGgo')) return 'png';
+    if (base64String.startsWith('R0lGOD')) return 'gif';
+    if (base64String.startsWith('UklGR')) return 'webp';
+    return 'jpeg'; // Por defecto
+  };
+
+  // Función para obtener el avatar del usuario
+  const fetchUserAvatar = async () => {
+    if (!userId || isLoadingAvatar) return;
+
+    // Primero verificar si existe en localStorage
+    const cachedAvatar = localStorage.getItem('avatarImage');
+    if (cachedAvatar) {
+      setAvatarSrc(cachedAvatar);
+      return;
+    }
+
+    try {
+      setIsLoadingAvatar(true);
+      
+      const response = await axios.get(`/api/profile?userId=${userId}`);
+
+      if (response.data && response.data.statusCode === "200" && response.data.data.avatarImage) {
+        const base64Image = response.data.data.avatarImage;
+        
+        // Detectar el tipo de imagen
+        const imageType = getImageTypeFromBase64(base64Image);
+        
+        // Crear la URL completa con el tipo MIME correcto
+        const imageUrl = `data:image/${imageType};base64,${base64Image}`;
+        
+        // Guardar en localStorage
+        localStorage.setItem('avatarImage', imageUrl);
+        
+        // Actualizar el estado
+        setAvatarSrc(imageUrl);
+      }
+    } catch (error) {
+      console.error('Error al obtener el avatar del usuario:', error);
+      // En caso de error, mantener la imagen por defecto
+    } finally {
+      setIsLoadingAvatar(false);
+    }
+  };
+
+  // Función para limpiar el caché del avatar (útil para cuando se actualice)
+  const clearAvatarCache = () => {
+    localStorage.removeItem('avatarImage');
+    setAvatarSrc('/assets/navbar/perfil.jpg');
+    fetchUserAvatar();
+  };
+
+  // Obtener el avatar cuando se monta el componente o cambia el userId
+  useEffect(() => {
+    if (userId) {
+      fetchUserAvatar();
+    }
+  }, [userId]);
+
+  // Escuchar eventos de actualización de avatar
+  useEffect(() => {
+    const handleAvatarUpdate = (event) => {
+      const { newAvatarUrl } = event.detail;
+      setAvatarSrc(newAvatarUrl);
+    };
+
+    window.addEventListener('avatarUpdated', handleAvatarUpdate);
+    
+    return () => {
+      window.removeEventListener('avatarUpdated', handleAvatarUpdate);
+    };
+  }, []);
 
   // Actualizar el conteo cuando se cierre el popup de notificaciones
   useEffect(() => {
@@ -118,15 +196,24 @@ const Navbar = ({ onMenuClick }) => {
               <div className="flex items-center gap-2 text-[13px] font-normal">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className={`w-9 h-9 border rounded-full overflow-hidden transition-all
+                  className={`w-9 h-9 border rounded-full overflow-hidden transition-all relative
                     ${isProfileOpen ? 'border-[#0080ff]' : 'border-white dark:border-gray-700'}`}
                 >
+                  {isLoadingAvatar && (
+                    <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
                   <Image
-                    src="/assets/navbar/perfil.jpg"
+                    src={avatarSrc}
                     alt="Perfil"
                     width={36}
                     height={36}
                     className="w-full h-full object-cover"
+                    onError={() => {
+                      // Si falla la carga de la imagen, usar la imagen por defecto
+                      setAvatarSrc('/assets/navbar/perfil.jpg');
+                    }}
                   />
                 </button>
                 <span
@@ -162,6 +249,7 @@ const Navbar = ({ onMenuClick }) => {
         <ProfilePopup
           isOpen={isProfileOpen}
           onClose={() => setIsProfileOpen(false)}
+          onAvatarUpdate={clearAvatarCache} // Prop opcional para refrescar avatar
         />
         <NotificationsPopup
           isOpen={isNotificationsOpen}

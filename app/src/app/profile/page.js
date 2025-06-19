@@ -17,6 +17,16 @@ export default function ProfilePage() {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [avatarSrc, setAvatarSrc] = useState('/assets/navbar/perfil.jpg');
+
+  // Función para detectar el tipo de imagen desde base64
+  const getImageTypeFromBase64 = (base64String) => {
+    if (base64String.startsWith('/9j/')) return 'jpeg';
+    if (base64String.startsWith('iVBORw0KGgo')) return 'png';
+    if (base64String.startsWith('R0lGOD')) return 'gif';
+    if (base64String.startsWith('UklGR')) return 'webp';
+    return 'jpeg'; // Por defecto
+  };
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -40,6 +50,17 @@ export default function ProfilePage() {
         
         if (data.statusCode === "200") {
           setProfileData(data.data);
+          
+          // Procesar la imagen del avatar si existe
+          if (data.data.avatarImage) {
+            const base64Image = data.data.avatarImage;
+            const imageType = getImageTypeFromBase64(base64Image);
+            const imageUrl = `data:image/${imageType};base64,${base64Image}`;
+            setAvatarSrc(imageUrl);
+            
+            // También actualizar el localStorage para que el navbar use la misma imagen
+            localStorage.setItem('avatarImage', imageUrl);
+          }
         } else {
           throw new Error(data.message || 'Error en la respuesta del servidor');
         }
@@ -169,11 +190,15 @@ export default function ProfilePage() {
                         <label className="block text-[12px] font-medium font-poppins leading-[18px] text-[#92929d] mb-1">Avatar</label>
                         <div className="w-[70px] h-[70px] rounded-full overflow-hidden">
                           <Image
-                            src="/assets/navbar/perfil.jpg"
+                            src={avatarSrc}
                             alt="Avatar"
                             width={70}
                             height={70}
                             className="object-cover w-full h-full"
+                            onError={() => {
+                              // Si falla la carga de la imagen, usar la imagen por defecto
+                              setAvatarSrc('/assets/navbar/perfil.jpg');
+                            }}
                           />
                         </div>
                       </div>

@@ -94,7 +94,10 @@ export function AuthProvider({ children }) {
     // Clear cookies with proper path
     ['auth', 'tabs', 'activeTabId', 'tabCounter', 'profileName'].forEach(cookieName => { 
       Cookies.remove(cookieName, { path: '/' }); 
-    }); 
+    });
+    
+    // Limpiar datos del localStorage relacionados con la sesión
+    localStorage.removeItem('avatarImage');
     
     window.location.href = '/login'; 
   }; 
