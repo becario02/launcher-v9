@@ -31,6 +31,7 @@ import IconModulos from "@/components/icons/sidebar/IconModulos";
 import IconNucleares from "@/components/icons/sidebar/IconNucleares";
 import IconFinancieros from "@/components/icons/sidebar/IconFinancieros";
 import IconAuxiliares from "@/components/icons/sidebar/IconAuxiliares";
+import Cookies from "js-cookie";
 
 const DefaultIcon = Menu;
 
@@ -172,6 +173,8 @@ export default function Sidebar({ onClose }) {
     }
     return '---';
   });
+  const profileName = Cookies.get('profileName');
+  const isUserAdvan = profileName?.includes('USERADVAN');
 
   // Función para obtener la versión del launcher
   const fetchLauncherVersion = useCallback(async () => {
@@ -190,7 +193,7 @@ export default function Sidebar({ onClose }) {
     }
 
     try {
-      const response = await fetch('http://localhost:5173/mslauncher/api/v1/configurations');
+      const response = await fetch('/api/configurations');
       const data = await response.json();
       
       if (data.statusCode === "200" && data.data) {
@@ -241,7 +244,6 @@ export default function Sidebar({ onClose }) {
     if (onClose) onClose();
   }, [pathname, router, onClose]);
 
-  // Optimizar el cálculo de estados activos usando useMemo o directamente en render
   const isDivisionActive = ['NUCLEARES', 'FINANCIAL', 'AUXILIARES'].includes(activeItem);
   const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminMenus', 'AdminNotifications', 'AdminIntegradores', 'AdminAddendas', 'AdminPromociones'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
 
@@ -282,7 +284,7 @@ export default function Sidebar({ onClose }) {
           onClick={() => navigateTo('/', 'Dashboard')}
         />
 
-        {!isAdvan && (
+        {!isUserAdvan && (
         <ExpandableItem
           icon={IconModulos}
           text="Divisiones"
@@ -331,7 +333,7 @@ export default function Sidebar({ onClose }) {
         )}
 
         {/* Show Noticias for regular users */}
-        {!isAdmin && (
+        {(!isAdmin && !isAdvan)  && (
           <SidebarItem
             icon={Newspaper}
             text="Noticias"
@@ -341,62 +343,75 @@ export default function Sidebar({ onClose }) {
         )}
         
         {/* Admin dropdown section */}
-        {isAdmin && (
+        {(isAdmin || isAdvan) && (
           <ExpandableItem
             icon={Settings}
             text="Administración"
             defaultOpen={false}
             isChildActive={isAdminActive}
           >
-            <SidebarItem
-              icon={Newspaper}
-              text="Noticias"
-              indent
-              active={activeItem === 'Noticias'}
-              onClick={() => navigateTo('/admin/news', 'Noticias')}
-            />
-            <SidebarItem
-              icon={Users}
-              text="Usuarios"
-              indent
-              active={activeItem === 'AdminUsers'}
-              onClick={() => navigateTo('/admin/users', 'AdminUsers')}
-            />
-            <SidebarItem
-              icon={Video}
-              text="Videos"
-              indent
-              active={activeItem === 'AdminVideos'}
-              onClick={() => navigateTo('/admin/videos', 'AdminVideos')}
-            />
-            <SidebarItem
-              icon={Bell}
-              text="Notificaciones"
-              indent
-              active={activeItem === 'AdminNotifications'}
-              onClick={() => navigateTo('/admin/notifications', 'AdminNotifications')}
-            />
-            <SidebarItem
-              icon={Import}
-              text="Integrador"
-              indent
-              active={activeItem === 'AdminIntegradores'}
-              onClick={() => navigateTo('/admin/integradores', 'AdminIntegradores')}
-            />
-            <SidebarItem
-              icon={FileText}
-              text="Addendas"
-              indent
-              active={activeItem === 'AdminAddendas'}
-              onClick={() => navigateTo('/admin/addendas', 'AdminAddendas')}
-            />
-            <SidebarItem
-              icon={Gift}
-              text="Promociones"
-              indent
-              active={activeItem === 'AdminPromociones'}
-              onClick={() => navigateTo('/admin/promociones', 'AdminPromociones')}
-            />
+            {isAdvan && (
+              <SidebarItem
+                icon={Newspaper}
+                text="Noticias"
+                indent
+                active={activeItem === 'Noticias'}
+                onClick={() => navigateTo('/admin/news', 'Noticias')}
+              />
+            )}
+           
+              <SidebarItem
+                icon={Users}
+                text="Usuarios"
+                indent
+                active={activeItem === 'AdminUsers'}
+                onClick={() => navigateTo('/admin/users', 'AdminUsers')}
+              />
+            {isAdvan && (
+              <SidebarItem
+                icon={Video}
+                text="Videos"
+                indent
+                active={activeItem === 'AdminVideos'}
+                onClick={() => navigateTo('/admin/videos', 'AdminVideos')}
+              />
+            )}
+            {isAdvan && (
+              <SidebarItem
+                icon={Bell}
+                text="Notificaciones"
+                indent
+                active={activeItem === 'AdminNotifications'}
+                onClick={() => navigateTo('/admin/notifications', 'AdminNotifications')}
+              />
+            )}
+            {isAdvan && (
+              <SidebarItem
+                icon={Import}
+                text="Integrador"
+                indent
+                active={activeItem === 'AdminIntegradores'}
+                onClick={() => navigateTo('/admin/integradores', 'AdminIntegradores')}
+              />
+            )}
+            {isAdvan && (
+              <SidebarItem
+                icon={FileText}
+                text="Addendas"
+                indent
+                active={activeItem === 'AdminAddendas'}
+                onClick={() => navigateTo('/admin/addendas', 'AdminAddendas')}
+              />
+            )}
+            {isAdvan && (
+              <SidebarItem
+                icon={Gift}
+                text="Promociones"
+                indent
+                active={activeItem === 'AdminPromociones'}
+                onClick={() => navigateTo('/admin/promociones', 'AdminPromociones')}
+              />
+            )}
           </ExpandableItem>
         )}
 

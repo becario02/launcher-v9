@@ -23,7 +23,7 @@ export default function AdminUsersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [expandedCompanies, setExpandedCompanies] = useState({});
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(5);
   const [totalUsers, setTotalUsers] = useState(0);
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import Cookies from 'js-cookie';
+import { createContext, useContext, useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import Cookies from "js-cookie";
 
 const TabsContext = createContext({});
 
@@ -14,9 +14,9 @@ export function TabsProvider({ children }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    const savedTabs = Cookies.get('tabs');
-    const savedActiveTab = Cookies.get('activeTabId');
-    const savedCounter = Cookies.get('tabCounter');
+    const savedTabs = Cookies.get("tabs");
+    const savedActiveTab = Cookies.get("activeTabId");
+    const savedCounter = Cookies.get("tabCounter");
 
     if (savedTabs) {
       setTabs(JSON.parse(savedTabs));
@@ -30,43 +30,64 @@ export function TabsProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    Cookies.set('tabs', JSON.stringify(tabs), { expires: 7 });
-    Cookies.set('tabCounter', tabCounter.toString(), { expires: 7 });
+    Cookies.set("tabs", JSON.stringify(tabs), { expires: 7 });
+    Cookies.set("tabCounter", tabCounter.toString(), { expires: 7 });
     if (activeTabId) {
-      Cookies.set('activeTabId', activeTabId, { expires: 7 });
+      Cookies.set("activeTabId", activeTabId, { expires: 7 });
     } else {
-      Cookies.remove('activeTabId');
+      Cookies.remove("activeTabId");
     }
   }, [tabs, activeTabId, tabCounter]);
 
   const formatUrlName = (name) => {
     return name
       .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .replace(/\./g, '')
-      .replace(/\s+/g, '-');
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .replace(/\./g, "")
+      .replace(/\s+/g, "-");
   };
 
   useEffect(() => {
-    if (pathname === '/') {
+    if (pathname === "/") {
       setActiveTabId(null);
     }
   }, [pathname]);
 
   useEffect(() => {
     // Lista de rutas que no deben ser afectadas por la redirección de pestañas
-    const exemptRoutes = ['/login', '/recuperarPassword', '/admin/news', '/settings', '/admin/users', '/admin', '/divisiones', '/profile', '/notifications', '/news'];
-    const isExemptRoute = exemptRoutes.some(route => pathname === route || pathname.startsWith(route + '/'));
-    
+    const exemptRoutes = [
+      "/login",
+      "/recuperarPassword",
+      "/settings",
+      "/profile",
+      "/notifications",
+      "/news",
+      "/admin",
+      "/admin/",
+      "/admin/news",
+      "/admin/users",
+      "/admin/videos",
+      "/admin/notifications",
+      "/admin/integradores",
+      "/admin/addendas",
+      "/admin/promociones",
+      "/divisiones",
+      "/divisiones/nucleares",
+      "/divisiones/financieros",
+      "/divisiones/auxiliares",
+    ];
+    const isExemptRoute = exemptRoutes.some(route => pathname.startsWith(route));
+
     // Solo aplicar lógica de redirección si no estamos en una ruta exenta
     if (!isExemptRoute) {
       if (tabs.length === 0) {
-        router.push('/');
+        console.log('Redirigiendo por tabs. Path:', pathname);
+        router.push("/");
       } else if (activeTabId) {
-        const activeTab = tabs.find(tab => tab.uniqueId === activeTabId);
+        const activeTab = tabs.find((tab) => tab.uniqueId === activeTabId);
         if (activeTab) {
           router.push(activeTab.path);
         }
@@ -77,36 +98,36 @@ export function TabsProvider({ children }) {
   const addTab = (moduleId, moduleName) => {
     const urlPath = formatUrlName(moduleName);
     const uniqueId = `${moduleId}-${tabCounter}`;
-    
+
     const newTab = {
       id: moduleId,
       uniqueId,
       name: moduleName,
       path: `/modulos/${urlPath}`,
-      displayName: `${moduleName}${getInstanceNumber(moduleName)}`
+      displayName: `${moduleName}${getInstanceNumber(moduleName)}`,
     };
 
-    setTabs(prev => [...prev, newTab]);
-    setTabCounter(prev => prev + 1);
+    setTabs((prev) => [...prev, newTab]);
+    setTabCounter((prev) => prev + 1);
     setActiveTabId(uniqueId);
   };
 
   const getInstanceNumber = (moduleName) => {
-    const instances = tabs.filter(tab => tab.name === moduleName).length;
-    return instances > 0 ? ` (${instances + 1})` : '';
+    const instances = tabs.filter((tab) => tab.name === moduleName).length;
+    return instances > 0 ? ` (${instances + 1})` : "";
   };
 
   const removeTab = (uniqueId) => {
-    setTabs(prev => {
-      const newTabs = prev.filter(tab => tab.uniqueId !== uniqueId);
-      
+    setTabs((prev) => {
+      const newTabs = prev.filter((tab) => tab.uniqueId !== uniqueId);
+
       if (activeTabId === uniqueId && newTabs.length > 0) {
         const lastTab = newTabs[newTabs.length - 1];
         setActiveTabId(lastTab.uniqueId);
       } else if (newTabs.length === 0) {
         setActiveTabId(null);
       }
-      
+
       return newTabs;
     });
   };
@@ -116,13 +137,15 @@ export function TabsProvider({ children }) {
   };
 
   return (
-    <TabsContext.Provider value={{ 
-      tabs, 
-      activeTabId, 
-      addTab, 
-      removeTab, 
-      switchTab 
-    }}>
+    <TabsContext.Provider
+      value={{
+        tabs,
+        activeTabId,
+        addTab,
+        removeTab,
+        switchTab,
+      }}
+    >
       {children}
     </TabsContext.Provider>
   );
