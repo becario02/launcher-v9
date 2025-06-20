@@ -1,5 +1,77 @@
 import { useState, useEffect } from 'react';
-import { Check, X, Search, Layers, Building2, Users, ChevronDown, Info } from 'lucide-react';
+import { Check, X, Search, Layers, Building2, Users, ChevronDown, Info, AlertCircle } from 'lucide-react';
+
+const SkeletonLoader = () => {
+  return (
+    <div className="p-6 flex-grow overflow-y-auto bg-gray-100 dark:bg-gray-7">
+      <div className="mb-6 mx-auto max-w-4xl">
+        <div className="flex items-center p-4 bg-gray-200 border border-gray-300 rounded-lg dark:bg-gray-6 dark:border-gray-5 animate-pulse">
+          <div className="flex-shrink-0 w-5 h-5 bg-gray-300 rounded dark:bg-gray-5"></div>
+          <div className="ml-3 flex-1">
+            <div className="h-4 bg-gray-300 rounded dark:bg-gray-5 w-3/4"></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div className="flex flex-col p-4 bg-white border border-gray-200 rounded-xl dark:bg-gray-6 dark:border-gray-6">
+          <div className="flex items-center mb-3">
+            <div className="w-5 h-5 bg-gray-300 rounded mr-2 animate-pulse dark:bg-gray-5"></div>
+            <div className="h-5 bg-gray-300 rounded w-32 animate-pulse dark:bg-gray-5"></div>
+          </div>
+          
+          <div className="relative mb-3">
+            <div className="w-full h-10 bg-gray-200 rounded-md animate-pulse dark:bg-gray-5"></div>
+          </div>
+          
+          <div className="flex items-center mb-2 p-2">
+            <div className="w-4 h-4 bg-gray-300 rounded animate-pulse dark:bg-gray-5"></div>
+            <div className="ml-2 h-4 bg-gray-300 rounded w-40 animate-pulse dark:bg-gray-5"></div>
+          </div>
+          
+          <div className="flex-grow p-1 bg-white border border-gray-200 rounded-lg dark:bg-gray-7 dark:border-gray-6 max-h-[280px]">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center p-2 mb-1">
+                <div className="w-4 h-4 bg-gray-300 rounded animate-pulse dark:bg-gray-5"></div>
+                <div className="ml-2 h-4 bg-gray-300 rounded flex-1 animate-pulse dark:bg-gray-5"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col p-4 bg-white border border-gray-200 rounded-xl dark:bg-gray-6 dark:border-gray-6">
+          <div className="flex items-center mb-3">
+            <div className="w-5 h-5 bg-gray-300 rounded mr-2 animate-pulse dark:bg-gray-5"></div>
+            <div className="h-5 bg-gray-300 rounded w-24 animate-pulse dark:bg-gray-5"></div>
+          </div>
+          
+          <div className="relative mb-3">
+            <div className="w-full h-10 bg-gray-200 rounded-md animate-pulse dark:bg-gray-5"></div>
+          </div>
+          
+          <div className="flex items-center mb-2 p-2">
+            <div className="w-4 h-4 bg-gray-300 rounded animate-pulse dark:bg-gray-5"></div>
+            <div className="ml-2 h-4 bg-gray-300 rounded w-36 animate-pulse dark:bg-gray-5"></div>
+          </div>
+          
+          <div className="flex-grow p-1 bg-white border border-gray-200 rounded-lg dark:bg-gray-7 dark:border-gray-6 max-h-[280px]">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex items-center p-2 mb-1">
+                <div className="w-4 h-4 bg-gray-300 rounded animate-pulse dark:bg-gray-5"></div>
+                <div className="ml-2 h-4 bg-gray-300 rounded flex-1 animate-pulse dark:bg-gray-5"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="sticky bottom-0 z-10 flex justify-end gap-3 px-6 py-4 bg-gray-100 border-t border-gray-200 dark:bg-gray-7 dark:border-gray-6">
+        <div className="h-10 w-24 bg-gray-300 rounded-full animate-pulse dark:bg-gray-5"></div>
+        <div className="h-10 w-36 bg-gray-300 rounded-full animate-pulse dark:bg-gray-5"></div>
+      </div>
+    </div>
+  );
+};
 
 export default function AddPermissions({
   applications,
@@ -19,7 +91,8 @@ export default function AddPermissions({
   onSavePermissions,
   handleCloseModal,
   assignedAudience,
-  isDark
+  isDark,
+  isLoading = false 
 }) {
   const [saving, setSaving] = useState(false);
   const [appSearchTerm, setAppSearchTerm] = useState('');
@@ -29,9 +102,10 @@ export default function AddPermissions({
   const [alreadyAssignedClientNames, setAlreadyAssignedClientNames] = useState({});
   const [alreadyAssignedUserEmails, setAlreadyAssignedUserEmails] = useState({});
   
+  const [validationError, setValidationError] = useState('');
+  const [showValidationMessage, setShowValidationMessage] = useState(false);
+
   useEffect(() => {
-    console.log("assignedAudience en AddPermissions:", assignedAudience);
-    
     if (assignedAudience) {
       const appNames = {};
       if (Array.isArray(assignedAudience.applications)) {
@@ -41,7 +115,6 @@ export default function AddPermissions({
           }
         });
       }
-      console.log("Aplicaciones asignadas por nombre:", appNames);
       setAlreadyAssignedAppNames(appNames);
       
       const clientNames = {};
@@ -52,7 +125,6 @@ export default function AddPermissions({
           }
         });
       }
-      console.log("Clientes asignados por nombre:", clientNames);
       setAlreadyAssignedClientNames(clientNames);
       
       const userEmails = {};
@@ -63,10 +135,50 @@ export default function AddPermissions({
           }
         });
       }
-      console.log("Usuarios asignados por email:", userEmails);
       setAlreadyAssignedUserEmails(userEmails);
     }
   }, [assignedAudience]);
+
+  if (isLoading) {
+    return <SkeletonLoader />;
+  }
+
+  const validatePermissions = () => {
+    const hasApplications = permissions.applications && permissions.applications.length > 0;
+    const hasClients = permissions.clients && permissions.clients.length > 0;
+    const hasUsers = permissions.users && permissions.users.length > 0;
+    
+    if (!hasApplications) {
+      return {
+        isValid: false,
+        message: 'Debe seleccionar al menos una aplicación para continuar'
+      };
+    }
+    
+    if (!hasClients && !hasUsers) {
+      return {
+        isValid: false,
+        message: 'Debe seleccionar al menos un cliente para continuar'
+      };
+    }
+    
+    return {
+      isValid: true,
+      message: ''
+    };
+  };
+
+  const isFormValid = () => {
+    return validatePermissions().isValid;
+  };
+
+  const showTemporaryValidationMessage = (message) => {
+    setValidationError(message);
+    setShowValidationMessage(true);
+    setTimeout(() => {
+      setShowValidationMessage(false);
+    }, 4000);
+  };
   
   const isAlreadyAssigned = (type, item) => {
     if (!item) return false;
@@ -132,7 +244,6 @@ export default function AddPermissions({
         ])
       ];
     
-      // ✅ NUEVO: Recolectar todos los usuarios de los nuevos clientes seleccionados
       const newUserIds = new Set(permissions.users || []);
       newSelectedClients.forEach(clientId => {
         if (clientUserRelations[clientId]) {
@@ -145,7 +256,7 @@ export default function AddPermissions({
       setPermissions({
         ...permissions,
         clients: newSelectedClients,
-        users: Array.from(newUserIds) // ✅ Actualizar usuarios
+        users: Array.from(newUserIds)
       });
     } else {
       const clientIdsToRemove = new Set(
@@ -220,23 +331,19 @@ export default function AddPermissions({
   const handleSelectClientUsers = (clientId, clientUsers) => {
     if (!clientUsers || !Array.isArray(clientUsers) || clientUsers.length === 0) return;
     
-    // Filtrar usuarios ya asignados
     const selectableUsers = clientUsers.filter(user => 
       user && user.id && !isAlreadyAssigned('users', user)
     );
     
-    if (selectableUsers.length === 0) return; // No hay usuarios para seleccionar
+    if (selectableUsers.length === 0) return;
     
-    // Verificar si todos los usuarios del cliente ya están seleccionados
     const allSelected = selectableUsers.every(user => 
       user && user.id && (permissions.users || []).includes(user.id)
     );
     
-    // Obtener los IDs de los usuarios del cliente
     const clientUserIds = selectableUsers.filter(user => user && user.id).map(user => user.id);
     
     if (allSelected) {
-      // Si todos están seleccionados, deseleccionarlos
       setPermissions({
         ...permissions,
         users: (permissions.users || []).filter(
@@ -244,7 +351,6 @@ export default function AddPermissions({
         )
       });
     } else {
-      // Si no todos están seleccionados, seleccionar todos
       setPermissions({
         ...permissions,
         users: [...new Set([
@@ -255,13 +361,11 @@ export default function AddPermissions({
     }
   };
   
-  // Manejar cambios individuales de permisos
   const handlePermissionChange = (type, id, item) => {
     if (!id) return;
     
-    // Verificar si el elemento ya está asignado
     if (isAlreadyAssigned(type, item)) {
-      return; // No permitir cambiar elementos ya asignados
+      return;
     }
     
     const currentPermissions = [...(permissions[type] || [])];
@@ -278,11 +382,9 @@ export default function AddPermissions({
       [type]: currentPermissions
     };
     
-    // Si se cambia un cliente, actualizar usuarios
     if (type === 'clients') {
       const validUserIds = new Set();
       
-      // Recolectar todos los usuarios de los clientes seleccionados
       updatedPermissions.clients.forEach(clientId => {
         if (clientId && clientUserRelations[clientId]) {
           clientUserRelations[clientId].forEach(userId => {
@@ -291,13 +393,11 @@ export default function AddPermissions({
         }
       });
     
-      // Nueva lista de usuarios: todos los usuarios de los clientes seleccionados
       updatedPermissions.users = Array.from(validUserIds);
     }    
     
     setPermissions(updatedPermissions);
     
-    // Actualizar estado "all" correspondiente
     if (type === 'applications') {
       const visibleApps = applications.filter(app => 
         app && (app.name || '').toLowerCase().includes((appSearchTerm || '').toLowerCase()) && 
@@ -341,7 +441,6 @@ export default function AddPermissions({
     }
   };
   
-  // Función para expandir/colapsar un cliente
   const toggleClientExpanded = (clientId) => {
     setExpandedClients(prev => ({
       ...prev,
@@ -349,17 +448,14 @@ export default function AddPermissions({
     }));
   };
   
-  // Filtrar aplicaciones según búsqueda
   const filteredApplications = applications.filter(app => 
     app && (app.name || '').toLowerCase().includes((appSearchTerm || '').toLowerCase())
   );
   
-  // Filtrar clientes según búsqueda
   const filteredClients = clients.filter(client => 
     client && (client.name || '').toLowerCase().includes((clientSearchTerm || '').toLowerCase())
   );
   
-  // Obtener usuarios según clientes seleccionados y búsqueda
   const getClientUsers = (clientId) => {
     if (!clientId) return [];
     
@@ -369,22 +465,79 @@ export default function AddPermissions({
       (user.email || '').toLowerCase().includes((userSearchTerm || '').toLowerCase())
     );
   };
-  
+
   const handleSave = async () => {
+    const validation = validatePermissions();
+    
+    if (!validation.isValid) {
+      showTemporaryValidationMessage(validation.message);
+      return;
+    }
+    
     setSaving(true);
-    await onSavePermissions();
-    setSaving(false);
+    try {
+      await onSavePermissions();
+    } catch (error) {
+      console.error('Error al guardar permisos:', error);
+      showTemporaryValidationMessage('Error al guardar los permisos. Intente nuevamente.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <>
-      <div className="p-6 flex-grow overflow-y-auto bg-gray-100 dark:bg-gray-7">
+      {saving && (
+        <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-20 flex items-center justify-center">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-lg font-medium text-gray-700 dark:text-gray-200">
+              Guardando permisos...
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className={`p-6 flex-grow overflow-y-auto bg-gray-100 dark:bg-gray-7 ${saving ? 'pointer-events-none' : ''}`}>
+        {showValidationMessage && (
+          <div className="mb-4 mx-auto max-w-4xl">
+            <div className="flex items-center p-4 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800">
+              <AlertCircle className="flex-shrink-0 w-5 h-5 text-red-600 dark:text-red-400" />
+              <div className="ml-3">
+                <p className="text-sm text-red-800 dark:text-red-300 font-medium">
+                  {validationError}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowValidationMessage(false)}
+                className="ml-auto -mx-1.5 -my-1.5 bg-red-50 text-red-500 rounded-lg focus:ring-2 focus:ring-red-400 p-1.5 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="mb-6 mx-auto max-w-4xl">
+          <div className="flex items-center p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-800">
+            <Info className="flex-shrink-0 w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <div className="ml-3">
+              <p className="text-sm text-blue-800 dark:text-blue-300">
+                <span className="font-medium">Campos requeridos:</span> Debe seleccionar al menos una aplicación y un cliente para guardar los permisos.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {/* Aplicaciones */}
           <div className="flex flex-col p-4 bg-white border border-gray-200 rounded-xl dark:bg-gray-6 dark:border-gray-6">
             <div className="flex items-center mb-3">
               <Layers size={18} className="mr-2 text-primary" />
-              <h3 className="text-h3 font-medium text-gray-700 dark:text-gray-2">APLICACIONES</h3>
+              <h3 className="text-h3 font-medium text-gray-700 dark:text-gray-2">
+                APLICACIONES
+                <span className="text-red-500 ml-1">*</span>
+              </h3>
             </div>
             <div className="relative mb-3">
               <input
@@ -470,7 +623,10 @@ export default function AddPermissions({
           <div className="flex flex-col p-4 bg-white border border-gray-200 rounded-xl dark:bg-gray-6 dark:border-gray-6">
             <div className="flex items-center mb-3">
               <Building2 size={18} className="mr-2 text-primary" />
-              <h3 className="text-h3 font-medium text-gray-700 dark:text-gray-2">CLIENTES</h3>
+              <h3 className="text-h3 font-medium text-gray-700 dark:text-gray-2">
+                CLIENTES
+                <span className="text-red-500 ml-1">*</span>
+              </h3>
             </div>
             <div className="relative mb-3">
               <input
@@ -551,23 +707,30 @@ export default function AddPermissions({
               )}
             </div>
           </div>
-
-          
         </div>
       </div>
 
       {/* Footer */}
-      <div className="sticky bottom-0 z-10 flex justify-end gap-3 px-6 py-4 bg-gray-100 border-t border-gray-200 dark:bg-gray-7 dark:border-gray-6">
+      <div className={`sticky bottom-0 z-10 flex justify-end gap-3 px-6 py-4 bg-gray-100 border-t border-gray-200 dark:bg-gray-7 dark:border-gray-6 ${saving ? 'pointer-events-none' : ''}`}>
         <button
           onClick={handleCloseModal}
-          className="px-4 py-2 text-p border rounded-full text-semantic.red bg-white border-semantic.red hover:bg-gray-50 transition-all duration-200 shadow-sm transform hover:-translate-y-0.5 dark:bg-gray-6 dark:text-semantic.red dark:border-semantic.red dark:hover:bg-gray-5"
+          disabled={saving}
+          className={`px-4 py-2 text-p border rounded-full text-semantic.red bg-white border-semantic.red transition-all duration-200 shadow-sm transform dark:bg-gray-6 dark:text-semantic.red dark:border-semantic.red ${
+            saving 
+              ? 'opacity-50 cursor-not-allowed' 
+              : 'hover:bg-gray-50 hover:-translate-y-0.5 dark:hover:bg-gray-5'
+          }`}
         >
           Cancelar
         </button>
         <button
-          onClick={async () => { setSaving(true); await onSavePermissions(); setSaving(false); }}
-          disabled={saving}
-          className="flex items-center px-4 py-2 text-p text-white bg-primary rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-70 dark:bg-primary"
+          onClick={handleSave}
+          disabled={saving || !isFormValid()}
+          className={`flex items-center px-4 py-2 text-p text-white rounded-full transition-all duration-200 shadow-sm transform ${
+            saving || !isFormValid() 
+              ? 'bg-gray-400 cursor-not-allowed opacity-70' 
+              : 'bg-primary hover:shadow-md hover:-translate-y-0.5'
+          } dark:bg-primary`}
         >
           {saving ? (
             <>

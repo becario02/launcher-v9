@@ -62,7 +62,7 @@ export default function ProfilePage() {
             localStorage.setItem('avatarImage', imageUrl);
           }
         } else {
-          throw new Error(data.message || 'Error en la respuesta del servidor');
+          throw new Error("No se encontraron datos del perfil");
         }
       } catch (error) {
         console.error('Error:', error);

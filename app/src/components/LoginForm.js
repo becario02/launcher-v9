@@ -1,79 +1,76 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/auth';
-import Cookies from 'js-cookie';
-import Link from 'next/link';
-import Image from 'next/image';
-import ErrorIniciarSesion from './ErrorIniciarSesion';
-import MensajeOlvidasteContraseña from './MensajeOlvidasteContraseña';
-import FormRecuperarContraseña from './FormRecuperarContraseña';
-import MensajeExitoRecuperarContraseña from './MensajeExitoRecuperarContraseña';
-import VerificationMethod from './VerificationMethod';
-import TokenInput from './TokenInput';
-import { recuperarContraseña } from '@/services/api/recuperarContraseña';
-import axios from 'axios';
-import { v4 as uuidv4 } from 'uuid';
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/auth";
+import Cookies from "js-cookie";
+import Link from "next/link";
+import Image from "next/image";
+import ErrorIniciarSesion from "./ErrorIniciarSesion";
+import MensajeOlvidasteContraseña from "./MensajeOlvidasteContraseña";
+import FormRecuperarContraseña from "./FormRecuperarContraseña";
+import MensajeExitoRecuperarContraseña from "./MensajeExitoRecuperarContraseña";
+import VerificationMethod from "./VerificationMethod";
+import TokenInput from "./TokenInput";
+import { recuperarContraseña } from "@/services/api/recuperarContraseña";
+import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginForm() {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState('login');
-  const [error, setError] = useState('');
-  const [deviceId, setDeviceId] = useState('');
-  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [step, setStep] = useState("login");
+  const [error, setError] = useState("");
+  const [deviceId, setDeviceId] = useState("");
+  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const [modalStates, setModalStates] = useState({
     error: false,
     contraseña: false,
     recuperarForm: false,
-    exito: false
+    exito: false,
   });
 
   const rawLang =
-    typeof navigator !== 'undefined'
-      ? navigator.language || 'en-US'
-      : 'en-US';
-  const language = rawLang.startsWith('es') ? 'es-MX' : 'en-US';
+    typeof navigator !== "undefined" ? navigator.language || "en-US" : "en-US";
+  const language = rawLang.startsWith("es") ? "es-MX" : "en-US";
 
   useEffect(() => {
-    let storedId = localStorage.getItem('deviceId');
+    let storedId = localStorage.getItem("deviceId");
     if (!storedId) {
       storedId = uuidv4();
-      localStorage.setItem('deviceId', storedId);
+      localStorage.setItem("deviceId", storedId);
     }
     setDeviceId(storedId.substring(0, 20));
   }, []);
 
-  const handleChange = e => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const saveSession = userData => {
+  const saveSession = (userData) => {
     const companies = userData.connections || [];
-    Cookies.set('auth', 'dummy-token', { expires: 7 });
-    Cookies.set('idUser', userData.idUser, { expires: 7 });
-    Cookies.set('fullname', userData.fullname, { expires: 7 });
-    Cookies.set('companyName', companies[0]?.name || '', { expires: 7 });
-    Cookies.set('urlErp', companies[0]?.urlErp || '', { expires: 7 });
-    Cookies.set('passwordErpDb', userData.passwordErpDb, { expires: 7 });
-    Cookies.set('serverErpDb', userData.serverErpDb, { expires: 7 });
-    Cookies.set('nameErpDb', userData.nameErpDb, { expires: 7 });
-    Cookies.set('profileName', userData.profileName, { expires: 7 });
-    
-    localStorage.setItem(
-      'userData',
-      JSON.stringify({ data: companies })
-    );
-    localStorage.removeItem('selectedCompany');
+    Cookies.set("auth", "dummy-token", { expires: 7 });
+    Cookies.set("idUser", userData.idUser, { expires: 7 });
+    Cookies.set("fullname", userData.fullname, { expires: 7 });
+    Cookies.set("companyName", companies[0]?.name || "", { expires: 7 });
+    Cookies.set("urlErp", companies[0]?.urlErp || "", { expires: 7 });
+    Cookies.set("passwordErpDb", userData.passwordErpDb, { expires: 7 });
+    Cookies.set("serverErpDb", userData.serverErpDb, { expires: 7 });
+    Cookies.set("nameErpDb", userData.nameErpDb, { expires: 7 });
+    Cookies.set("profileName", userData.profileName, { expires: 7 });
+
+    localStorage.setItem("userData", JSON.stringify({ data: companies }));
+    localStorage.removeItem("selectedCompany");
 
     login({
       username: formData.username,
       idUser: userData.idUser,
       fullname: userData.fullname,
-      idCompany : companies[0]?.idCompany || '',
-      companyName: companies[0]?.name || '',
-      urlErp: companies[0]?.urlErp || '',
+      idCompany: companies[0]?.idCompany || "",
+      companyName: companies[0]?.name || "",
+      urlErp: companies[0]?.urlErp || "",
       passwordErpDb: userData.passwordErpDb,
       serverErpDb: userData.serverErpDb,
       nameErpDb: userData.nameErpDb,
@@ -83,56 +80,58 @@ export default function LoginForm() {
     setTimeout(() => window.location.reload(), 100);
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       const res = await axios.post(
-        '/api/login',
+        "/api/login",
         {
           username: formData.username,
           password: formData.password,
           ipHostUser: deviceId,
-          digitToken: null
+          digitToken: null,
         },
         {
           headers: {
-            'Accept-Language': language,
-            'Content-Type': 'application/json'
+            "Accept-Language": language,
+            "Content-Type": "application/json",
           },
-          validateStatus: () => true
+          validateStatus: () => true,
         }
       );
-      
+
       // Handle different scenarios based on response
-      if (res.data.statusCode === '401' && (
-            res.data.message.includes('Has excedido el número de intentos') || 
-            res.data.message.includes('You have exceeded the allowed number'))) {
+      if (
+        res.data.statusCode === "401" &&
+        (res.data.message.includes("Has excedido el número de intentos") ||
+          res.data.message.includes("You have exceeded the allowed number"))
+      ) {
         // Handle exceeded login attempts - move to verification method
         // Save the message to display to the user
         const securityMessage = res.data.message;
-        setStep('method');
+        setStep("method");
         // Store the security message in localStorage to access it in the VerificationMethod component
-        localStorage.setItem('securityMessage', securityMessage);
+        localStorage.setItem("securityMessage", securityMessage);
       } else {
         const msg = res.data.message || res.data.Message;
         if (
-          msg === 'Usuario o contraseña incorrectos' ||
-          msg === 'Invalid username or password'
+          msg === "Usuario o contraseña incorrectos" ||
+          msg === "Invalid username or password"
         ) {
           setError(msg);
         } else if (
-          msg.startsWith('Se ha detectado') ||
-          msg.startsWith('New device detected')
+          msg.startsWith("Se ha detectado") ||
+          msg.startsWith("New device detected")
         ) {
           // Save the device detection message
-          localStorage.setItem('securityMessage', msg);
-          setStep('method');
+          localStorage.setItem("securityMessage", msg);
+          setStep("method");
         } else if (
-          msg === 'Inicio de sesión exitoso' ||
-          msg === 'Login successful'
+          msg === "Inicio de sesión exitoso" ||
+          msg === "Login successful"
         ) {
           saveSession(res.data.data);
           return;
@@ -142,41 +141,41 @@ export default function LoginForm() {
       }
     } catch (err) {
       console.error(err);
-      setError('No se pudo conectar con el servidor');
+      setError("No se pudo conectar con el servidor");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleTokenSubmit = async token => {
+  const handleTokenSubmit = async (token) => {
     setLoading(true);
-    setError('');
+    setError("");
     try {
       const res = await axios.post(
-        '/api/login',
+        "/api/login",
         {
           username: formData.username,
           password: formData.password,
           ipHostUser: deviceId,
-          digitToken: token
+          digitToken: token,
         },
         {
           headers: {
-            'Accept-Language': language,
-            'Content-Type': 'application/json'
+            "Accept-Language": language,
+            "Content-Type": "application/json",
           },
-          validateStatus: () => true
+          validateStatus: () => true,
         }
       );
       const msg = res.data.message || res.data.Message;
       if (
-        msg === 'El código ingresado es incorrecto' ||
-        msg === 'The verification code is incorrect'
+        msg === "El código ingresado es incorrecto" ||
+        msg === "The verification code is incorrect"
       ) {
         setError(msg);
       } else if (
-        msg === 'Inicio de sesión exitoso' ||
-        msg === 'Login successful'
+        msg === "Inicio de sesión exitoso" ||
+        msg === "Login successful"
       ) {
         saveSession(res.data.data);
         return;
@@ -185,48 +184,48 @@ export default function LoginForm() {
       }
     } catch (err) {
       console.error(err);
-      setError('No se pudo verificar el código');
+      setError("No se pudo verificar el código");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleMethodSelected = () => setStep('token');
-  const handleModalClose = name =>
-    setModalStates(prev => ({ ...prev, [name]: false }));
+  const handleMethodSelected = () => setStep("token");
+  const handleModalClose = (name) =>
+    setModalStates((prev) => ({ ...prev, [name]: false }));
   const handleRecuperarSubmit = async ({ email }) => {
     try {
       await recuperarContraseña.enviarCorreo(email);
-      setModalStates(prev => ({
+      setModalStates((prev) => ({
         ...prev,
         recuperarForm: false,
-        exito: true
+        exito: true,
       }));
     } catch {
-      setModalStates(prev => ({ ...prev, error: true }));
+      setModalStates((prev) => ({ ...prev, error: true }));
     }
   };
 
-  if (step === 'method') {
+  if (step === "method") {
     return (
       <VerificationMethod
         onMethodSelected={handleMethodSelected}
         onBack={() => {
-          setError('');
-          setStep('login');
+          setError("");
+          setStep("login");
         }}
       />
     );
   }
-  if (step === 'token') {
+  if (step === "token") {
     return (
       <TokenInput
         onSubmitToken={handleTokenSubmit}
         error={error}
         loading={loading}
         onBack={() => {
-          setError('');
-          setStep('method');
+          setError("");
+          setStep("method");
         }}
       />
     );
@@ -250,7 +249,8 @@ export default function LoginForm() {
             Ingresa a tu cuenta
           </h1>
           <p className="text-gray-500 text-sm">
-            Bienvenido de nuevo, ingresa tus credenciales para acceder a tu cuenta
+            Bienvenido de nuevo, ingresa tus credenciales para acceder a tu
+            cuenta
           </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -268,7 +268,7 @@ export default function LoginForm() {
                 type="text"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-gray-400"
+                className="w-full px-4 py-3 border rounded-md focus:text-gray-700 text-gray-700"
                 placeholder="usuario"
               />
             </div>
@@ -279,22 +279,31 @@ export default function LoginForm() {
               >
                 Contraseña
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-gray-400"
-                placeholder="********"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 pr-12 border rounded-md focus:text-gray-700 text-gray-700"
+                  placeholder="********"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
           </div>
           <div className="flex justify-end">
             <button
               type="button"
               onClick={() =>
-                setModalStates(prev => ({ ...prev, contraseña: true }))
+                setModalStates((prev) => ({ ...prev, contraseña: true }))
               }
               className="text-sm text-gray-600 hover:text-gray-800"
             >
@@ -311,34 +320,36 @@ export default function LoginForm() {
             disabled={loading}
             className="w-full bg-black text-white py-3 rounded-md hover:bg-gray-800 disabled:bg-gray-400"
           >
-            {loading ? 'Ingresando...' : 'Ingresar'}
+            {loading ? "Ingresando..." : "Ingresar"}
           </button>
         </form>
       </div>
 
       {modalStates.error && (
-        <ErrorIniciarSesion onClose={() => handleModalClose('error')} />
+        <ErrorIniciarSesion onClose={() => handleModalClose("error")} />
       )}
       {modalStates.contraseña && (
         <MensajeOlvidasteContraseña
-          onClose={() => handleModalClose('contraseña')}
+          onClose={() => handleModalClose("contraseña")}
           onContinue={() =>
-            setModalStates(prev => ({
+            setModalStates((prev) => ({
               ...prev,
               contraseña: false,
-              recuperarForm: true
+              recuperarForm: true,
             }))
           }
         />
       )}
       {modalStates.recuperarForm && (
         <FormRecuperarContraseña
-          onClose={() => handleModalClose('recuperarForm')}
+          onClose={() => handleModalClose("recuperarForm")}
           onSubmit={handleRecuperarSubmit}
         />
       )}
       {modalStates.exito && (
-        <MensajeExitoRecuperarContraseña onClose={() => handleModalClose('exito')} />
+        <MensajeExitoRecuperarContraseña
+          onClose={() => handleModalClose("exito")}
+        />
       )}
     </div>
   );

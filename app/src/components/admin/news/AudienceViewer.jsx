@@ -44,7 +44,6 @@ export default function AudienceViewer({ newsId }) {
         setUsers(userData || []);
         setClientUserRelations(relationsData || {});
       } catch (error) {
-        console.error('Error al cargar datos de audiencia:', error);
       } finally {
         setLoading(false);
       }

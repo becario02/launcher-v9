@@ -1,60 +1,68 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useRef } from 'react';
-import { X, Eye, EyeOff } from 'lucide-react';
-import clsx from 'clsx';
-import { usePrimaryColor } from '@/context/primaryColor';
+import { useEffect, useState, useRef, useCallback } from "react";
+import { X, Eye, EyeOff } from "lucide-react";
+import clsx from "clsx";
+import { usePrimaryColor } from "@/context/primaryColor";
 
-export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }) {
+export default function UserFormModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  initialData,
+}) {
   const { primaryColor } = usePrimaryColor();
   const modalRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
-    fullname: '',
-    email: '',
-    username: '',
-    password: '',
-    role: 'NORMAL'
+    fullname: "",
+    email: "",
+    username: "",
+    password: "",
+    role: "NORMAL",
   });
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState({
     score: 0,
-    label: 'Muy débil',
-    color: 'bg-red-500'
+    label: "Muy débil",
+    color: "bg-red-500",
   });
   const [errors, setErrors] = useState({});
 
-  // ✅ Resetea el formulario al abrir el modal
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
         setFormData({
-          fullname: initialData.fullname || '',
-          email: initialData.email || '',
-          username: initialData.username || '',
-          password: '',
+          fullname: initialData.fullname || "",
+          email: initialData.email || "",
+          username: initialData.username || "",
+          password: "",
           role:
-            initialData.role === 'ADMINADVAN'
-              ? 'ADMIN'
-              : initialData.role === 'USERADVAN'
-              ? 'NORMAL'
-              : 'NORMAL'
+            initialData.profileName === "ADMINADVAN"
+              ? "ADMIN"
+              : initialData.profileName === "USERADVAN"
+              ? "NORMAL"
+              : "NORMAL",
         });
       } else {
         setFormData({
-          fullname: '',
-          email: '',
-          username: '',
-          password: ''
+          fullname: "",
+          email: "",
+          username: "",
+          password: "",
+          role: "NORMAL",
         });
       }
       setErrors({});
-      setPasswordStrength({ score: 0, label: 'Muy débil', color: 'bg-red-500' });
-      
-      // Animar entrada
+      setPasswordStrength({
+        score: 0,
+        label: "Muy débil",
+        color: "bg-red-500",
+      });
+
       const timer = setTimeout(() => {
         setIsVisible(true);
       }, 50);
@@ -63,90 +71,123 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }
       setIsVisible(false);
     }
   }, [isOpen, initialData]);
-  
-  // Manejar clics fuera del modal
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (modalRef.current && !modalRef.current.contains(event.target) && isOpen) {
-        handleClose();
-      }
-    }
-    
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen]);
-  
-  // Función para cerrar el modal con animación
-  const handleClose = () => {
+
+  const handleClose = useCallback(() => {
     setIsVisible(false);
     setTimeout(() => {
       onClose();
     }, 200);
-  };
-  
-  // Evaluar la fortaleza de la contraseña cuando cambia
+  }, [onClose]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target) &&
+        isOpen
+      ) {
+        handleClose();
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, handleClose]);
+
   useEffect(() => {
     if (formData.password) {
       const strength = evaluatePasswordStrength(formData.password);
       setPasswordStrength(strength);
     } else {
-      setPasswordStrength({ score: 0, label: 'Muy débil', color: 'bg-red-500' });
+      setPasswordStrength({
+        score: 0,
+        label: "Muy débil",
+        color: "bg-red-500",
+      });
     }
   }, [formData.password]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Limpiar errores al cambiar el valor del campo
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
     if (errors[name]) {
-      setErrors(prev => {
+      setErrors((prev) => {
         const updatedErrors = { ...prev };
         delete updatedErrors[name];
         return updatedErrors;
       });
     }
   };
-  
-  // Validar campo individual cuando pierde el foco
+
+  const validateEmailDomain = (email) => {
+    const requiredDomain = "@advanpro.com.mx";
+    return email.endsWith(requiredDomain);
+  };
+
   const handleBlur = (e) => {
     const { name, value } = e.target;
-    
-    // Validar en tiempo real
+
     switch (name) {
-      case 'fullname':
+      case "fullname":
         if (!value.trim()) {
-          setErrors(prev => ({ ...prev, fullname: 'El nombre completo es obligatorio' }));
+          setErrors((prev) => ({
+            ...prev,
+            fullname: "El nombre completo es obligatorio",
+          }));
         }
         break;
-      case 'email':
+      case "email":
         if (!value.trim()) {
-          setErrors(prev => ({ ...prev, email: 'El correo electrónico es obligatorio' }));
+          setErrors((prev) => ({
+            ...prev,
+            email: "El correo electrónico es obligatorio",
+          }));
         } else {
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailRegex.test(value)) {
-            setErrors(prev => ({ ...prev, email: 'Formato de correo electrónico inválido' }));
+            setErrors((prev) => ({
+              ...prev,
+              email: "Formato de correo electrónico inválido",
+            }));
+          } else if (!validateEmailDomain(value)) {
+            setErrors((prev) => ({
+              ...prev,
+              email: "El correo debe tener el dominio @advanpro.com.mx",
+            }));
           }
         }
         break;
-      case 'username':
+      case "username":
         if (!value.trim()) {
-          setErrors(prev => ({ ...prev, username: 'El nombre de usuario es obligatorio' }));
+          setErrors((prev) => ({
+            ...prev,
+            username: "El nombre de usuario es obligatorio",
+          }));
         } else if (value.length < 4) {
-          setErrors(prev => ({ ...prev, username: 'El nombre de usuario debe tener al menos 4 caracteres' }));
+          setErrors((prev) => ({
+            ...prev,
+            username: "El nombre de usuario debe tener al menos 4 caracteres",
+          }));
         }
         break;
-      case 'password':
+      case "password":
         if (!initialData && !value) {
-          setErrors(prev => ({ ...prev, password: 'La contraseña es obligatoria' }));
+          setErrors((prev) => ({
+            ...prev,
+            password: "La contraseña es obligatoria",
+          }));
         } else if (value) {
           const passwordErrors = validatePassword(value);
           if (passwordErrors.length > 0) {
-            setErrors(prev => ({ ...prev, password: passwordErrors[0] }));
+            setErrors((prev) => ({ ...prev, password: passwordErrors[0] }));
           } else if (passwordStrength.score < 3) {
-            setErrors(prev => ({ ...prev, password: 'La contraseña no es lo suficientemente segura' }));
+            setErrors((prev) => ({
+              ...prev,
+              password: "La contraseña no es lo suficientemente segura",
+            }));
           }
         }
         break;
@@ -154,108 +195,102 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }
         break;
     }
   };
-  
-  // Función para evaluar la fortaleza de la contraseña
+
   const evaluatePasswordStrength = (password) => {
     let score = 0;
-    
+
     // Longitud mínima
     if (password.length >= 8) score += 1;
     if (password.length >= 12) score += 1;
-    
+
     // Complejidad
-    if (/[a-z]/.test(password)) score += 1; // Minúsculas
-    if (/[A-Z]/.test(password)) score += 1; // Mayúsculas
-    if (/[0-9]/.test(password)) score += 1; // Números
-    if (/[^a-zA-Z0-9]/.test(password)) score += 1; // Caracteres especiales
-    
+    if (/[a-z]/.test(password)) score += 1;
+    if (/[A-Z]/.test(password)) score += 1;
+    if (/[0-9]/.test(password)) score += 1;
+    if (/[^a-zA-Z0-9]/.test(password)) score += 1;
+
     // Patrones repetitivos (reduce la puntuación)
     if (/(.)\1{2,}/.test(password)) score -= 1; // Caracteres repetidos
-    if (/^(?:123|abc|qwerty|password|contraseña|admin)/i.test(password)) score -= 1; // Patrones comunes
-    
-    // Asegúrate que el puntaje no sea negativo
+    if (/^(?:123|abc|qwerty|password|contraseña|admin)/i.test(password))
+      score -= 1; // Patrones comunes
+
     score = Math.max(0, score);
-    
-    // Máximo 5 puntos
+
     score = Math.min(5, score);
-    
-    // Determina la etiqueta y color según la puntuación
+
     const strengthMap = [
-      { score: 0, label: 'Muy débil', color: 'bg-red-500' },
-      { score: 1, label: 'Muy débil', color: 'bg-red-500' },
-      { score: 2, label: 'Débil', color: 'bg-orange-500' },
-      { score: 3, label: 'Moderada', color: 'bg-yellow-500' },
-      { score: 4, label: 'Fuerte', color: 'bg-blue-500' },
-      { score: 5, label: 'Muy fuerte', color: 'bg-green-500' }
+      { score: 0, label: "Muy débil", color: "bg-red-500" },
+      { score: 1, label: "Muy débil", color: "bg-red-500" },
+      { score: 2, label: "Débil", color: "bg-orange-500" },
+      { score: 3, label: "Moderada", color: "bg-yellow-500" },
+      { score: 4, label: "Fuerte", color: "bg-blue-500" },
+      { score: 5, label: "Muy fuerte", color: "bg-green-500" },
     ];
-    
+
     return strengthMap[score];
   };
-  
-  // Validar contraseña - validación más estricta
+
   const validatePassword = (password) => {
     const errors = [];
-    
-    // Si es edición y no hay contraseña, permitir continuar
+
     if (initialData && !password) {
       return errors;
     }
-    
-    // Verificamos todos los criterios obligatorios
+
     if (password.length < 8) {
-      errors.push('La contraseña debe tener al menos 8 caracteres');
+      errors.push("La contraseña debe tener al menos 8 caracteres");
     }
-    
+
     if (!/[a-z]/.test(password)) {
-      errors.push('Debe incluir al menos una letra minúscula');
+      errors.push("Debe incluir al menos una letra minúscula");
     }
-    
+
     if (!/[A-Z]/.test(password)) {
-      errors.push('Debe incluir al menos una letra mayúscula');
+      errors.push("Debe incluir al menos una letra mayúscula");
     }
-    
+
     if (!/[0-9]/.test(password)) {
-      errors.push('Debe incluir al menos un número');
+      errors.push("Debe incluir al menos un número");
     }
-    
+
     if (!/[^a-zA-Z0-9]/.test(password)) {
-      errors.push('Debe incluir al menos un carácter especial');
+      errors.push("Debe incluir al menos un carácter especial");
     }
-    
-    // Verificaciones adicionales de seguridad
+
     if (/(.)\1{2,}/.test(password)) {
-      errors.push('No debe contener caracteres repetidos consecutivamente');
+      errors.push("No debe contener caracteres repetidos consecutivamente");
     }
-    
+
     if (/^(?:123|abc|qwerty|password|contraseña|admin)/i.test(password)) {
-      errors.push('No debe contener secuencias comunes o predecibles');
+      errors.push("No debe contener secuencias comunes o predecibles");
     }
-    
+
     return errors;
   };
-  
-  // Renderizar indicador de fortaleza
+
   const renderStrengthIndicator = () => {
     const { score, label, color } = passwordStrength;
     const percentage = (score / 5) * 100;
-    
+
     return (
       <div className="mt-2">
         <div className="flex justify-between text-xs mb-1">
           <span className="text-gray-600 dark:text-gray-400">Fortaleza:</span>
-          <span className={`font-medium ${
-            score <= 2 
-              ? 'text-red-600 dark:text-red-400' 
-              : score <= 3 
-                ? 'text-yellow-600 dark:text-yellow-400' 
-                : 'text-green-600 dark:text-green-400'
-          }`}>
+          <span
+            className={`font-medium ${
+              score <= 2
+                ? "text-red-600 dark:text-red-400"
+                : score <= 3
+                ? "text-yellow-600 dark:text-yellow-400"
+                : "text-green-600 dark:text-green-400"
+            }`}
+          >
             {label}
           </span>
         </div>
         <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-          <div 
-            className={`h-full ${color} transition-all duration-300`} 
+          <div
+            className={`h-full ${color} transition-all duration-300`}
             style={{ width: `${percentage}%` }}
           ></div>
         </div>
@@ -263,44 +298,43 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }
     );
   };
 
-  // Validar todos los campos del formulario
   const validateForm = () => {
-    // Limpiar errores previos
     setErrors({});
-    
-    // Validación secuencial - solo mostrar el primer error encontrado
-    
-    // 1. Validar nombre completo
+
     if (!formData.fullname.trim()) {
-      setErrors({ fullname: 'El nombre completo es obligatorio' });
+      setErrors({ fullname: "El nombre completo es obligatorio" });
       return false;
     }
-    
-    // 2. Validar email
+
     if (!formData.email.trim()) {
-      setErrors({ email: 'El correo electrónico es obligatorio' });
+      setErrors({ email: "El correo electrónico es obligatorio" });
       return false;
     } else {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
-        setErrors({ email: 'Formato de correo electrónico inválido' });
+        setErrors({ email: "Formato de correo electrónico inválido" });
+        return false;
+      } else if (!validateEmailDomain(formData.email)) {
+        setErrors({
+          email: "El correo debe tener el dominio @advanpro.com.mx",
+        });
         return false;
       }
     }
-    
-    // 3. Validar nombre de usuario
+
     if (!formData.username.trim()) {
-      setErrors({ username: 'El nombre de usuario es obligatorio' });
+      setErrors({ username: "El nombre de usuario es obligatorio" });
       return false;
     } else if (formData.username.length < 4) {
-      setErrors({ username: 'El nombre de usuario debe tener al menos 4 caracteres' });
+      setErrors({
+        username: "El nombre de usuario debe tener al menos 4 caracteres",
+      });
       return false;
     }
-    
-    // 4. Validar contraseña
-    if (!initialData) { // Si es nuevo usuario, contraseña es obligatoria
+
+    if (!initialData) {
       if (!formData.password) {
-        setErrors({ password: 'La contraseña es obligatoria' });
+        setErrors({ password: "La contraseña es obligatoria" });
         return false;
       } else {
         const passwordErrors = validatePassword(formData.password);
@@ -308,21 +342,25 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }
           setErrors({ password: passwordErrors[0] });
           return false;
         } else if (passwordStrength.score < 3) {
-          setErrors({ password: 'La contraseña no es lo suficientemente segura' });
+          setErrors({
+            password: "La contraseña no es lo suficientemente segura",
+          });
           return false;
         }
       }
-    } else if (formData.password) { 
+    } else if (formData.password) {
       const passwordErrors = validatePassword(formData.password);
       if (passwordErrors.length > 0) {
         setErrors({ password: passwordErrors[0] });
         return false;
       } else if (passwordStrength.score < 3) {
-        setErrors({ password: 'La contraseña no es lo suficientemente segura' });
+        setErrors({
+          password: "La contraseña no es lo suficientemente segura",
+        });
         return false;
       }
     }
-    
+
     return true;
   };
 
@@ -331,10 +369,10 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }
 
     if (validateForm()) {
       setIsSubmitting(true);
-      const mappedRole = formData.role === 'ADMIN' ? 'ADMINADVAN' : 'USERADVAN';
+      const mappedRole = formData.role === "ADMIN" ? "ADMINADVAN" : "USERADVAN";
       const finalForm = {
         ...formData,
-        type: mappedRole
+        type: mappedRole,
       };
 
       try {
@@ -348,16 +386,17 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4 transition-opacity duration-300"
-         style={{ opacity: isVisible ? 1 : 0 }}>
-      <div 
+    <div
+      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4 transition-opacity duration-300"
+      style={{ opacity: isVisible ? 1 : 0 }}
+    >
+      <div
         ref={modalRef}
         className={`bg-white dark:bg-[#1C1C24] rounded-xl w-full max-w-md shadow-xl p-6 relative font-poppins transition-all duration-300 transform ${
-          isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+          isVisible ? "scale-100 opacity-100" : "scale-95 opacity-0"
         }`}
       >
-        {/* Botón cerrar */}
-        <button 
+        <button
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"
           onClick={handleClose}
         >
@@ -365,51 +404,87 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }
         </button>
 
         <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-6">
-          {initialData ? 'Editar usuario' : 'Crear nuevo usuario'}
+          {initialData ? "Editar usuario" : "Crear nuevo usuario"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5 text-sm">
           <div>
-            <label className="block mb-1 text-gray-700 dark:text-gray-300">Nombre completo</label>
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">
+              Nombre completo
+            </label>
             <input
               type="text"
               name="fullname"
               value={formData.fullname}
               onChange={handleChange}
               onBlur={handleBlur}
-              className={`w-full rounded-md bg-white dark:bg-[#1C1C24] border ${errors.fullname ? 'border-red-400' : 'border-gray-300 dark:border-[#2C2C38]'} px-3 py-2 text-gray-800 dark:text-white`}
+              className={`w-full rounded-md bg-white dark:bg-[#1C1C24] border ${
+                errors.fullname
+                  ? "border-red-400"
+                  : "border-gray-300 dark:border-[#2C2C38]"
+              } px-3 py-2 text-gray-800 dark:text-white`}
             />
-            {errors.fullname && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.fullname}</p>}
+            {errors.fullname && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {errors.fullname}
+              </p>
+            )}
           </div>
-          
+
           <div>
-            <label className="block mb-1 text-gray-700 dark:text-gray-300">Correo electrónico</label>
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">
+              Correo electrónico
+              <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                (debe ser @advanpro.com.mx)
+              </span>
+            </label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               onBlur={handleBlur}
-              className={`w-full rounded-md bg-white dark:bg-[#1C1C24] border ${errors.email ? 'border-red-400' : 'border-gray-300 dark:border-[#2C2C38]'} px-3 py-2 text-gray-800 dark:text-white`}
+              placeholder="ejemplo@advanpro.com.mx"
+              className={`w-full rounded-md bg-white dark:bg-[#1C1C24] border ${
+                errors.email
+                  ? "border-red-400"
+                  : "border-gray-300 dark:border-[#2C2C38]"
+              } px-3 py-2 text-gray-800 dark:text-white`}
             />
-            {errors.email && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.email}</p>}
+            {errors.email && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {errors.email}
+              </p>
+            )}
           </div>
-          
+
           <div>
-            <label className="block mb-1 text-gray-700 dark:text-gray-300">Nombre de usuario</label>
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">
+              Nombre de usuario
+            </label>
             <input
               type="text"
               name="username"
               value={formData.username}
               onChange={handleChange}
               onBlur={handleBlur}
-              className={`w-full rounded-md bg-white dark:bg-[#1C1C24] border ${errors.username ? 'border-red-400' : 'border-gray-300 dark:border-[#2C2C38]'} px-3 py-2 text-gray-800 dark:text-white`}
+              className={`w-full rounded-md bg-white dark:bg-[#1C1C24] border ${
+                errors.username
+                  ? "border-red-400"
+                  : "border-gray-300 dark:border-[#2C2C38]"
+              } px-3 py-2 text-gray-800 dark:text-white`}
             />
-            {errors.username && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.username}</p>}
+            {errors.username && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {errors.username}
+              </p>
+            )}
           </div>
-          
+
           <div>
-            <label className="block mb-1 text-gray-700 dark:text-gray-300">Contraseña</label>
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">
+              Contraseña
+            </label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -417,40 +492,79 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }
                 value={formData.password}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                className={`w-full rounded-md bg-white dark:bg-[#1C1C24] border ${errors.password ? 'border-red-400' : 'border-gray-300 dark:border-[#2C2C38]'} px-3 py-2 text-gray-800 dark:text-white pr-10`}
-                placeholder={initialData ? '••••••••' : ''}
+                className={`w-full rounded-md bg-white dark:bg-[#1C1C24] border ${
+                  errors.password
+                    ? "border-red-400"
+                    : "border-gray-300 dark:border-[#2C2C38]"
+                } px-3 py-2 text-gray-800 dark:text-white pr-10`}
+                placeholder={initialData ? "••••••••" : ""}
               />
               <button
                 type="button"
                 className="absolute right-3 top-2.5 text-gray-500 dark:text-gray-400"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
             {errors.password && (
-              <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.password}</p>
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">
+                {errors.password}
+              </p>
             )}
-            
-            {/* Solo mostrar indicadores si hay contraseña o si es creación */}
+
             {(formData.password || !initialData) && (
               <>
                 {formData.password && renderStrengthIndicator()}
-                
+
                 <ul className="mt-2 text-xs text-gray-500 dark:text-gray-400 space-y-1 pl-5 list-disc">
-                  <li className={formData.password.length >= 8 ? 'text-green-600 dark:text-green-400' : ''}>
+                  <li
+                    className={
+                      formData.password.length >= 8
+                        ? "text-green-600 dark:text-green-400"
+                        : ""
+                    }
+                  >
                     Mínimo 8 caracteres
                   </li>
-                  <li className={/[a-z]/.test(formData.password) ? 'text-green-600 dark:text-green-400' : ''}>
+                  <li
+                    className={
+                      /[a-z]/.test(formData.password)
+                        ? "text-green-600 dark:text-green-400"
+                        : ""
+                    }
+                  >
                     Al menos una letra minúscula
                   </li>
-                  <li className={/[A-Z]/.test(formData.password) ? 'text-green-600 dark:text-green-400' : ''}>
+                  <li
+                    className={
+                      /[A-Z]/.test(formData.password)
+                        ? "text-green-600 dark:text-green-400"
+                        : ""
+                    }
+                  >
                     Al menos una letra mayúscula
                   </li>
-                  <li className={/[0-9]/.test(formData.password) ? 'text-green-600 dark:text-green-400' : ''}>
+                  <li
+                    className={
+                      /[0-9]/.test(formData.password)
+                        ? "text-green-600 dark:text-green-400"
+                        : ""
+                    }
+                  >
                     Al menos un número
                   </li>
-                  <li className={/[^a-zA-Z0-9]/.test(formData.password) ? 'text-green-600 dark:text-green-400' : ''}>
+                  <li
+                    className={
+                      /[^a-zA-Z0-9]/.test(formData.password)
+                        ? "text-green-600 dark:text-green-400"
+                        : ""
+                    }
+                  >
                     Al menos un carácter especial
                   </li>
                 </ul>
@@ -459,7 +573,9 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }
           </div>
 
           <div>
-            <label className="block mb-1 text-gray-700 dark:text-gray-300">Tipo de usuario</label>
+            <label className="block mb-1 text-gray-700 dark:text-gray-300">
+              Tipo de usuario
+            </label>
             <select
               name="role"
               value={formData.role}
@@ -483,15 +599,19 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, initialData }
               type="submit"
               disabled={isSubmitting}
               className={clsx(
-                'px-5 py-2 rounded-md text-white font-medium text-sm shadow',
-                'hover:opacity-90 transition',
-                isSubmitting && 'opacity-50 cursor-not-allowed'
+                "px-5 py-2 rounded-md text-white font-medium text-sm shadow",
+                "hover:opacity-90 transition",
+                isSubmitting && "opacity-50 cursor-not-allowed"
               )}
               style={{ backgroundColor: primaryColor }}
             >
               {isSubmitting
-                ? (initialData ? 'Guardando...' : 'Creando...')
-                : (initialData ? 'Guardar cambios' : 'Crear usuario')}
+                ? initialData
+                  ? "Guardando..."
+                  : "Creando..."
+                : initialData
+                ? "Guardar cambios"
+                : "Crear usuario"}
             </button>
           </div>
         </form>

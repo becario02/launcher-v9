@@ -91,10 +91,10 @@ export default function LastSessionCard() {
         if (data.statusCode === "200") {
           setProfileData(data.data);
         } else {
-          setError(data.message || "Error en la respuesta del servidor");
+          setError("No se encontraron datos del perfil");
         }
       } catch (err) {
-        setError("Error de conexión o servidor");
+        setError("Error de conexión");
       } finally {
         setLoading(false);
       }

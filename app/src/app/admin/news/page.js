@@ -183,7 +183,6 @@ export default function AdminNewsPage() {
   const indexOfFirst = indexOfLast - itemsPerPage;
   const currentItems = filteredNews.slice(indexOfFirst, indexOfLast);
 
-  // Categorías dinámicas
   const categories = ['all', ...new Set(news.map(n => n.category))];
 
   // Permisos
