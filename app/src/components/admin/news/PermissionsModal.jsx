@@ -110,7 +110,6 @@ export default function PermissionsModal({
   // Guardar permisos
   const onSave = async () => {
     if (!newsId) return;
-    setLoading(true);
     try {
       const res = await newsPermissionsService.saveNewsPermissions(newsId, permissions);
       if (res?.success) {
@@ -120,8 +119,7 @@ export default function PermissionsModal({
       }
     } catch (e) {
       console.error(e);
-    } finally {
-      setLoading(false);
+      throw e; // ✅ Re-lanzar error para que AddPermissions lo maneje
     }
   };
 
@@ -154,22 +152,26 @@ export default function PermissionsModal({
               <div className="flex items-center p-1 rounded-full bg-gray-200 dark:bg-gray-600">
                 <button
                   onClick={() => setViewMode('add')}
+                  disabled={loading}
                   className={`
                     flex items-center px-3 py-1 sm:px-4 sm:py-1.5 text-p font-medium rounded-full transition-colors
                     ${viewMode === 'add'
                       ? 'bg-white dark:bg-gray-800 shadow-sm text-primary'
                       : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100'}
+                    ${loading ? 'opacity-50 cursor-not-allowed' : ''}
                   `}
                 >
                   <PlusCircle className="mr-1" size={14} /> Agregar
                 </button>
                 <button
                   onClick={() => setViewMode('view')}
+                  disabled={loading}
                   className={`
                     flex items-center px-3 py-1 sm:px-4 sm:py-1.5 text-p font-medium rounded-full transition-colors
                     ${viewMode === 'view'
                       ? 'bg-white dark:bg-gray-800 shadow-sm text-primary'
                       : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100'}
+                    ${loading ? 'opacity-50 cursor-not-allowed' : ''}
                   `}
                 >
                   <Eye className="mr-1" size={14} /> Ver Asignados
@@ -185,11 +187,7 @@ export default function PermissionsModal({
           </div>
 
           {/* Content */}
-          {loading ? (
-            <div className="flex-grow flex items-center justify-center bg-white dark:bg-gray-800">
-              <div className="h-8 w-8 rounded-full border-b-2 border-primary-blue animate-spin"></div>
-            </div>
-          ) : viewMode === 'add' ? (
+          {viewMode === 'add' ? (
             <AddPermissions
               applications={applications}
               clients={clients}
@@ -209,12 +207,14 @@ export default function PermissionsModal({
               handleCloseModal={handleCloseModal}
               assignedAudience={assignedAudience}
               isDark={isDark}
+              isLoading={loading} // ✅ Pasar el estado de loading
             />
           ) : (
             <ViewAudience
               assignedAudience={assignedAudience}
               handleCloseModal={handleCloseModal}
               isDark={isDark}
+              isLoading={loading} // ✅ También para ViewAudience si lo necesitas
             />
           )}
         </div>
