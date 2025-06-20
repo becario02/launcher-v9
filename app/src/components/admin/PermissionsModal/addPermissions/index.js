@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Check, X, Search, Layers, Building2, Users, ChevronDown, Info, AlertCircle } from 'lucide-react';
 
-// ✅ Componente Skeleton para estado de carga
 const SkeletonLoader = () => {
   return (
     <div className="p-6 flex-grow overflow-y-auto bg-gray-100 dark:bg-gray-7">
-      {/* Skeleton del mensaje informativo */}
       <div className="mb-6 mx-auto max-w-4xl">
         <div className="flex items-center p-4 bg-gray-200 border border-gray-300 rounded-lg dark:bg-gray-6 dark:border-gray-5 animate-pulse">
           <div className="flex-shrink-0 w-5 h-5 bg-gray-300 rounded dark:bg-gray-5"></div>
@@ -16,25 +14,21 @@ const SkeletonLoader = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        {/* Skeleton Aplicaciones */}
         <div className="flex flex-col p-4 bg-white border border-gray-200 rounded-xl dark:bg-gray-6 dark:border-gray-6">
           <div className="flex items-center mb-3">
             <div className="w-5 h-5 bg-gray-300 rounded mr-2 animate-pulse dark:bg-gray-5"></div>
             <div className="h-5 bg-gray-300 rounded w-32 animate-pulse dark:bg-gray-5"></div>
           </div>
           
-          {/* Skeleton search input */}
           <div className="relative mb-3">
             <div className="w-full h-10 bg-gray-200 rounded-md animate-pulse dark:bg-gray-5"></div>
           </div>
           
-          {/* Skeleton checkbox "todos" */}
           <div className="flex items-center mb-2 p-2">
             <div className="w-4 h-4 bg-gray-300 rounded animate-pulse dark:bg-gray-5"></div>
             <div className="ml-2 h-4 bg-gray-300 rounded w-40 animate-pulse dark:bg-gray-5"></div>
           </div>
           
-          {/* Skeleton lista */}
           <div className="flex-grow p-1 bg-white border border-gray-200 rounded-lg dark:bg-gray-7 dark:border-gray-6 max-h-[280px]">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex items-center p-2 mb-1">
@@ -45,7 +39,6 @@ const SkeletonLoader = () => {
           </div>
         </div>
 
-        {/* Skeleton Clientes */}
         <div className="flex flex-col p-4 bg-white border border-gray-200 rounded-xl dark:bg-gray-6 dark:border-gray-6">
           <div className="flex items-center mb-3">
             <div className="w-5 h-5 bg-gray-300 rounded mr-2 animate-pulse dark:bg-gray-5"></div>
@@ -72,7 +65,6 @@ const SkeletonLoader = () => {
         </div>
       </div>
 
-      {/* Skeleton Footer */}
       <div className="sticky bottom-0 z-10 flex justify-end gap-3 px-6 py-4 bg-gray-100 border-t border-gray-200 dark:bg-gray-7 dark:border-gray-6">
         <div className="h-10 w-24 bg-gray-300 rounded-full animate-pulse dark:bg-gray-5"></div>
         <div className="h-10 w-36 bg-gray-300 rounded-full animate-pulse dark:bg-gray-5"></div>
@@ -100,7 +92,7 @@ export default function AddPermissions({
   handleCloseModal,
   assignedAudience,
   isDark,
-  isLoading = false // ✅ Nueva prop para controlar el loading
+  isLoading = false 
 }) {
   const [saving, setSaving] = useState(false);
   const [appSearchTerm, setAppSearchTerm] = useState('');
@@ -147,7 +139,6 @@ export default function AddPermissions({
     }
   }, [assignedAudience]);
 
-  // ✅ Si está cargando, mostrar skeleton
   if (isLoading) {
     return <SkeletonLoader />;
   }
@@ -167,7 +158,7 @@ export default function AddPermissions({
     if (!hasClients && !hasUsers) {
       return {
         isValid: false,
-        message: 'Debe seleccionar al menos un cliente o usuario para continuar'
+        message: 'Debe seleccionar al menos un cliente para continuar'
       };
     }
     
@@ -496,7 +487,6 @@ export default function AddPermissions({
 
   return (
     <>
-      {/* ✅ Overlay de guardado - solo se muestra cuando está guardando */}
       {saving && (
         <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-20 flex items-center justify-center">
           <div className="flex flex-col items-center space-y-4">
@@ -533,7 +523,7 @@ export default function AddPermissions({
             <Info className="flex-shrink-0 w-5 h-5 text-blue-600 dark:text-blue-400" />
             <div className="ml-3">
               <p className="text-sm text-blue-800 dark:text-blue-300">
-                <span className="font-medium">Campos requeridos:</span> Debe seleccionar al menos una aplicación y un cliente o usuario para guardar los permisos.
+                <span className="font-medium">Campos requeridos:</span> Debe seleccionar al menos una aplicación y un cliente para guardar los permisos.
               </p>
             </div>
           </div>
