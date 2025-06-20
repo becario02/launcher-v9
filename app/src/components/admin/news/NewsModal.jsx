@@ -135,7 +135,7 @@ export default function NewsModal({
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-4 sm:px-6 py-4 flex justify-between items-center bg-primary-blue">
+        <div className="px-4 sm:px-6 py-4 flex justify-between items-center bg-primary">
           <h2 className="text-lg sm:text-xl font-medium text-white">
             {modalType === 'add' && 'Crear Nueva Noticia'}
             {modalType === 'edit' && 'Editar Noticia'}
@@ -143,7 +143,7 @@ export default function NewsModal({
           </h2>
           <button
             onClick={handleCloseModal}
-            className="p-1 rounded-full text-white hover:text-primary-blue hover:bg-white transition-colors"
+            className="p-1 rounded-full text-white hover:text-primary hover:bg-white transition-colors"
           >
             <X size={20} />
           </button>
@@ -186,7 +186,7 @@ export default function NewsModal({
                 onChange={handleFormChange}
                 readOnly={isView}
                 className={`
-                  w-full px-4 py-3 rounded-lg text-p focus:outline-none focus:ring-2 focus:ring-primary-blue
+                  w-full px-4 py-3 rounded-lg text-p focus:outline-none focus:ring-2 focus:ring-primary
                   bg-gray-100 text-gray-900 placeholder-gray-500 border border-gray-200
                   dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:border-gray-600
                   ${isView ? 'cursor-not-allowed opacity-60' : ''}
@@ -205,7 +205,7 @@ export default function NewsModal({
                 onChange={handleFormChange}
                 disabled={isView}
                 className={`
-                  w-full px-4 py-3 rounded-lg text-p focus:outline-none focus:ring-2 focus:ring-primary-blue
+                  w-full px-4 py-3 rounded-lg text-p focus:outline-none focus:ring-2 focus:ring-primary
                   bg-gray-100 text-gray-900 placeholder-gray-500 border border-gray-200
                   dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:border-gray-600
                   ${isView ? 'cursor-not-allowed opacity-60' : ''}
@@ -235,7 +235,7 @@ export default function NewsModal({
                 onChange={handleFormChange}
                 readOnly={isView}
                 className={`
-                  w-full px-4 py-3 rounded-lg text-p focus:outline-none focus:ring-2 focus:ring-primary-blue
+                  w-full px-4 py-3 rounded-lg text-p focus:outline-none focus:ring-2 focus:ring-primary
                   bg-gray-100 text-gray-900 placeholder-gray-500 border border-gray-200
                   dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:border-gray-600
                   ${isView ? 'cursor-not-allowed opacity-60' : ''}
@@ -258,8 +258,8 @@ export default function NewsModal({
                       hover:bg-gray-200 dark:hover:bg-gray-600
                     `}
                   >
-                    <Upload size={18} className="text-primary-blue" />
-                    <span className="mt-2 text-p-small text-primary-blue">
+                    <Upload size={18} className="text-primary" />
+                    <span className="mt-2 text-p-small text-primary">
                       Haz clic para subir una imagen
                     </span>
                     <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
@@ -348,10 +348,10 @@ export default function NewsModal({
               disabled={isSaving}
               className={`
                 px-4 py-2 text-h3 text-white rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5 hover:shadow-md
-                bg-primary-blue dark:bg-primary-blue
+                bg-primary dark:bg-primary-
                 ${isSaving
                   ? 'opacity-50 cursor-not-allowed'
-                  : 'hover:bg-semantic.green dark:hover:bg-semantic.green'}
+                  : 'hover:bg-primary dark:hover:bg-primary'}
               `}
             >
               {isSaving ? 'Guardando...' : modalType === 'add' ? 'Crear' : 'Guardar'}

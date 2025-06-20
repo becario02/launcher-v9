@@ -257,9 +257,9 @@ export default function AdminUsersPage() {
                   setModalOpen(true);
                 }}
                 primaryColor={primaryColor}
-                users={users} // ✅ le pasas los usuarios filtrados
-                customOptions={customOptionsData.custom} // 👈 nuevo prop
-                dashboards={customOptionsData.dashboards} // 👈 nuevo prop
+                users={users}
+                customOptions={customOptionsData.custom}
+                dashboards={customOptionsData.dashboards}
               />
 
               {selectedCompany ? (

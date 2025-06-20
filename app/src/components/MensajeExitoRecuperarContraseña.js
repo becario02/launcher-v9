@@ -33,10 +33,10 @@ const MensajeExitoRecuperarContraseña = ({ onClose, onContinue }) => {
             </p>
             
             <button
-              onClick={onContinue}
+              onClick={onClose}
               className="w-32 bg-sky-600 text-white rounded-full py-2.5 px-6 hover:bg-sky-700 transition-colors"
             >
-              Continuar
+              Aceptar
             </button>
           </div>
         </div>

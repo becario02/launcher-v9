@@ -106,7 +106,7 @@ export default function SelectCompanyModal({
                     <>
                         <li
                           onClick={() => onSelect({ isAdvan: true })}
-                          className="flex items-center justify-between px-4 py-3 bg-semantic.blue dark:bg-semantic.blue rounded-lg cursor-pointer hover:bg-primary-blue dark:hover:bg-primary-blue transition-all group mt-2"
+                          className="flex items-center justify-between px-4 py-3 bg-gray-100 dark:bg-[#2C2C38] rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-[#3C3C48] transition-all group mt-2"
                         >
                           <div className="flex items-center gap-3">
                             <Shield className="w-5 h-5 text-primary dark:text-primary" />
@@ -114,7 +114,7 @@ export default function SelectCompanyModal({
                               Ver usuarios Advan
                             </span>
                           </div>
-                          <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-300 opacity-0 group-hover:opacity-100 transition" />
+                          <Check className="w-4 h-4 text-primary opacity-0 group-hover:opacity-100 transition" />
                         </li>
                       {filteredCompanies.map((company) => (
                         <li
