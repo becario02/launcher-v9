@@ -29,7 +29,7 @@ export async function POST(req) {
   const body = await req.json();
 
   const data = await callApiGateway({
-    endpoint: "/mslauncher/api/v1/videos",
+    endpoint: "/mslauncher/api/v1/video",
     method: "POST",
     body,
     headers: {
@@ -44,7 +44,7 @@ export async function PUT(req) {
   const body = await req.json();
 
   const data = await callApiGateway({
-    endpoint: "/mslauncher/api/v1/videos",
+    endpoint: "/mslauncher/api/v1/video",
     method: "PUT",
     body,
     headers: {
