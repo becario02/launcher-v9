@@ -15,7 +15,7 @@ export default function PromotionCard() {
   // Función para obtener la promoción actual
   const fetchCurrentPromotion = async () => {
     try {
-      const response = await fetch('http://localhost:5173/mslauncher/api/v1/promotions/current', {
+      const response = await fetch('/api/promotions/current', {
         headers: {
           'accept': 'application/json'
         }
