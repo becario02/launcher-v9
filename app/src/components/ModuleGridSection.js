@@ -5,19 +5,19 @@ import Link from 'next/link';
 const modules = [
   {
     name: 'Nucleares',
-    description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
+    description: 'Módulos centrales que gestionan el flujo operativo de la empresa con integridad y visibilidad total.',
     image: '/assets/modules/nucleares.png',
     icon: '/assets/modules/icon-nucleares.png',
   },
   {
     name: 'Financieros',
-    description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
+    description: 'Conectan la operación con los procesos financieros, permitiendo una gestión contable precisa y eficaz.',
     image: '/assets/modules/financieros.png',
     icon: '/assets/modules/icon-financieros.png',
   },
   {
     name: 'Auxiliares',
-    description: 'Lorem ipsum placerat mi tellus non ac risus facilisis nibh consequat ipsum.',
+    description: 'Control de forma eficiente los recursos clave de tu operación: compras, almacén, mantenimiento y gestión de llantas.',
     image: '/assets/modules/auxiliares.png',
     icon: '/assets/modules/icon-auxiliar.png',
   },

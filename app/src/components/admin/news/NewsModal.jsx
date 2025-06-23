@@ -220,28 +220,39 @@ export default function NewsModal({
             </div>
 
             {/* Fecha de Expiración */}
-            <div>
-              <label className="block mb-1 font-medium text-gray-800 dark:text-white">
-                Fecha de Expiración
-              </label>
-              <input
-                type="date"
-                name="dateExpiration"
-                value={
-                  formData.dateExpiration
-                    ? new Date(formData.dateExpiration).toISOString().split('T')[0]
-                    : ''
-                }
-                onChange={handleFormChange}
-                readOnly={isView}
-                className={`
-                  w-full px-4 py-3 rounded-lg text-p focus:outline-none focus:ring-2 focus:ring-primary
-                  bg-gray-100 text-gray-900 placeholder-gray-500 border border-gray-200
-                  dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:border-gray-600
-                  ${isView ? 'cursor-not-allowed opacity-60' : ''}
-                `}
-              />
-            </div>
+            <>
+                <style>
+                  {`
+                    html.dark input[type="date"]::-webkit-calendar-picker-indicator {
+                      filter: brightness(0) invert(1);
+                      opacity: 0.8;
+                    }
+                  `}
+                </style>
+            
+              <div>
+                <label className="block mb-1 font-medium text-gray-800 dark:text-white">
+                  Fecha de Expiración
+                </label>
+                <input
+                  type="date"
+                  name="dateExpiration"
+                  value={
+                    formData.dateExpiration
+                      ? new Date(formData.dateExpiration).toISOString().split('T')[0]
+                      : ''
+                  }
+                  onChange={handleFormChange}
+                  readOnly={isView}
+                  className={`
+                    w-full px-4 py-3 rounded-lg text-p focus:outline-none focus:ring-2 focus:ring-primary
+                    bg-gray-100 text-gray-900 placeholder-gray-500 border border-gray-200
+                    dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:border-gray-600
+                    ${isView ? 'cursor-not-allowed opacity-60' : ''}
+                  `}
+                />
+              </div>
+            </>
 
             {/* Imagen */}
             <div>

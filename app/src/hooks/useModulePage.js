@@ -798,7 +798,7 @@ export function useModulePage() {
         .writeText(encoded)
         .then(() => {
           setTimeout(() => {
-            window.location.href = `advanerpconnect://${exeName}?session=${data.data.session}?server=${selectedCompany.serverErpDb}?database=${selectedCompany.nameErpDb}?user=${selectedCompany.userErpDb}?password=${selectedCompany.passwordErpDb}?idSession=${idSession}`;
+            window.location.href = `advanerpconnect://${exeName}?session=${data.data.idSession}?server=${selectedCompany.serverErpDb}?database=${selectedCompany.nameErpDb}?user=${selectedCompany.userErpDb}?password=${selectedCompany.passwordErpDb}?idSession=${idSession}`;
           }, 2500);
         })
         .catch((err) => {

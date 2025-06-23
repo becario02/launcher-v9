@@ -432,34 +432,45 @@ export default function NotificationFormModal({
                         </div>
 
                         {/* Fecha de Expiración */}
-                        <div>
-                          <label htmlFor="expirationDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Fecha de Expiración <span className="text-red-500">*</span>
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <Calendar className="h-4 w-4 text-gray-400" />
+                        <>
+                          <style>
+                            {`
+                              html.dark input[type="date"]::-webkit-calendar-picker-indicator {
+                                filter: brightness(0) invert(1);
+                                opacity: 0.8;
+                              }
+                            `}
+                          </style>
+                        
+                          <div>
+                            <label htmlFor="expirationDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Fecha de Expiración <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Calendar className="h-4 w-4 text-gray-400" />
+                              </div>
+                              <input
+                                type="date"
+                                id="expirationDate"
+                                name="expirationDate"
+                                value={formData.expirationDate}
+                                onChange={handleChange}
+                                min={new Date().toISOString().split('T')[0]} // Esto permite seleccionar el día actual
+                                className={clsx(
+                                  "w-full pl-10 px-3 py-2 rounded-md text-sm border focus:outline-none focus:ring-1",
+                                  errors.expirationDate 
+                                    ? "border-red-300 focus:border-red-500 focus:ring-red-500 dark:border-red-700 dark:focus:border-red-500" 
+                                    : "border-gray-300 focus:border-primary focus:ring-primary dark:border-[#4a4c57] dark:focus:border-primary",
+                                  "bg-white dark:bg-[#262631] text-gray-800 dark:text-white"
+                                )}
+                              />
                             </div>
-                            <input
-                              type="date"
-                              id="expirationDate"
-                              name="expirationDate"
-                              value={formData.expirationDate}
-                              onChange={handleChange}
-                              min={new Date().toISOString().split('T')[0]} // Esto permite seleccionar el día actual
-                              className={clsx(
-                                "w-full pl-10 px-3 py-2 rounded-md text-sm border focus:outline-none focus:ring-1",
-                                errors.expirationDate 
-                                  ? "border-red-300 focus:border-red-500 focus:ring-red-500 dark:border-red-700 dark:focus:border-red-500" 
-                                  : "border-gray-300 focus:border-primary focus:ring-primary dark:border-[#4a4c57] dark:focus:border-primary",
-                                "bg-white dark:bg-[#262631] text-gray-800 dark:text-white"
-                              )}
-                            />
+                            {errors.expirationDate && (
+                              <p className="mt-1 text-xs text-red-500">{errors.expirationDate}</p>
+                            )}
                           </div>
-                          {errors.expirationDate && (
-                            <p className="mt-1 text-xs text-red-500">{errors.expirationDate}</p>
-                          )}
-                        </div>
+                        </>
                       </div>
                     </div>
 
