@@ -136,8 +136,8 @@ export default function SubMenu({
       return;
     }
 
-    const combinedText = `${currentSession}${acronym}${item.idName}`;
-    
+    const paddedSession = currentSession.toString().padStart(10, '0');
+    const combinedText = `${paddedSession}${acronym}${item.idName}`;
     const textToCopy = btoa(combinedText); 
     
     const textToShow = item.textOption || item.idName;
