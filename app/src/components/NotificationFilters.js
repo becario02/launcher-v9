@@ -33,10 +33,7 @@ const NotificationFilters = ({
     { value: 'NEWARTICLE', label: 'Nuevo Artículo' },
     { value: 'NEWEVENT', label: 'Nuevo Evento' },
     { value: 'HOLIDAY', label: 'Días Festivos' },
-    { value: 'CHANGELOG', label: 'Registro de Cambios' },
-    // Mantener categorías legacy para compatibilidad
-    { value: 'SYSTEMUPDATE', label: 'Actualización del Sistema (Legacy)' },
-    { value: 'NA', label: 'Sin Categoría' }
+    { value: 'CHANGELOG', label: 'Registro de Cambios' }
   ];
 
   // Función para obtener la etiqueta de categoría
@@ -231,7 +228,9 @@ const NotificationFilters = ({
                     type="date"
                     value={startDate ? startDate.toISOString().split('T')[0] : ''}
                     onChange={(e) => {
-                      setStartDate(e.target.value ? new Date(e.target.value) : null);
+                      const [year, month, day] = e.target.value.split('-').map(Number);
+                      const localDate = new Date(year, month - 1, day); // mes 0-indexado
+                      setStartDate(localDate);
                       setPage(1);
                     }}
                     className="w-full px-3 py-2 rounded-lg text-sm border border-gray-300 dark:border-[#2C2C38] bg-white dark:bg-[#1C1C24] text-gray-800 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:focus:border-primary"
@@ -248,7 +247,12 @@ const NotificationFilters = ({
                     type="date"
                     value={endDate ? endDate.toISOString().split('T')[0] : ''}
                     onChange={(e) => {
-                      setEndDate(e.target.value ? new Date(e.target.value) : null);
+                      if (e.target.value) {
+                        const [year, month, day] = e.target.value.split('-').map(Number);
+                        setEndDate(new Date(year, month - 1, day));
+                      } else {
+                        setEndDate(null);
+                      }
                       setPage(1);
                     }}
                     className="w-full px-3 py-2 rounded-lg text-sm border border-gray-300 dark:border-[#2C2C38] bg-white dark:bg-[#1C1C24] text-gray-800 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:focus:border-primary"
