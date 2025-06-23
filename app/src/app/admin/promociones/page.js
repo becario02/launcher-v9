@@ -8,11 +8,8 @@ import Sidebar from '@/components/Sidebar';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useTheme } from '@/context/ThemeContext';
 import Toast from '@/components/Toast';
-
-// Importar el modal unificado y el visor de imágenes
 import PromotionFormModal from '@/components/PromotionFormModal';
 import ImageViewerModal from '@/components/ImageViewerModal';
-// import ViewPromotionModal from '@/components/ViewPromotionModal';
 
 export default function AdminPromotionsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,7 +24,7 @@ export default function AdminPromotionsPage() {
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [selectedPromotion, setSelectedPromotion] = useState(null);
   const [selectedImage, setSelectedImage] = useState({ src: '', alt: '' });
-  const [updatingStatus, setUpdatingStatus] = useState({}); // Para manejar loading individual de switches
+  const [updatingStatus, setUpdatingStatus] = useState({});
 
   // Estados para la tabla de promociones
   const [promotions, setPromotions] = useState([]);
