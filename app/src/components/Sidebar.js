@@ -17,7 +17,9 @@ import {
   Bell,
   Import,
   FileText,
-  Gift
+  Gift,
+  HelpCircle,
+  FileText as DocumentIcon
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -47,6 +49,8 @@ function getActiveItemFromPath(pathname) {
     return 'AdminUsers';
   } else if (pathname.includes('/admin/videos')) {
     return 'AdminVideos';
+  } else if (pathname.includes('/admin/documents')) {
+    return 'AdminDocumentos';
   } else if (pathname.includes('/admin/notifications')) {
     return 'AdminNotifications';
   } else if (pathname.includes('/admin/integradores')) {
@@ -87,7 +91,7 @@ const SidebarItem = ({ icon: Icon, text, active = false, onClick, indent = false
   </button>
 );
 
-const ExpandableItem = ({ icon: Icon, text, children, defaultOpen = false, isChildActive = false }) => {
+const ExpandableItem = ({ icon: Icon, text, children, defaultOpen = false, isChildActive = false, indent = false }) => {
   const [open, setOpen] = useState(defaultOpen || isChildActive);
 
   // Optimizar el efecto para evitar re-renders innecesarios
@@ -105,7 +109,8 @@ const ExpandableItem = ({ icon: Icon, text, children, defaultOpen = false, isChi
           "font-[Poppins] w-full px-5 py-2 flex items-center justify-between text-[12px] font-medium rounded-md transition-colors duration-150",
           open || isChildActive
             ? 'bg-[#F2F6FD] dark:bg-[#31313e]'
-            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#31313e]'
+            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#31313e]',
+          indent && 'pl-8'
         )}
       >
         <div className="flex items-center gap-3">
@@ -245,7 +250,8 @@ export default function Sidebar({ onClose }) {
   }, [pathname, router, onClose]);
 
   const isDivisionActive = ['NUCLEARES', 'FINANCIAL', 'AUXILIARES'].includes(activeItem);
-  const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminMenus', 'AdminNotifications', 'AdminIntegradores', 'AdminAddendas', 'AdminPromociones'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
+  const isHelpCenterActive = ['AdminVideos', 'AdminDocumentos'].includes(activeItem);
+  const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminDocumentos', 'AdminMenus', 'AdminNotifications', 'AdminIntegradores', 'AdminAddendas', 'AdminPromociones'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
 
   function formatServer(server) {
     if (!server) return '';
@@ -360,22 +366,40 @@ export default function Sidebar({ onClose }) {
               />
             )}
            
-              <SidebarItem
-                icon={Users}
-                text="Usuarios"
-                indent
-                active={activeItem === 'AdminUsers'}
-                onClick={() => navigateTo('/admin/users', 'AdminUsers')}
-              />
+            <SidebarItem
+              icon={Users}
+              text="Usuarios"
+              indent
+              active={activeItem === 'AdminUsers'}
+              onClick={() => navigateTo('/admin/users', 'AdminUsers')}
+            />
+
+            {/* Centro de Ayuda sub-dropdown */}
             {isAdvan && (
-              <SidebarItem
-                icon={Video}
-                text="Videos"
-                indent
-                active={activeItem === 'AdminVideos'}
-                onClick={() => navigateTo('/admin/videos', 'AdminVideos')}
-              />
+              <ExpandableItem
+                icon={HelpCircle}
+                text="Centro Ayuda"
+                indent={true}
+                defaultOpen={false}
+                isChildActive={isHelpCenterActive}
+              >
+                <SidebarItem
+                  icon={Video}
+                  text="Videos"
+                  indent
+                  active={activeItem === 'AdminVideos'}
+                  onClick={() => navigateTo('/admin/videos', 'AdminVideos')}
+                />
+                <SidebarItem
+                  icon={DocumentIcon}
+                  text="Documentos"
+                  indent
+                  active={activeItem === 'AdminDocumentos'}
+                  onClick={() => navigateTo('/admin/documents', 'AdminDocumentos')}
+                />
+              </ExpandableItem>
             )}
+
             {isAdvan && (
               <SidebarItem
                 icon={Bell}
