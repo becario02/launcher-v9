@@ -803,7 +803,7 @@ export function useModulePage() {
         })
         .catch((err) => {
           setTimeout(() => {
-            window.location.href = `advanerpconnect://${exeName}?session=${data.data.session}?server=${selectedCompany.serverErpDb}?database=${selectedCompany.nameErpDb}?user=${selectedCompany.userErpDb}?password=${selectedCompany.passwordErpDb}?idSession=${idSession}`;
+            window.location.href = `advanerpconnect://${exeName}?session=${data.data.idSession}?server=${selectedCompany.serverErpDb}?database=${selectedCompany.nameErpDb}?user=${selectedCompany.userErpDb}?password=${selectedCompany.passwordErpDb}?idSession=${idSession}`;
           }, 2500);
         });
     } catch (err) {
@@ -863,7 +863,7 @@ export function useModulePage() {
 
     if (exeName && session) {
       setTimeout(() => {
-        window.location.href = `advanerpconnect://close/${exeName}?session=${session}`;
+        window.location.href = `advanerpconnect://close/${exeName}?session=${idSession}`;
         showNotification(
           "success",
           `Instancia de ${moduleParam} cerrada exitosamente`,
@@ -910,7 +910,7 @@ export function useModulePage() {
         inst.module === moduleParam
     );
 
-    return currentInstance?.session || null;
+    return currentInstance?.idSession || null;
   }, [activeInstance, getGlobalInstances, division, moduleParam]);
 
   return {
