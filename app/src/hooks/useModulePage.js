@@ -788,24 +788,13 @@ export function useModulePage() {
       );
 
       const idSession = data.data.idSession;
-      const userErpDb = selectedCompany.userErpDb;
+      const base64Password = selectedCompany.passwordErpDb;
+      const decodedPassword = atob(base64Password);
 
-      const clipboardString = `?idsession=${idSession}?usererpdb=${userErpDb}`;
+      setTimeout(() => {
+        window.location.href = `advanerpconnect://${exeName}?session=${data.data.idSession}?server=${selectedCompany.serverErpDb}?database=${selectedCompany.nameErpDb}?user=${selectedCompany.userErpDb}?password=${decodedPassword}?idSession=${idSession}`;
+      }, 2500);
 
-      const encoded = btoa(clipboardString);
-
-      navigator.clipboard
-        .writeText(encoded)
-        .then(() => {
-          setTimeout(() => {
-            window.location.href = `advanerpconnect://${exeName}?session=${data.data.idSession}?server=${selectedCompany.serverErpDb}?database=${selectedCompany.nameErpDb}?user=${selectedCompany.userErpDb}?password=${selectedCompany.passwordErpDb}?idSession=${idSession}`;
-          }, 2500);
-        })
-        .catch((err) => {
-          setTimeout(() => {
-            window.location.href = `advanerpconnect://${exeName}?session=${data.data.idSession}?server=${selectedCompany.serverErpDb}?database=${selectedCompany.nameErpDb}?user=${selectedCompany.userErpDb}?password=${selectedCompany.passwordErpDb}?idSession=${idSession}`;
-          }, 2500);
-        });
     } catch (err) {
       showNotification(
         "error",
