@@ -19,7 +19,9 @@ import {
   FileText,
   Gift,
   HelpCircle,
-  FileText as DocumentIcon
+  FileText as DocumentIcon,
+  BarChart3,
+  Truck
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -65,6 +67,8 @@ function getActiveItemFromPath(pathname) {
     return 'FINANCIAL';
   } else if (pathname.includes('/auxiliares')) {
     return 'AUXILIARES';
+  } else if (pathname.includes('/tableros/flotillas')) {
+    return 'Flotillas';
   } else if (pathname.startsWith('/custom/')) {
     return pathname;
   }
@@ -252,6 +256,7 @@ export default function Sidebar({ onClose }) {
   const isDivisionActive = ['NUCLEARES', 'FINANCIAL', 'AUXILIARES'].includes(activeItem);
   const isHelpCenterActive = ['AdminVideos', 'AdminDocumentos'].includes(activeItem);
   const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminDocumentos', 'AdminMenus', 'AdminNotifications', 'AdminIntegradores', 'AdminAddendas', 'AdminPromociones'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
+  const isGerencialesActive = ['Flotillas'].includes(activeItem);
 
   function formatServer(server) {
     if (!server) return '';
@@ -438,6 +443,22 @@ export default function Sidebar({ onClose }) {
             )}
           </ExpandableItem>
         )}
+
+        {/* Tableros Gerenciales */}
+        <ExpandableItem
+          icon={BarChart3}
+          text="Tableros Gerenc."
+          defaultOpen={false}
+          isChildActive={isGerencialesActive}
+        >
+          <SidebarItem
+            icon={Truck}
+            text="Flotillas"
+            indent
+            active={activeItem === 'Flotillas'}
+            onClick={() => navigateTo('/tableros/flotillas', 'Flotillas')}
+          />
+        </ExpandableItem>
 
         {/* CUSTOM PARENTS al final */}
         {customParents.map(p => (
