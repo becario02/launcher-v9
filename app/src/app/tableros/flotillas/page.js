@@ -141,8 +141,8 @@ const FleetLocationView = () => {
     const googleMap = new window.google.maps.Map(mapRef.current, {
       center: { lat: 4.6482, lng: -74.0731 },
       zoom: 11,
-      mapTypeControl: true,
-      streetViewControl: true,
+      mapTypeControl: false,
+      streetViewControl: false,
       fullscreenControl: true,
       styles: isDark ? [
         {
@@ -169,30 +169,35 @@ const FleetLocationView = () => {
     markersRef.current = [];
     
     const newMarkers = data.map(unit => {
+      // Create custom truck icon SVG
+      const truckIcon = {
+        url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1 17V13C1 12.45 1.196 11.979 1.588 11.588C1.98 11.196 2.45 11 3 11H12V7C12 6.45 12.196 5.979 12.588 5.588C12.98 5.196 13.45 5 14 5H19L22 8V17C22 17.55 21.804 18.021 21.412 18.412C21.021 18.804 20.55 19 20 19H19C19 19.8 18.683 20.483 18.05 21.05C17.417 21.617 16.767 21.9 16.1 21.9C15.433 21.9 14.783 21.617 14.15 21.05C13.517 20.483 13.2 19.8 13.2 19H8.8C8.8 19.8 8.483 20.483 7.85 21.05C7.217 21.617 6.567 21.9 5.9 21.9C5.233 21.9 4.583 21.617 3.95 21.05C3.317 20.483 3 19.8 3 19H2C1.45 19 0.979 18.804 0.588 18.412C0.196 18.021 0 17.55 0 17H1ZM14 7V11H20V9L18 7H14ZM5.9 20C6.367 20 6.767 19.833 7.1 19.5C7.433 19.167 7.6 18.767 7.6 18.3C7.6 17.833 7.433 17.433 7.1 17.1C6.767 16.767 6.367 16.6 5.9 16.6C5.433 16.6 5.033 16.767 4.7 17.1C4.367 17.433 4.2 17.833 4.2 18.3C4.2 18.767 4.367 19.167 4.7 19.5C5.033 19.833 5.433 20 5.9 20ZM16.1 20C16.567 20 16.967 19.833 17.3 19.5C17.633 19.167 17.8 18.767 17.8 18.3C17.8 17.833 17.633 17.433 17.3 17.1C16.967 16.767 16.567 16.6 16.1 16.6C15.633 16.6 15.233 16.767 14.9 17.1C14.567 17.433 14.4 17.833 14.4 18.3C14.4 18.767 14.567 19.167 14.9 19.5C15.233 19.833 15.633 20 16.1 20Z" fill="${getStatusColor(unit.StatusMantto)}" stroke="#ffffff" stroke-width="0.5"/>
+          </svg>
+        `)}`,
+        size: new window.google.maps.Size(24, 24),
+        scaledSize: new window.google.maps.Size(24, 24),
+        anchor: new window.google.maps.Point(12, 12)
+      };
+
       const marker = new window.google.maps.Marker({
         position: { lat: unit.latitud, lng: unit.Longitud },
         map: googleMap,
         title: `${unit.NumEco} - ${unit.StatusMantto}`,
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: getStatusColor(unit.StatusMantto),
-          fillOpacity: 1,
-          strokeColor: '#ffffff',
-          strokeWeight: 2
-        }
+        icon: truckIcon
       });
 
       const infoWindow = new window.google.maps.InfoWindow({
         content: `
-          <div class="p-3 ${isDark ? 'dark' : ''}">
-            <div class="bg-white dark:bg-gray-800 rounded-lg">
-              <h3 class="font-bold text-lg text-gray-900 dark:text-white mb-2">Unidad ${unit.NumEco}</h3>
+          <div class="p-3">
+            <div class="bg-white rounded-lg">
+              <h3 class="font-bold text-lg text-gray-900 mb-2">Unidad ${unit.NumEco}</h3>
               <div class="space-y-1 text-sm">
-                <p class="text-gray-700 dark:text-gray-300"><strong>Estado:</strong> ${unit.StatusMantto}</p>
-                <p class="text-gray-700 dark:text-gray-300"><strong>Posición:</strong> ${unit.Posicion}</p>
-                <p class="text-gray-700 dark:text-gray-300"><strong>Destino:</strong> ${unit.TerminalDestino}</p>
-                <p class="text-gray-700 dark:text-gray-300"><strong>Km por vencer:</strong> ${unit.Kilometrosporvencerovencido}</p>
+                <p class="text-gray-700"><strong>Estado:</strong> ${unit.StatusMantto}</p>
+                <p class="text-gray-700"><strong>Posición:</strong> ${unit.Posicion}</p>
+                <p class="text-gray-700"><strong>Destino:</strong> ${unit.TerminalDestino}</p>
+                <p class="text-gray-700"><strong>Km por vencer:</strong> ${unit.Kilometrosporvencerovencido}</p>
               </div>
             </div>
           </div>
@@ -289,25 +294,27 @@ const FleetLocationView = () => {
         <Navbar className="sticky top-0 z-30" onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Main content */}
-        <main className="min-h-screen bg-[#F2F6FD] dark:bg-[#13131a] pt-14 w-full">
-          <div className="h-[calc(100vh-56px)] flex flex-col">
+        <main className="min-h-screen bg-[#F2F6FD] dark:bg-[#13131a] pt-14 pb-14 px-4 md:px-8 xl:px-10 w-full">
+          <div className="max-w-7xl mx-auto space-y-10">
             {/* Header */}
-            <div className="px-4 md:px-8 xl:px-10 py-6 bg-white dark:bg-[#1C1C24] border-b border-gray-200 dark:border-[#2C2C38]">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-6 h-6" style={{ color: primaryColor }} />
-                <h1 className="text-[26px] leading-[39px] font-semibold text-[#44444f] dark:text-[#e2e2ea]">
-                  Ubicación de la Flotilla
-                </h1>
+            <div className="flex flex-col gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-6 h-6" style={{ color: primaryColor }} />
+                  <h1 className="text-[26px] leading-[39px] font-semibold text-[#44444f] dark:text-[#e2e2ea]">
+                    Ubicación de la Flotilla
+                  </h1>
+                </div>
+                <p className="text-sm text-[#696974] dark:text-[#92929d] mt-1 ml-8">
+                  Visualización geográfica en tiempo real del estatus de mantenimiento de la flotilla.
+                </p>
               </div>
-              <p className="text-sm text-[#696974] dark:text-[#92929d] mt-1 ml-8">
-                Visualización geográfica en tiempo real del estatus de mantenimiento de la flotilla.
-              </p>
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 flex overflow-hidden">
+            <div className="h-[calc(100vh-160px)] flex overflow-hidden">
               {/* Sidebar with units */}
-              <div className="w-80 bg-white dark:bg-[#1C1C24] border-r border-gray-200 dark:border-[#2C2C38] flex flex-col">
+              <div className="w-80 bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-lg mr-6 flex flex-col">
                 {/* Controls Section */}
                 <div className="p-4 border-b border-gray-200 dark:border-[#2C2C38]">
                   <div className="flex items-center justify-between mb-4">
@@ -352,23 +359,23 @@ const FleetLocationView = () => {
                 </div>
 
                 {/* Summary */}
-                <div className="p-4 border-b border-gray-200 dark:border-[#2C2C38] bg-gray-50 dark:bg-[#2C2C38]">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="p-3 border-b border-gray-200 dark:border-[#2C2C38] bg-gray-50 dark:bg-[#2C2C38]">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900 dark:text-white">{filteredData.length}</div>
-                      <div className="text-gray-600 dark:text-gray-400">Total unidades</div>
+                      <div className="text-xl font-bold text-gray-900 dark:text-white">{filteredData.length}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Total unidades</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                      <div className="text-xl font-bold text-red-600 dark:text-red-400">
                         {filteredData.filter(u => u.StatusMantto === 'Vencido').length}
                       </div>
-                      <div className="text-gray-600 dark:text-gray-400">Vencidas</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Vencidas</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Unit Cards */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
                   {filteredData.map((unit) => (
                     <div
                       key={unit.NumEco}
@@ -414,7 +421,7 @@ const FleetLocationView = () => {
               </div>
 
               {/* Map Container */}
-              <div className="flex-1 relative">
+              <div className="flex-1 relative bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-lg overflow-hidden">
                 <div ref={mapRef} className="w-full h-full" />
                 
                 {/* Map Loading State */}
