@@ -6,6 +6,9 @@ import { usePrimaryColor } from '@/context/primaryColor';
 import { useTheme } from '@/context/ThemeContext';
 
 export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
+  const USERNAME = process.env.NEXT_PUBLIC_MSERPSERVICE_USERNAME;
+  const PASSWORD = process.env.NEXT_PUBLIC_MSERPSERVICE_PASSWORD;
+
   const { primaryColor } = usePrimaryColor();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -125,8 +128,8 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          username: 'admin',
-          password: 'Hola'
+          username:  USERNAME,
+          password: PASSWORD
         })
       });
 
@@ -134,7 +137,9 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
         const loginResult = await loginResponse.json();
         const token = loginResult.accessToken;
         setAccessToken(token);
-
+        const base64Password = companyData.passwordErpDb;
+        const decodedPassword = atob(base64Password);
+        
         // Luego obtener clientes con el token y headers de DB
         const clientesResponse = await fetch(`${urlErp}/mserpservice/api/v1/getCustomers`, {
           method: 'GET',
@@ -145,7 +150,7 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
             'Server-Erp-Db': companyData.serverErpDb,
             'Name-Erp-Db': companyData.nameErpDb,
             'User-Erp-Db': companyData.userErpDb,
-            'Password-Erp-Db': companyData.passwordErpDb
+            'Password-Erp-Db': decodedPassword
           }
         });
 

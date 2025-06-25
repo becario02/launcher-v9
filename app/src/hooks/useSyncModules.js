@@ -1,9 +1,13 @@
 import { useState, useCallback, useRef } from 'react';
+import { useCompany } from "@/context/CompanyContext";
 
 export const useSyncModules = () => {
+  const USERNAME = process.env.NEXT_PUBLIC_MSERPSERVICE_USERNAME;
+  const PASSWORD = process.env.NEXT_PUBLIC_MSERPSERVICE_PASSWORD;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  
+  const { selectedCompany } = useCompany();
+
   // ✅ REF PARA CONTROLAR REQUESTS CONCURRENTES
   const activeRequestRef = useRef(null);
 
@@ -14,8 +18,8 @@ export const useSyncModules = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: 'admin',
-          password: 'Hola'
+          username: USERNAME,
+          password: PASSWORD
         })
       });
 
@@ -62,7 +66,6 @@ export const useSyncModules = () => {
 
     // ✅ PREVENIR MÚLTIPLES REQUESTS SIMULTÁNEOS
     if (isLoading || activeRequestRef.current) {
-      console.log('⏳ Sincronización ya en progreso, omitiendo request duplicado...');
       return null;
     }
 
@@ -82,7 +85,11 @@ export const useSyncModules = () => {
       const payload = {
         urlErp: company.urlErp,
         idUserCompanyConnection: company.idUserCompanyConnection,
-        accessToken: token
+        accessToken: token,
+        Server_Erp_Db: selectedCompany.serverErpDb,
+        Name_Erp_Db: selectedCompany.nameErpDb,
+        User_Erp_Db: selectedCompany.userErpDb,
+        Password_Erp_Db: decodedPassword
       };
 
       let response = await fetch('/api/sync-company-modules', {
@@ -106,6 +113,9 @@ export const useSyncModules = () => {
         if (!token) {
           throw new Error('Error al refrescar token');
         }
+
+      const base64Password = selectedCompany.passwordErpDb;
+      const decodedPassword = atob(base64Password);
 
         response = await fetch('/api/sync-company-modules', {
           method: 'POST',

@@ -9,6 +9,7 @@ export default function ChangeErpPasswordModal({
   serverErpDb,
   nameErpDb,
   idUserCompany,
+  urlErp,
   onClose,
   onSave,
   showNotification
@@ -27,7 +28,8 @@ export default function ChangeErpPasswordModal({
   const [isVisible, setIsVisible] = useState(false);
   const modalRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const USERNAME = process.env.NEXT_PUBLIC_MSERPSERVICE_USERNAME;
+  const PASSWORD = process.env.NEXT_PUBLIC_MSERPSERVICE_PASSWORD;
 
   useEffect(() => {
     setTimeout(() => setIsVisible(true), 50);
@@ -121,12 +123,12 @@ export default function ChangeErpPasswordModal({
 
   const login = async () => {
     try {
-        const response = await fetch('http://localhost:5293/mserpservice/api/auth/login', {
+        const response = await fetch(`${urlErp}/mserpservice/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            username: 'admin',
-            password: 'Hola'
+            username: USERNAME,
+            password: PASSWORD
         })
         });
 
@@ -145,7 +147,7 @@ export default function ChangeErpPasswordModal({
     const refreshToken = async () => {
     try {
         const refreshToken = localStorage.getItem('refreshToken');
-        const response = await fetch('http://localhost:5293/mserpservice/api/auth/refresh', {
+        const response = await fetch(`${urlErp}/mserpservice/api/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken })
@@ -189,7 +191,7 @@ export default function ChangeErpPasswordModal({
               baseDatos: nameErpDb
           };
 
-          const response = await fetch('http://localhost:5293/mserpservice/api/cambiar-password', {
+          const response = await fetch(`${urlErp}/mserpservice/api/cambiar-password`, {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
@@ -202,7 +204,7 @@ export default function ChangeErpPasswordModal({
               token = await refreshToken();
               if (!token) return setError('Error al refrescar token');
 
-              const retryResponse = await fetch('http://localhost:5293/mserpservice/api/cambiar-password', {
+              const retryResponse = await fetch(`${urlErp}/mserpservice/api/cambiar-password`, {
                   method: 'POST',
                   headers: {
                       'Content-Type': 'application/json',

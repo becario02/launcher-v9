@@ -119,6 +119,7 @@ export default function ConnectionsSettings() {
                               serverErpDb: company.serverErpDb,
                               nameErpDb: company.nameErpDb,
                               idUserCompany: company.idUserCompany,
+                              urlErp: company.urlErp,
                             })
                           }
                           className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white"
