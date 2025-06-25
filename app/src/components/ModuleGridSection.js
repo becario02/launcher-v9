@@ -17,7 +17,7 @@ const modules = [
   },
   {
     name: 'Auxiliares',
-    description: 'Control de forma eficiente los recursos clave de tu operación: compras, almacén, mantenimiento y gestión de llantas.',
+    description: 'Control eficiente de los recursos clave de tu operación: compras, almacén, mantenimiento y de llantas.',
     image: '/assets/modules/auxiliares.png',
     icon: '/assets/modules/icon-auxiliar.png',
   },
