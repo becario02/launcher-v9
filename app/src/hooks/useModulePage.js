@@ -795,6 +795,15 @@ export function useModulePage() {
         window.location.href = `advanerpconnect://${exeName}?session=${data.data.idSession}?server=${selectedCompany.serverErpDb}?database=${selectedCompany.nameErpDb}?user=${selectedCompany.userErpDb}?password=${decodedPassword}?idSession=${idSession}`;
       }, 2500);
 
+      let attempts = 0;
+      const intervalId = setInterval(() => {
+        fetchMenuPermissions();
+        attempts++;
+        if (attempts >= 10) {
+          clearInterval(intervalId);
+        }
+      }, 5000);
+
     } catch (err) {
       showNotification(
         "error",
@@ -866,6 +875,16 @@ export function useModulePage() {
         "toast"
       );
     }
+
+    let attempts = 0;
+    const intervalId = setInterval(() => {
+      fetchMenuPermissions();
+      attempts++;
+      if (attempts >= 2) {
+        clearInterval(intervalId);
+      }
+    }, 2000);
+
   };
 
   const setInstanceActive = (id) => {
