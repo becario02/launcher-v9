@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
-import { FileText, Tag } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import clsx from 'clsx';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useTheme } from '@/context/theme';
@@ -16,42 +16,35 @@ export default function NewsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme } = useTheme();
   const { primaryColor } = usePrimaryColor();
-  
+
   const [news, setNews] = useState([]);
-  const [unreadNews, setUnreadNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [availableFilters, setAvailableFilters] = useState(["Todos"]);
   const [selectedFilters, setSelectedFilters] = useState(["Todos"]);
   const [markingAsRead, setMarkingAsRead] = useState(null);
 
-  // Obtener el ID de usuario de las cookies
-  const userId = Cookies.get('idUser') || '1'; // Fallback a 1 si no hay cookie
+  const userId = Cookies.get('idUser') || '1';
 
-  // Cargar noticias desde la API
   const fetchNews = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        'http://localhost:5173/mslauncher/api/v1/news',
-        {
-          headers: {
-            'accept': '*/*'
-          }
-        }
-      );
-      
+      const response = await axios.get(`/api/news?idUser=${userId}`, {
+        headers: { 'accept': '*/*' }
+      });
+
       if (response.data && response.data.data) {
         const newsData = response.data.data;
         setNews(newsData);
-        
-        // Extraer categorías únicas de newsType y formatearlas
+
         const categories = [...new Set(newsData.map(item => item.newsType))];
         const formattedFilters = ["Todos", ...categories.map(cat => formatCategoryName(cat))];
         setAvailableFilters(formattedFilters);
       } else {
         setNews([]);
+        setAvailableFilters(["Todos"]);
       }
+
       setError(null);
     } catch (error) {
       console.error('Error al obtener noticias:', error);
@@ -62,53 +55,26 @@ export default function NewsPage() {
     }
   };
 
-  // Cargar noticias no leídas del usuario
-  const fetchUnreadNews = async () => {
-    try {
-      const response = await axios.get(
-        `http://localhost:5173/mslauncher/api/v1/news/unread?idUser=${userId}`,
-        {
-          headers: {
-            'accept': '*/*'
-          }
-        }
-      );
-      
-      if (response.data && response.data.data) {
-        setUnreadNews(response.data.data);
-      } else {
-        setUnreadNews([]);
-      }
-    } catch (error) {
-      console.error('Error al obtener noticias no leídas:', error);
-      setUnreadNews([]);
-    }
-  };
-
-  // Marcar noticia como leída
   const markAsRead = async (idNews) => {
-    if (markingAsRead === idNews) return; // Prevenir múltiples clics
-    
+    if (markingAsRead === idNews) return;
+
     try {
       setMarkingAsRead(idNews);
-      
-      const response = await axios.put(
-        'http://localhost:5173/mslauncher/api/v1/news/mark-as-read',
-        {
-          idUser: parseInt(userId),
-          idNews: idNews
-        },
-        {
-          headers: {
-            'accept': '*/*',
-            'Content-Type': 'application/json'
-          }
-        }
-      );
 
-      if (response.data && response.data.statusCode === "200") {
-        // Actualizar la lista de noticias no leídas
-        setUnreadNews(prev => prev.filter(news => news.idNews !== idNews));
+      const response = await fetch('/api/news', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept-Language': 'es-MX'
+        },
+        body: JSON.stringify({
+          IdUser: parseInt(userId),
+          IdNews: idNews
+        })
+      });
+
+      if (response.ok) {
+        setNews(prev => prev.filter(n => n.idNews !== idNews));
       }
     } catch (error) {
       console.error('Error al marcar como leída:', error);
@@ -117,36 +83,10 @@ export default function NewsPage() {
     }
   };
 
-  // Cargar noticias al montar el componente
   useEffect(() => {
     fetchNews();
-    fetchUnreadNews();
   }, [userId]);
 
-  // Verificar si una noticia está sin leer
-  const isNewsUnread = (idNews) => {
-    return unreadNews.some(unread => unread.idNews === idNews);
-  };
-
-  // Función auxiliar para obtener el newsType original desde el nombre formateado
-  const getOriginalNewsType = (formattedName) => {
-    const reverseMapping = {
-      'Comunicados': 'COMMUNICATION',
-      'Ventana de mantenimiento externas': 'MAINTENANCE_EXTERNAL',
-      'General': 'GENERAL_NEWS',
-      'Noticias normativas y fiscales': 'LEGAL_NEWS',
-      'Blog': 'BLOG',
-      'Productos y servicios Advan': 'PRODUCTS_SERVICES',
-      'Casos de éxito - Productos o servicios Advan': 'SUCCESS_STORY',
-      'Promocional': 'PROMOTIONAL',
-      'Nube - Promocional': 'CLOUD_PROMO',
-      'Eventos próximos': 'UPCOMING_EVENTS'
-    };
-    
-    return reverseMapping[formattedName] || formattedName;
-  };
-
-  // Filtrar noticias basado en los filtros seleccionados
   const filteredNews = news.filter(item => {
     if (selectedFilters.includes("Todos")) return true;
     return selectedFilters.some(filter => {
@@ -155,10 +95,6 @@ export default function NewsPage() {
     });
   });
 
-  // Contar noticias sin leer en las noticias filtradas
-  const unreadCount = filteredNews.filter(news => isNewsUnread(news.idNews)).length;
-
-  // Manejar selección de filtros
   const handleFilterToggle = (filter) => {
     if (filter === "Todos") {
       setSelectedFilters(["Todos"]);
@@ -175,23 +111,16 @@ export default function NewsPage() {
     }
   };
 
-  // Función para formatear la fecha y hora de la noticia
   const formatNewsTime = (timestamp) => {
     if (!timestamp) return '';
-    
     try {
       const date = new Date(timestamp);
-      return formatDistance(date, new Date(), {
-        addSuffix: true,
-        locale: es
-      });
-    } catch (e) {
-      console.error('Error al formatear fecha:', e);
+      return formatDistance(date, new Date(), { addSuffix: true, locale: es });
+    } catch {
       return '';
     }
   };
 
-  // Función para formatear el nombre de la categoría para mostrar
   const formatCategoryName = (newsType) => {
     const categoryNames = {
       'COMMUNICATION': 'Comunicados',
@@ -205,21 +134,30 @@ export default function NewsPage() {
       'CLOUD_PROMO': 'Nube - Promocional',
       'UPCOMING_EVENTS': 'Eventos próximos'
     };
-    
     return categoryNames[newsType] || newsType.replace(/_/g, ' ').toLowerCase()
       .split(' ')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
 
-  // Función para abrir la noticia en una nueva pestaña y marcarla como leída
+  const getOriginalNewsType = (formattedName) => {
+    const reverseMapping = {
+      'Comunicados': 'COMMUNICATION',
+      'Ventana de mantenimiento externas': 'MAINTENANCE_EXTERNAL',
+      'General': 'GENERAL_NEWS',
+      'Noticias normativas y fiscales': 'LEGAL_NEWS',
+      'Blog': 'BLOG',
+      'Productos y servicios Advan': 'PRODUCTS_SERVICES',
+      'Casos de éxito - Productos o servicios Advan': 'SUCCESS_STORY',
+      'Promocional': 'PROMOTIONAL',
+      'Nube - Promocional': 'CLOUD_PROMO',
+      'Eventos próximos': 'UPCOMING_EVENTS'
+    };
+    return reverseMapping[formattedName] || formattedName;
+  };
+
   const handleNewsClick = (newsItem) => {
-    // Marcar como leída si está sin leer
-    if (isNewsUnread(newsItem.idNews)) {
-      markAsRead(newsItem.idNews);
-    }
-    
-    // Abrir la URL si existe
+    markAsRead(newsItem.idNews);
     if (newsItem.referenceUrl) {
       window.open(newsItem.referenceUrl, '_blank');
     }
@@ -246,7 +184,6 @@ export default function NewsPage() {
         <main className="min-h-screen bg-[#F2F6FD] dark:bg-[#13131a] pt-14 pb-14">
           <div className="w-full max-w-4xl px-4 md:px-12 lg:px-6 mx-auto md:ml-0 lg:ml-24 xl:ml-32 space-y-12">
             
-            {/* TÍTULO PRINCIPAL CON ESTADÍSTICAS */}
             <div className="flex items-center justify-between mb-6 pt-4">
               <div className="flex items-center">
                 <FileText className="w-6 h-6 mr-3 text-primary" />
@@ -254,19 +191,9 @@ export default function NewsPage() {
                   Noticias
                 </h1>
               </div>
-              
-              {/* Información estadística */}
               <div className="text-right">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {filteredNews.length} {filteredNews.length === 1 ? 'noticia' : 'noticias'}
-                  {!loading && news.length > 0 && (
-                    <>
-                      {' • '}
-                      <span className="text-blue-600 dark:text-blue-400">
-                        {unreadCount} sin leer
-                      </span>
-                    </>
-                  )}
+                  {filteredNews.length} {filteredNews.length === 1 ? 'noticia' : 'noticias'} sin leer
                 </p>
                 {selectedFilters.length > 0 && !selectedFilters.includes("Todos") && (
                   <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
@@ -278,13 +205,10 @@ export default function NewsPage() {
 
             <div className="space-y-4">
               <div className="flex flex-col md:flex-row gap-10">
-                {/* COLUMNA IZQUIERDA - Filtros */}
                 <div className="w-full md:hidden lg:block md:w-60 pt-2">
                   <h3 className="text-[14px] leading-[21px] font-medium font-poppins text-[#000000] dark:text-[#e2e2ea] mb-4">
                     Etiquetas
                   </h3>
-                  
-                  {/* Filtros */}
                   <div className="flex flex-wrap gap-2">
                     {availableFilters.map((filter) => (
                       <button
@@ -303,7 +227,6 @@ export default function NewsPage() {
                   </div>
                 </div>
 
-                {/* COLUMNA DERECHA - Noticias */}
                 <div className="flex-1">
                   {loading ? (
                     <div className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-2xl p-6 shadow-sm">
@@ -334,13 +257,12 @@ export default function NewsPage() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {filteredNews.map((article, index) => (
+                      {filteredNews.map((article) => (
                         <div
                           key={article.idNews}
                           onClick={() => handleNewsClick(article)}
                           className="relative border border-gray-200 dark:border-[#2C2C38] rounded-[8px] overflow-hidden w-[188px] h-[200px] flex flex-col items-start justify-start pt-[12px] bg-white dark:bg-[#1C1C24] cursor-pointer hover:shadow-md transition-shadow duration-200"
                         >
-                          {/* Imagen */}
                           <div className="w-[168px] h-[100px] mb-[8px] mx-auto bg-gray-100 dark:bg-gray-800 rounded-[6px] flex items-center justify-center overflow-hidden">
                             {article.imageContent ? (
                               <img
@@ -352,18 +274,9 @@ export default function NewsPage() {
                               <FileText className="w-8 h-8 text-gray-400" />
                             )}
                           </div>
-                          
-                          {/* Título */}
                           <p className="text-[12px] leading-[18px] text-[#171725] dark:text-gray-200 text-left font-medium font-[Poppins] px-[12px] line-clamp-3">
                             {article.title}
                           </p>
-
-                          {/* Indicador de no leída */}
-                          {isNewsUnread(article.idNews) && (
-                            <div className="absolute bottom-2 right-2">
-                              <span className="w-2 h-2 bg-blue-500 rounded-full block"></span>
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>

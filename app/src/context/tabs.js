@@ -85,7 +85,6 @@ export function TabsProvider({ children }) {
     // Solo aplicar lógica de redirección si no estamos en una ruta exenta
     if (!isExemptRoute) {
       if (tabs.length === 0) {
-        console.log('Redirigiendo por tabs. Path:', pathname);
         router.push("/");
       } else if (activeTabId) {
         const activeTab = tabs.find((tab) => tab.uniqueId === activeTabId);
