@@ -1,13 +1,13 @@
 import { useState, useCallback, useRef } from 'react';
-import { useCompany } from "@/context/CompanyContext";
 
 export const useSyncModules = () => {
   const USERNAME = process.env.NEXT_PUBLIC_MSERPSERVICE_USERNAME;
   const PASSWORD = process.env.NEXT_PUBLIC_MSERPSERVICE_PASSWORD;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { selectedCompany } = useCompany();
-
+  const selectedCompanyStorage = localStorage.getItem('selectedCompany');
+  const selectedCompany = JSON.parse(selectedCompanyStorage);
+  
   // ✅ REF PARA CONTROLAR REQUESTS CONCURRENTES
   const activeRequestRef = useRef(null);
 

@@ -443,9 +443,9 @@ export default function Sidebar({ onClose }) {
             )}
           </ExpandableItem>
         )}
-
+          
         {/* Tableros Gerenciales */}
-        <ExpandableItem
+        {/*<ExpandableItem
           icon={BarChart3}
           text="Tableros Gerenc."
           defaultOpen={false}
@@ -458,7 +458,7 @@ export default function Sidebar({ onClose }) {
             active={activeItem === 'Flotillas'}
             onClick={() => navigateTo('/tableros/flotillas', 'Flotillas')}
           />
-        </ExpandableItem>
+        </ExpandableItem>*/}
 
         {/* CUSTOM PARENTS al final */}
         {customParents.map(p => (
