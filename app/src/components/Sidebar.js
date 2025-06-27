@@ -26,6 +26,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import clsx from 'clsx';
+import Cookies from "js-cookie";
 
 import { useTheme } from "@/context/theme";
 import { useAuth } from "@/context/auth";
@@ -35,11 +36,10 @@ import IconModulos from "@/components/icons/sidebar/IconModulos";
 import IconNucleares from "@/components/icons/sidebar/IconNucleares";
 import IconFinancieros from "@/components/icons/sidebar/IconFinancieros";
 import IconAuxiliares from "@/components/icons/sidebar/IconAuxiliares";
-import Cookies from "js-cookie";
 
 const DefaultIcon = Menu;
 
-// Función para determinar el elemento activo basado en la ruta
+// Function to determine active item based on route
 function getActiveItemFromPath(pathname) {
   if (pathname === '/' || pathname === '') {
     return 'Dashboard';
@@ -67,8 +67,11 @@ function getActiveItemFromPath(pathname) {
     return 'FINANCIAL';
   } else if (pathname.includes('/auxiliares')) {
     return 'AUXILIARES';
-  } else if (pathname.includes('/tableros/flotillas')) {
-    return 'Flotillas';
+  } else if (pathname.includes('/tableros/')) {
+    // Extract dashboard name from path
+    const segments = pathname.split('/');
+    const dashboardSegment = segments[segments.length - 1];
+    return dashboardSegment.charAt(0).toUpperCase() + dashboardSegment.slice(1);
   } else if (pathname.startsWith('/custom/')) {
     return pathname;
   }
@@ -98,7 +101,6 @@ const SidebarItem = ({ icon: Icon, text, active = false, onClick, indent = false
 const ExpandableItem = ({ icon: Icon, text, children, defaultOpen = false, isChildActive = false, indent = false }) => {
   const [open, setOpen] = useState(defaultOpen || isChildActive);
 
-  // Optimizar el efecto para evitar re-renders innecesarios
   useEffect(() => {
     if (isChildActive && !open) {
       setOpen(true);
@@ -164,14 +166,13 @@ export default function Sidebar({ onClose }) {
   const { selectedCompany } = useCompany();
   const { user, isAdmin, isAdvan } = useAuth();
   const [customParents, setCustomParents] = useState([]);
+  const [dashboards, setDashboards] = useState([]);
   const [activeItem, setActiveItem] = useState(() => getActiveItemFromPath(pathname));
   const [launcherVersion, setLauncherVersion] = useState(() => {
-    // Intentar obtener la versión del localStorage al inicializar
     if (typeof window !== 'undefined') {
       const cached = localStorage.getItem('launcherVersion');
       const cacheTime = localStorage.getItem('launcherVersionTime');
       
-      // Verificar si el cache es válido (menos de 5 minutos)
       if (cached && cacheTime) {
         const fiveMinutes = 5 * 60 * 1000;
         const now = Date.now();
@@ -182,12 +183,29 @@ export default function Sidebar({ onClose }) {
     }
     return '---';
   });
+  
   const profileName = Cookies.get('profileName');
   const isUserAdvan = profileName?.includes('USERADVAN');
 
-  // Función para obtener la versión del launcher
+  // Fetch user dashboards
+  const fetchUserDashboards = useCallback(async () => {
+    const userId = Cookies.get('idUser');
+    if (!userId) return;
+
+    try {
+      const response = await fetch(`/api/users/dashboards?userId=${userId}`);
+      const data = await response.json();
+      
+      if (data.statusCode === "200" && data.data) {
+        setDashboards(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching user dashboards:', error);
+    }
+  }, []);
+
+  // Fetch launcher version
   const fetchLauncherVersion = useCallback(async () => {
-    // Verificar si el cache es válido antes de hacer la petición
     if (typeof window !== 'undefined') {
       const cached = localStorage.getItem('launcherVersion');
       const cacheTime = localStorage.getItem('launcherVersionTime');
@@ -196,7 +214,7 @@ export default function Sidebar({ onClose }) {
         const fiveMinutes = 5 * 60 * 1000;
         const now = Date.now();
         if (now - parseInt(cacheTime) < fiveMinutes) {
-          return; // Cache aún válido
+          return;
         }
       }
     }
@@ -208,41 +226,45 @@ export default function Sidebar({ onClose }) {
       if (data.statusCode === "200" && data.data) {
         const versionConfig = data.data.find(config => config.configName === "VERSION_LAUNCHER");
         if (versionConfig) {
-          setLauncherVersion(versionConfig.configValue);
-          localStorage.setItem('launcherVersion', versionConfig.configValue);
+          const version = versionConfig.configValue;
+          setLauncherVersion(version);
+          localStorage.setItem('launcherVersion', version);
           localStorage.setItem('launcherVersionTime', Date.now().toString());
         } else {
-          setLauncherVersion('No disponible');
-          localStorage.setItem('launcherVersion', 'No disponible');
+          const noAvailable = 'No disponible';
+          setLauncherVersion(noAvailable);
+          localStorage.setItem('launcherVersion', noAvailable);
           localStorage.setItem('launcherVersionTime', Date.now().toString());
         }
       } else {
-        setLauncherVersion('Error');
-        localStorage.setItem('launcherVersion', 'Error');
+        const error = 'Error';
+        setLauncherVersion(error);
+        localStorage.setItem('launcherVersion', error);
         localStorage.setItem('launcherVersionTime', Date.now().toString());
       }
     } catch (error) {
       console.error('Error fetching launcher version:', error);
-      setLauncherVersion('No disponible');
-      localStorage.setItem('launcherVersion', 'No disponible');
+      const noAvailable = 'No disponible';
+      setLauncherVersion(noAvailable);
+      localStorage.setItem('launcherVersion', noAvailable);
       localStorage.setItem('launcherVersionTime', Date.now().toString());
     }
   }, []);
 
-  // Cargar la versión del launcher al montar el componente
+  // Load data on component mount
   useEffect(() => {
     fetchLauncherVersion();
-  }, [fetchLauncherVersion]);
+    fetchUserDashboards();
+  }, [fetchLauncherVersion, fetchUserDashboards]);
 
-  // Optimizar el efecto que actualiza activeItem
+  // Update active item when pathname changes
   useEffect(() => {
     const newActiveItem = getActiveItemFromPath(pathname);
     setActiveItem(newActiveItem);
   }, [pathname]);
 
-  // Usar useCallback para evitar re-creaciones innecesarias de la función
+  // Navigate function
   const navigateTo = useCallback((route, itemName) => {
-    // Evitar navegación si ya estamos en la ruta
     if (pathname === route) {
       if (onClose) onClose();
       return;
@@ -253,10 +275,15 @@ export default function Sidebar({ onClose }) {
     if (onClose) onClose();
   }, [pathname, router, onClose]);
 
+  // Check if dashboard-related items are active
+  const isDashboardActive = dashboards.some(dashboard => {
+    const dashboardName = dashboard.boardname;
+    return activeItem === dashboardName;
+  });
+
   const isDivisionActive = ['NUCLEARES', 'FINANCIAL', 'AUXILIARES'].includes(activeItem);
   const isHelpCenterActive = ['AdminVideos', 'AdminDocumentos'].includes(activeItem);
   const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminDocumentos', 'AdminMenus', 'AdminNotifications', 'AdminIntegradores', 'AdminAddendas', 'AdminPromociones'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
-  const isGerencialesActive = ['Flotillas'].includes(activeItem);
 
   function formatServer(server) {
     if (!server) return '';
@@ -284,7 +311,7 @@ export default function Sidebar({ onClose }) {
         </Link>
       </div>
 
-      {/* Menú */}
+      {/* Menu */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 custom-scrollbar">
         <p className="text-[12px] text-gray-400 dark:text-gray-500">Menú</p>
 
@@ -296,55 +323,55 @@ export default function Sidebar({ onClose }) {
         />
 
         {!isUserAdvan && (
-        <ExpandableItem
-          icon={IconModulos}
-          text="Divisiones"
-          defaultOpen={true}
-          isChildActive={isDivisionActive}
-        >
-          <SidebarItem
-            icon={({ size }) => (
-              <IconNucleares
-                size={size}
-                color={activeItem === "NUCLEARES" ? "#FFFFFF" : "#6B7280"}
-              />
-            )}
-            text="Nucleares"
-            indent
-            active={activeItem === "NUCLEARES"}
-            onClick={() => navigateTo('/divisiones/nucleares', 'NUCLEARES')}
-          />
+          <ExpandableItem
+            icon={IconModulos}
+            text="Divisiones"
+            defaultOpen={true}
+            isChildActive={isDivisionActive}
+          >
+            <SidebarItem
+              icon={({ size }) => (
+                <IconNucleares
+                  size={size}
+                  color={activeItem === "NUCLEARES" ? "#FFFFFF" : "#6B7280"}
+                />
+              )}
+              text="Nucleares"
+              indent
+              active={activeItem === "NUCLEARES"}
+              onClick={() => navigateTo('/divisiones/nucleares', 'NUCLEARES')}
+            />
 
-          <SidebarItem
-            icon={({ size }) => (
-              <IconFinancieros
-                size={size}
-                color={activeItem === "FINANCIAL" ? "#FFFFFF" : "#6B7280"}
-              />
-            )}
-            text="Financieros"
-            indent
-            active={activeItem === "FINANCIAL"}
-            onClick={() => navigateTo('/divisiones/financieros', 'FINANCIAL')}
-          />
+            <SidebarItem
+              icon={({ size }) => (
+                <IconFinancieros
+                  size={size}
+                  color={activeItem === "FINANCIAL" ? "#FFFFFF" : "#6B7280"}
+                />
+              )}
+              text="Financieros"
+              indent
+              active={activeItem === "FINANCIAL"}
+              onClick={() => navigateTo('/divisiones/financieros', 'FINANCIAL')}
+            />
 
-          <SidebarItem
-            icon={({ size }) => (
-              <IconAuxiliares
-                size={size}
-                color={activeItem === "AUXILIARES" ? "#FFFFFF" : "#6B7280"}
-              />
-            )}
-            text="Auxiliares"
-            indent
-            active={activeItem === "AUXILIARES"}
-            onClick={() => navigateTo('/divisiones/auxiliares', 'AUXILIARES')}
-          />
-        </ExpandableItem>
+            <SidebarItem
+              icon={({ size }) => (
+                <IconAuxiliares
+                  size={size}
+                  color={activeItem === "AUXILIARES" ? "#FFFFFF" : "#6B7280"}
+                />
+              )}
+              text="Auxiliares"
+              indent
+              active={activeItem === "AUXILIARES"}
+              onClick={() => navigateTo('/divisiones/auxiliares', 'AUXILIARES')}
+            />
+          </ExpandableItem>
         )}
 
         {/* Show Noticias for regular users */}
-        {(!isAdmin && !isAdvan)  && (
+        {(!isAdmin && !isAdvan) && (
           <SidebarItem
             icon={Newspaper}
             text="Noticias"
@@ -444,23 +471,28 @@ export default function Sidebar({ onClose }) {
           </ExpandableItem>
         )}
           
-        {/* Tableros Gerenciales */}
-        {/*<ExpandableItem
-          icon={BarChart3}
-          text="Tableros Gerenc."
-          defaultOpen={false}
-          isChildActive={isGerencialesActive}
-        >
-          <SidebarItem
-            icon={Truck}
-            text="Flotillas"
-            indent
-            active={activeItem === 'Flotillas'}
-            onClick={() => navigateTo('/tableros/flotillas', 'Flotillas')}
-          />
-        </ExpandableItem>*/}
+        {/* Dynamic Dashboards Section */}
+        {dashboards.length > 0 && (
+          <ExpandableItem
+            icon={BarChart3}
+            text="Tableros Gerenc."
+            defaultOpen={false}
+            isChildActive={isDashboardActive}
+          >
+            {dashboards.map(dashboard => (
+              <SidebarItem
+                key={dashboard.idManagementDashboard}
+                icon={Truck}
+                text={dashboard.boardname}
+                indent
+                active={activeItem === dashboard.boardname}
+                onClick={() => navigateTo(`/${dashboard.url}`, dashboard.boardname)}
+              />
+            ))}
+          </ExpandableItem>
+        )}
 
-        {/* CUSTOM PARENTS al final */}
+        {/* CUSTOM PARENTS at the end */}
         {customParents.map(p => (
           <SidebarItem
             key={p.id}
