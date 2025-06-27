@@ -566,7 +566,7 @@ const Calendario = () => {
                 </div>
               )}
 
-              {/* VISTA DÍA */}
+              {/* VISTA DÍA aa*/}
               {viewMode === "day" && (
                 <div
                   className={clsx(
