@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useTheme } from '@/context/ThemeContext';
 
-const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady }) => {
+const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading = false }) => {
   const { primaryColor } = usePrimaryColor();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -22,7 +22,7 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady }) => {
   };
 
   const centerOnUnit = useCallback((unit) => {
-    if (map) {
+    if (map && unit.latitud !== 0 && unit.Longitud !== 0) {
       map.setCenter({ lat: unit.latitud, lng: unit.Longitud });
       map.setZoom(15);
     }
@@ -32,9 +32,12 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady }) => {
     if (!window.google || !window.google.maps || !mapRef.current) return;
     if (map) return;
 
+    // Default center (Mexico City area)
+    const defaultCenter = { lat: 19.4326, lng: -99.1332 };
+
     const googleMap = new window.google.maps.Map(mapRef.current, {
-      center: { lat: 4.6482, lng: -74.0731 },
-      zoom: 11,
+      center: defaultCenter,
+      zoom: 6,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: true,
@@ -55,14 +58,25 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady }) => {
     });
 
     setMap(googleMap);
-    createMarkers(googleMap, fleetData);
+    if (fleetData.length > 0) {
+      createMarkers(googleMap, fleetData);
+    }
   };
 
   const createMarkers = useCallback((googleMap, data) => {
+    // Clear existing markers
     markersRef.current.forEach(marker => marker.setMap(null));
     markersRef.current = [];
     
-    const newMarkers = data.map(unit => {
+    // Filter data with valid coordinates
+    const validData = data.filter(unit => 
+      unit.latitud !== 0 && unit.Longitud !== 0 && 
+      unit.latitud != null && unit.Longitud != null
+    );
+
+    if (validData.length === 0) return;
+
+    const newMarkers = validData.map(unit => {
       // Create custom truck icon SVG
       const truckIcon = {
         url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
@@ -107,9 +121,18 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady }) => {
     });
 
     markersRef.current = newMarkers;
+
+    // Auto-fit map bounds to show all markers
+    if (newMarkers.length > 0) {
+      const bounds = new window.google.maps.LatLngBounds();
+      validData.forEach(unit => {
+        bounds.extend({ lat: unit.latitud, lng: unit.Longitud });
+      });
+      googleMap.fitBounds(bounds);
+    }
   }, [isDark, onUnitSelect]);
 
-  // Notificar al componente padre cuando el mapa esté listo
+  // Notify parent when map is ready
   useEffect(() => {
     if (map && onMapReady) {
       onMapReady({ centerOnUnit });
@@ -152,23 +175,58 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady }) => {
   }, []);
 
   useEffect(() => {
-    if (map) {
+    if (map && !isLoading) {
       createMarkers(map, filteredData);
     }
-  }, [map, filteredData, createMarkers]);
+  }, [map, filteredData, createMarkers, isLoading]);
 
   return (
     <div className="flex-1 relative bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-lg overflow-hidden h-96 lg:h-full">
       <div ref={mapRef} className="w-full h-full" />
       
+      {/* Loading overlay */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 flex items-center justify-center z-10">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-2" style={{ borderColor: primaryColor }}></div>
+            <p className="text-gray-600 dark:text-gray-400">Actualizando ubicaciones...</p>
+          </div>
+        </div>
+      )}
+      
       {/* Map Loading State */}
-      {!map && (
+      {!map && !isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-2" style={{ borderColor: primaryColor }}></div>
             <p className="text-gray-600 dark:text-gray-400">Cargando mapa...</p>
           </div>
         </div>
+      )}
+
+      {/* No data message */}
+      {map && !isLoading && filteredData.length === 0 && (
+        <div className="absolute top-4 left-4 bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-md border border-gray-200 dark:border-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">No hay unidades para mostrar</p>
+        </div>
+      )}
+
+      {/* Units without coordinates warning */}
+      {map && !isLoading && fleetData.length > 0 && (
+        (() => {
+          const unitsWithoutCoords = fleetData.filter(unit => 
+            unit.latitud === 0 || unit.Longitud === 0 || 
+            unit.latitud == null || unit.Longitud == null
+          ).length;
+          
+          return unitsWithoutCoords > 0 ? (
+            <div className="absolute top-4 right-4 bg-orange-100 dark:bg-orange-900/30 px-3 py-2 rounded-lg shadow-md border border-orange-200 dark:border-orange-700">
+              <p className="text-sm text-orange-700 dark:text-orange-300">
+                {unitsWithoutCoords} unidad{unitsWithoutCoords > 1 ? 'es' : ''} sin coordenadas
+              </p>
+            </div>
+          ) : null;
+        })()
       )}
     </div>
   );

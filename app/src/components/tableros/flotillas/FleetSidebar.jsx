@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Settings, MapPin, Truck } from 'lucide-react';
+import { Search, Settings, MapPin, Truck, RefreshCw } from 'lucide-react';
 import { usePrimaryColor } from '@/context/primaryColor';
 
 const FleetSidebar = ({
@@ -10,7 +10,8 @@ const FleetSidebar = ({
   filteredData,
   selectedUnit,
   onUnitSelect,
-  onSettingsClick
+  onSettingsClick,
+  isLoading = false
 }) => {
   const { primaryColor } = usePrimaryColor();
 
@@ -29,7 +30,12 @@ const FleetSidebar = ({
       {/* Controls Section */}
       <div className="p-4 border-b border-gray-200 dark:border-[#2C2C38]">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Filtros</h2>
+          <div className="flex items-center space-x-2">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Filtros</h2>
+            {isLoading && (
+              <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />
+            )}
+          </div>
           <button
             onClick={onSettingsClick}
             className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
@@ -51,6 +57,7 @@ const FleetSidebar = ({
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 rounded-md text-sm border border-gray-300 dark:border-[#2C2C38] bg-white dark:bg-[#1C1C24] text-gray-800 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-primary dark:focus:border-primary"
               style={{ '--tw-ring-color': primaryColor }}
+              disabled={isLoading}
             />
           </div>
           
@@ -59,6 +66,7 @@ const FleetSidebar = ({
             onChange={(e) => setStatusFilter(e.target.value)}
             className="w-full px-3 py-2 rounded-md text-sm border border-gray-300 dark:border-[#2C2C38] bg-white dark:bg-[#1C1C24] text-gray-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary dark:focus:border-primary"
             style={{ '--tw-ring-color': primaryColor }}
+            disabled={isLoading}
           >
             <option value="ALL">Todos los estados</option>
             <option value="Vencido">Vencido</option>
@@ -73,12 +81,14 @@ const FleetSidebar = ({
       <div className="p-3 border-b border-gray-200 dark:border-[#2C2C38] bg-gray-50 dark:bg-[#2C2C38]">
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="text-center">
-            <div className="text-xl font-bold text-gray-900 dark:text-white">{filteredData.length}</div>
+            <div className="text-xl font-bold text-gray-900 dark:text-white">
+              {isLoading ? '...' : filteredData.length}
+            </div>
             <div className="text-xs text-gray-600 dark:text-gray-400">Total unidades</div>
           </div>
           <div className="text-center">
             <div className="text-xl font-bold text-red-600 dark:text-red-400">
-              {filteredData.filter(u => u.StatusMantto === 'Vencido').length}
+              {isLoading ? '...' : filteredData.filter(u => u.StatusMantto === 'Vencido').length}
             </div>
             <div className="text-xs text-gray-600 dark:text-gray-400">Vencidas</div>
           </div>
@@ -87,47 +97,62 @@ const FleetSidebar = ({
 
       {/* Unit Cards */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
-        {filteredData.map((unit) => (
-          <div
-            key={unit.NumEco}
-            onClick={() => onUnitSelect(unit)}
-            className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
-              selectedUnit?.NumEco === unit.NumEco
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400'
-                : 'border-gray-200 dark:border-[#2C2C38] bg-white dark:bg-[#1C1C24] hover:border-gray-300 dark:hover:border-gray-600'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-2">
-                <Truck className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                <span className="font-semibold text-gray-900 dark:text-white">{unit.NumEco}</span>
-              </div>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBgColor(unit.StatusMantto)}`}>
-                {unit.StatusMantto}
-              </span>
-            </div>
-            <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-              <div className="flex justify-between">
-                <span>Tipo:</span>
-                <span className="font-medium text-gray-900 dark:text-white">TRACTOR</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Destino:</span>
-                <span className="font-medium text-gray-900 dark:text-white">{unit.TerminalDestino}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Km por vencer:</span>
-                <span className="font-medium text-gray-900 dark:text-white">{unit.Kilometrosporvencerovencido}</span>
-              </div>
-            </div>
-            <div className="mt-2 text-xs text-gray-500 dark:text-gray-500">
-              <div className="flex items-center space-x-1">
-                <MapPin className="h-3 w-3" />
-                <span className="truncate">{unit.Posicion}</span>
-              </div>
+        {isLoading && filteredData.length === 0 ? (
+          <div className="flex items-center justify-center h-32">
+            <div className="text-center">
+              <RefreshCw className="h-6 w-6 text-gray-400 animate-spin mx-auto mb-2" />
+              <p className="text-sm text-gray-600 dark:text-gray-400">Cargando unidades...</p>
             </div>
           </div>
-        ))}
+        ) : filteredData.length === 0 ? (
+          <div className="flex items-center justify-center h-32">
+            <p className="text-sm text-gray-600 dark:text-gray-400">No se encontraron unidades</p>
+          </div>
+        ) : (
+          filteredData.map((unit) => (
+            <div
+              key={unit.NumEco}
+              onClick={() => !isLoading && onUnitSelect(unit)}
+              className={`p-4 border rounded-lg transition-all hover:shadow-md ${
+                isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+              } ${
+                selectedUnit?.NumEco === unit.NumEco
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400'
+                  : 'border-gray-200 dark:border-[#2C2C38] bg-white dark:bg-[#1C1C24] hover:border-gray-300 dark:hover:border-gray-600'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <Truck className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                  <span className="font-semibold text-gray-900 dark:text-white">{unit.NumEco}</span>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBgColor(unit.StatusMantto)}`}>
+                  {unit.StatusMantto}
+                </span>
+              </div>
+              <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex justify-between">
+                  <span>Tipo:</span>
+                  <span className="font-medium text-gray-900 dark:text-white">TRACTOR</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Destino:</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{unit.TerminalDestino}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Km por vencer:</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{unit.Kilometrosporvencerovencido}</span>
+                </div>
+              </div>
+              <div className="mt-2 text-xs text-gray-500 dark:text-gray-500">
+                <div className="flex items-center space-x-1">
+                  <MapPin className="h-3 w-3" />
+                  <span className="truncate">{unit.Posicion}</span>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

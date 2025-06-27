@@ -5,154 +5,208 @@ import FleetHeader from '@/components/tableros/flotillas/FleetHeader';
 import FleetSidebar from '@/components/tableros/flotillas/FleetSidebar';
 import FleetMap from '@/components/tableros/flotillas/FleetMap';
 import SettingsModal from '@/components/tableros/flotillas/SettingsModal';
+import { useTokenManager } from '@/hooks/useTokenManager';
 
 const FleetLocationPage = () => {
-  // Estados principales
+  // Main states
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [updateInterval, setUpdateInterval] = useState(30);
   const [showSettings, setShowSettings] = useState(false);
   
-  // Ref para acceder a métodos del mapa
+  // API states
+  const [fleetData, setFleetData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [lastUpdate, setLastUpdate] = useState(null);
+  
+  // Ref for map methods access
   const mapMethodsRef = useRef(null);
 
-  // Static data based on the provided image
-  const fleetData = [
-    {
-      NumEco: '802610',
-      StatusMantto: 'Vencido',
-      Kilometrosporvencerovencido: '1000',
-      FechaEstimadaLlegada: null,
-      TerminalDestino: 'NLD',
-      latitud: 4.7110,
-      Longitud: -74.0721,
-      Posicion: 'PATIO TEPO'
-    },
-    {
-      NumEco: '802613',
-      StatusMantto: 'Vencido',
-      Kilometrosporvencerovencido: '1000',
-      FechaEstimadaLlegada: null,
-      TerminalDestino: 'MEX',
-      latitud: 4.6097,
-      Longitud: -74.0817,
-      Posicion: '0.896 km de TEPOTZOTLAN'
-    },
-    {
-      NumEco: '802680',
-      StatusMantto: 'Vencido',
-      Kilometrosporvencerovencido: '1000',
-      FechaEstimadaLlegada: null,
-      TerminalDestino: 'MEX',
-      latitud: 4.5981,
-      Longitud: -74.0758,
-      Posicion: '2.171 km de EL FRANC+S, Tama'
-    },
-    {
-      NumEco: '802700',
-      StatusMantto: 'Vencido',
-      Kilometrosporvencerovencido: '1000',
-      FechaEstimadaLlegada: null,
-      TerminalDestino: 'MEX',
-      latitud: 4.7297,
-      Longitud: -74.0659,
-      Posicion: '0.899 km de TEPOTZOTLAN'
-    },
-    {
-      NumEco: '802702',
-      StatusMantto: 'Vencido',
-      Kilometrosporvencerovencido: '1000',
-      FechaEstimadaLlegada: null,
-      TerminalDestino: 'NLD',
-      latitud: 4.6482,
-      Longitud: -74.0731,
-      Posicion: '0.897 km de NORIA DEL REFUGIO'
-    },
-    {
-      NumEco: '802705',
-      StatusMantto: 'Por Vencer',
-      Kilometrosporvencerovencido: '1000',
-      FechaEstimadaLlegada: null,
-      TerminalDestino: 'NLD',
-      latitud: 4.5953,
-      Longitud: -74.0834,
-      Posicion: '0.533 km de PATIO NUEVO LAREDO'
-    },
-    {
-      NumEco: '802709',
-      StatusMantto: 'Por Vencer',
-      Kilometrosporvencerovencido: '1000',
-      FechaEstimadaLlegada: null,
-      TerminalDestino: 'MTY',
-      latitud: 4.6789,
-      Longitud: -74.0492,
-      Posicion: '3.006 km de EL GRAN CHAPARRAL NL'
-    },
-    {
-      NumEco: '802711',
-      StatusMantto: 'Realizado',
-      Kilometrosporvencerovencido: '1000',
-      FechaEstimadaLlegada: null,
-      TerminalDestino: 'MTY',
-      latitud: 4.6234,
-      Longitud: -74.0912,
-      Posicion: '1.699 km de EL DIQUE (EL VIEJO), NL'
-    }
-  ];
+  // Token manager hook
+  const { tokenizedRequest, isProcessingTokens, tokenError, clearTokenError } = useTokenManager();
 
-  // Filtrar datos basado en búsqueda y filtro de estado
+  // Transform API data to match component structure
+  const transformApiData = (apiData) => {
+    if (!Array.isArray(apiData)) return [];
+    
+    return apiData.map(unit => ({
+      NumEco: unit.numEco?.trim() || '',
+      StatusMantto: unit.statusMantto || '',
+      Kilometrosporvencerovencido: unit.kilometrosPorVencerOVencido?.toString() || '0',
+      FechaEstimadaLlegada: unit.fechaEstimadaLlegada,
+      TerminalDestino: unit.terminalDestino || '',
+      latitud: parseFloat(unit.latitud) || 0,
+      Longitud: parseFloat(unit.longitud) || 0,
+      Posicion: unit.posicion || ''
+    }));
+  };
+
+  // Fetch fleet data from API
+  const fetchFleetData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      clearTokenError();
+
+      const result = await tokenizedRequest('/mserpservice/api/tableros/flotilla', {
+        method: 'GET'
+      });
+      
+      if (result.statusCode === '200' && result.data) {
+        const transformedData = transformApiData(result.data);
+        setFleetData(transformedData);
+        setLastUpdate(new Date());
+        console.log(`Fleet data updated: ${transformedData.length} units loaded`);
+      } else {
+        throw new Error(result.message || 'Invalid response format');
+      }
+    } catch (err) {
+      console.error('Error fetching fleet data:', err);
+      const errorMessage = tokenError || err.message;
+      setError(errorMessage);
+      
+      // Fallback to static data in case of error
+      if (fleetData.length === 0) {
+        const fallbackData = [
+          {
+            NumEco: 'DEMO001',
+            StatusMantto: 'Vencido',
+            Kilometrosporvencerovencido: '1000',
+            FechaEstimadaLlegada: null,
+            TerminalDestino: 'MEX',
+            latitud: 19.4326,
+            Longitud: -99.1332,
+            Posicion: 'DEMO - Error de conexión'
+          }
+        ];
+        setFleetData(fallbackData);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Filter data based on search and status filter
   const filteredData = React.useMemo(() => {
     return fleetData.filter(unit => {
       const matchesSearch = unit.NumEco.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'ALL' || unit.StatusMantto === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [searchTerm, statusFilter]);
+  }, [fleetData, searchTerm, statusFilter]);
 
-  // Manejar selección de unidad desde el sidebar
+  // Handle unit selection from sidebar
   const handleUnitSelect = React.useCallback((unit) => {
     setSelectedUnit(unit);
-    // Centrar mapa en la unidad seleccionada
     if (mapMethodsRef.current && mapMethodsRef.current.centerOnUnit) {
       mapMethodsRef.current.centerOnUnit(unit);
     }
   }, []);
 
-  // Manejar selección de unidad desde el mapa
+  // Handle unit selection from map
   const handleMapUnitSelect = React.useCallback((unit) => {
     setSelectedUnit(unit);
   }, []);
 
-  // Manejar cuando el mapa esté listo
+  // Handle map ready
   const handleMapReady = React.useCallback((mapMethods) => {
     mapMethodsRef.current = mapMethods;
   }, []);
 
-  // Manejar apertura del modal de configuración
+  // Handle settings modal
   const handleSettingsClick = React.useCallback(() => {
     setShowSettings(true);
   }, []);
 
-  // Manejar cierre del modal de configuración
   const handleSettingsClose = React.useCallback(() => {
     setShowSettings(false);
+  }, []);
+
+  // Handle error retry
+  const handleRetry = React.useCallback(() => {
+    setError(null);
+    clearTokenError();
+    fetchFleetData();
+  }, [clearTokenError]);
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchFleetData();
   }, []);
 
   // Auto-refresh functionality
   useEffect(() => {
     const interval = setInterval(() => {
       console.log('Auto-refreshing fleet data...');
-      // Aquí iría la lógica para refrescar los datos desde la API
+      fetchFleetData();
     }, updateInterval * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [updateInterval]);
 
+  // Show loading state
+  if ((isLoading || isProcessingTokens) && fleetData.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-160px)]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p className="text-gray-600 dark:text-gray-400">
+            {isProcessingTokens ? 'Procesando tokens...' : 'Cargando datos de flotilla...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       {/* Header */}
       <FleetHeader />
+
+      {/* Error Banner */}
+      {(error || tokenError) && (
+        <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col">
+              <span>Error al cargar datos: {error || tokenError}</span>
+              {(error || tokenError)?.includes('localStorage') && (
+                <span className="text-xs mt-1 opacity-75">
+                  Verifique que haya una empresa seleccionada
+                </span>
+              )}
+              {(error || tokenError)?.includes('autenticación') && (
+                <span className="text-xs mt-1 opacity-75">
+                  Verifique las credenciales en variables de entorno
+                </span>
+              )}
+              {lastUpdate && (
+                <span className="text-xs mt-1 opacity-75">
+                  Última actualización: {lastUpdate.toLocaleTimeString()}
+                </span>
+              )}
+            </div>
+            <button
+              onClick={handleRetry}
+              disabled={isLoading || isProcessingTokens}
+              className="text-sm bg-red-200 dark:bg-red-800 hover:bg-red-300 dark:hover:bg-red-700 px-3 py-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {(isLoading || isProcessingTokens) ? 'Cargando...' : 'Reintentar'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Token Processing Banner */}
+      {isProcessingTokens && (
+        <div className="bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 px-4 py-3 rounded-lg mb-4">
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            <span>Procesando tokens de acceso...</span>
+          </div>
+        </div>
+      )}
 
       {/* Content Area */}
       <div className="h-[calc(100vh-160px)] flex flex-col lg:flex-row overflow-hidden">
@@ -166,6 +220,7 @@ const FleetLocationPage = () => {
           selectedUnit={selectedUnit}
           onUnitSelect={handleUnitSelect}
           onSettingsClick={handleSettingsClick}
+          isLoading={isLoading || isProcessingTokens}
         />
 
         {/* Map */}
@@ -174,6 +229,7 @@ const FleetLocationPage = () => {
           filteredData={filteredData}
           onUnitSelect={handleMapUnitSelect}
           onMapReady={handleMapReady}
+          isLoading={isLoading || isProcessingTokens}
         />
       </div>
 
