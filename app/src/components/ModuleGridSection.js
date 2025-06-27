@@ -5,19 +5,16 @@ import Link from 'next/link';
 const modules = [
   {
     name: 'Nucleares',
-    description: 'Módulos centrales que gestionan el flujo operativo de la empresa con integridad y visibilidad total.',
     image: '/assets/modules/nucleares.png',
     icon: '/assets/modules/icon-nucleares.png',
   },
   {
     name: 'Financieros',
-    description: 'Conectan la operación con los procesos financieros, permitiendo una gestión contable precisa y eficaz.',
     image: '/assets/modules/financieros.png',
     icon: '/assets/modules/icon-financieros.png',
   },
   {
     name: 'Auxiliares',
-    description: 'Control eficiente de los recursos clave de tu operación: compras, almacén, mantenimiento y de llantas.',
     image: '/assets/modules/auxiliares.png',
     icon: '/assets/modules/icon-auxiliar.png',
   },
@@ -42,14 +39,12 @@ const ModuleGridSection = () => {
           </div>
 
           {/* Contenido principal */}
-          <div className="flex flex-col items-start justify-center h-full pt-6">
+          <div className="flex flex-col justify-center h-full pt-6">
             <img src={mod.image} alt={mod.name} className="h-[120px] object-contain mb-4" />
-            <h2 className="text-[20px] text-[#171725] dark:text-gray-200 font-medium font-poppins mb-2">
+            <h2 className="text-[20px] text-[#171725] dark:text-gray-200 text-center font-medium font-poppins mb-2">
               {mod.name}
             </h2>
-            <p className="text-[12px] leading-[18px] text-[#696974] dark:text-gray-400 font-poppins text-left">
-              {mod.description}
-            </p>
+           
           </div>
         </Link>
       ))}

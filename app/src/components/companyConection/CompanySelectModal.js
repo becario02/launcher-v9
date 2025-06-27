@@ -81,8 +81,7 @@ const CompanySelectModal = () => {
     if (!selectedCompanyId) return;
     const company = companies.find((c) => generateKey(c) === selectedCompanyId);
     if (company) {
-      // ✅ USAR LA NUEVA FUNCIÓN QUE CONECTA Y SINCRONIZA
-      connectAndSync(company); // En lugar de selectCompany(company)
+      connectAndSync(company);
     }
   };
 

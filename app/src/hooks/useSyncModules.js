@@ -57,55 +57,54 @@ export const useSyncModules = () => {
     }
   }, []);
 
-  // ✅ FUNCIÓN PRINCIPAL MEJORADA CON CONTROL DE CONCURRENCIA
   const syncModules = useCallback(async (company) => {
     if (!company || !company.urlErp || !company.idUserCompanyConnection) {
       setError('Datos de empresa incompletos');
       return null;
     }
 
-    // ✅ PREVENIR MÚLTIPLES REQUESTS SIMULTÁNEOS
     if (isLoading || activeRequestRef.current) {
       return null;
     }
 
-    const requestId = Date.now(); // ID único para este request
+    const requestId = Date.now(); 
     activeRequestRef.current = requestId;
 
     setIsLoading(true);
     setError(null);
 
-    try {
-      let token = await login(company.urlErp);
-      
-      if (!token) {
-        throw new Error('No se pudo obtener token de autenticación');
-      }
+      try {
+        let token = await login(company.urlErp);
+        
+        if (!token) {
+          throw new Error('No se pudo obtener token de autenticación');
+        }
+        const base64Password = selectedCompany.passwordErpDb;
+        const decodedPassword = atob(base64Password);
+        const payload = {
+          urlErp: company.urlErp,
+          idUserCompanyConnection: company.idUserCompanyConnection,
+          accessToken: token,
+          Server_Erp_Db: selectedCompany.serverErpDb,
+          Name_Erp_Db: selectedCompany.nameErpDb,
+          User_Erp_Db: selectedCompany.userErpDb,
+          Password_Erp_Db: decodedPassword
+        };
 
-      const payload = {
-        urlErp: company.urlErp,
-        idUserCompanyConnection: company.idUserCompanyConnection,
-        accessToken: token,
-        Server_Erp_Db: selectedCompany.serverErpDb,
-        Name_Erp_Db: selectedCompany.nameErpDb,
-        User_Erp_Db: selectedCompany.userErpDb,
-        Password_Erp_Db: decodedPassword
-      };
+        let response = await fetch('/api/sync-company-modules', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'Accept-Language': 'es-MX'
+          },
+          body: JSON.stringify(payload)
+        });
 
-      let response = await fetch('/api/sync-company-modules', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'Accept-Language': 'es-MX'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      // ✅ VERIFICAR SI ESTE REQUEST FUE CANCELADO
-      if (activeRequestRef.current !== requestId) {
-        return null;
-      }
+        // ✅ VERIFICAR SI ESTE REQUEST FUE CANCELADO
+        if (activeRequestRef.current !== requestId) {
+          return null;
+        }
 
       if (response.status === 401 || response.status === 404) {
         
@@ -113,9 +112,6 @@ export const useSyncModules = () => {
         if (!token) {
           throw new Error('Error al refrescar token');
         }
-
-      const base64Password = selectedCompany.passwordErpDb;
-      const decodedPassword = atob(base64Password);
 
         response = await fetch('/api/sync-company-modules', {
           method: 'POST',
