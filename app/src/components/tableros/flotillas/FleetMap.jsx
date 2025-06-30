@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useTheme } from '@/context/ThemeContext';
+import { useTokenManager } from '@/hooks/useTokenManager';
 
 const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading = false }) => {
   const { primaryColor } = usePrimaryColor();
@@ -9,7 +10,12 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
 
   const mapRef = useRef(null);
   const [map, setMap] = useState(null);
+  const [googleMapsApiKey, setGoogleMapsApiKey] = useState(null);
+  const [isLoadingApiKey, setIsLoadingApiKey] = useState(true);
+  const [apiKeyError, setApiKeyError] = useState(null);
   const markersRef = useRef([]);
+
+  const { tokenizedRequest, isProcessingTokens, tokenError } = useTokenManager();
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -27,6 +33,37 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
       map.setZoom(15);
     }
   }, [map]);
+
+  // Fetch Google Maps API key from backend
+  const fetchGoogleMapsApiKey = async () => {
+    try {
+      setIsLoadingApiKey(true);
+      setApiKeyError(null);
+
+      const result = await tokenizedRequest('/mserpservice/api/tableros/google-maps-api-key', {
+        method: 'GET'
+      });
+
+      if (result.statusCode === '200' && result.data) {
+        setGoogleMapsApiKey(result.data);
+        console.log('Google Maps API key obtained successfully');
+      } else {
+        throw new Error(result.message || 'Failed to get Google Maps API key');
+      }
+    } catch (err) {
+      console.error('Error fetching Google Maps API key:', err);
+      setApiKeyError(err.message);
+      
+      // Fallback to environment variable if available
+      const fallbackKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+      if (fallbackKey) {
+        console.log('Using fallback Google Maps API key from environment');
+        setGoogleMapsApiKey(fallbackKey);
+      }
+    } finally {
+      setIsLoadingApiKey(false);
+    }
+  };
 
   const initializeMap = () => {
     if (!window.google || !window.google.maps || !mapRef.current) return;
@@ -139,8 +176,15 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
     }
   }, [map, centerOnUnit, onMapReady]);
 
+  // Fetch API key on component mount
+  useEffect(() => {
+    fetchGoogleMapsApiKey();
+  }, []);
+
   useEffect(() => {
     const loadGoogleMaps = () => {
+      if (!googleMapsApiKey) return;
+
       if (window.google && window.google.maps) {
         initializeMap();
         return;
@@ -157,12 +201,13 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
       }
 
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyA3-GWkfDQ03ia3DAwhcKuocmOMzRf6Rjs&libraries=places`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places`;
       script.async = true;
       script.defer = true;
       script.onload = initializeMap;
       script.onerror = () => {
         console.error('Failed to load Google Maps API');
+        setApiKeyError('Error al cargar la API de Google Maps');
       };
       document.head.appendChild(script);
     };
@@ -172,7 +217,7 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
     return () => {
       markersRef.current.forEach(marker => marker.setMap(null));
     };
-  }, []);
+  }, [googleMapsApiKey]);
 
   useEffect(() => {
     if (map && !isLoading) {
@@ -180,22 +225,58 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
     }
   }, [map, filteredData, createMarkers, isLoading]);
 
+  const handleRetryApiKey = () => {
+    setApiKeyError(null);
+    fetchGoogleMapsApiKey();
+  };
+
   return (
     <div className="flex-1 relative bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-lg overflow-hidden h-96 lg:h-full">
       <div ref={mapRef} className="w-full h-full" />
       
       {/* Loading overlay */}
-      {isLoading && (
+      {(isLoading || isLoadingApiKey || isProcessingTokens) && (
         <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 flex items-center justify-center z-10">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-2" style={{ borderColor: primaryColor }}></div>
-            <p className="text-gray-600 dark:text-gray-400">Actualizando ubicaciones...</p>
+            <p className="text-gray-600 dark:text-gray-400">
+              {isProcessingTokens ? 'Procesando tokens...' : 
+               isLoadingApiKey ? 'Obteniendo configuración de mapa...' : 
+               'Actualizando ubicaciones...'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* API Key Error */}
+      {(apiKeyError || tokenError) && !isLoadingApiKey && (
+        <div className="absolute inset-0 bg-white/90 dark:bg-gray-800/90 flex items-center justify-center z-10">
+          <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 max-w-md mx-4">
+            <div className="text-red-500 mb-4">
+              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 15.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Error de configuración del mapa
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
+              {apiKeyError || tokenError}
+            </p>
+            <button
+              onClick={handleRetryApiKey}
+              disabled={isLoadingApiKey || isProcessingTokens}
+              className="px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: primaryColor }}
+            >
+              {(isLoadingApiKey || isProcessingTokens) ? 'Cargando...' : 'Reintentar'}
+            </button>
           </div>
         </div>
       )}
       
       {/* Map Loading State */}
-      {!map && !isLoading && (
+      {!map && !isLoading && !isLoadingApiKey && !apiKeyError && !tokenError && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-2" style={{ borderColor: primaryColor }}></div>
