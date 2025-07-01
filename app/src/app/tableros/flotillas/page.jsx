@@ -21,6 +21,7 @@ const FleetLocationPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [intervalChangeTime, setIntervalChangeTime] = useState(null);
   
   // Ref for map methods access and interval
   const mapMethodsRef = useRef(null);
@@ -93,8 +94,6 @@ const FleetLocationPage = () => {
     }
   };
 
-  // Remove the separate loadReloadTimeConfig function since it's now inline
-
   // Setup auto-refresh interval
   const setupAutoRefresh = React.useCallback(() => {
     // Clear existing interval
@@ -151,6 +150,15 @@ const FleetLocationPage = () => {
     setShowSettings(false);
   }, []);
 
+  // Handle interval change from settings modal
+  const handleIntervalChange = React.useCallback((changeTime) => {
+    setIntervalChangeTime(changeTime);
+    // Clear the interval change time after the next update cycle
+    setTimeout(() => {
+      setIntervalChangeTime(null);
+    }, updateInterval * 60 * 1000);
+  }, [updateInterval]);
+
   // Handle error retry
   const handleRetry = React.useCallback(() => {
     setError(null);
@@ -180,7 +188,7 @@ const FleetLocationPage = () => {
     if (currentDashboardId && fleetData.length === 0) {
       initializeData();
     }
-  }, [currentDashboardId]); // Remove getReloadTime dependency to avoid re-runs
+  }, [currentDashboardId]);
 
   // Setup auto-refresh when updateInterval changes (but not on initial load)
   useEffect(() => {
@@ -285,6 +293,8 @@ const FleetLocationPage = () => {
         updateInterval={updateInterval}
         setUpdateInterval={setUpdateInterval}
         lastUpdate={lastUpdate}
+        intervalChangeTime={intervalChangeTime}
+        onIntervalChange={handleIntervalChange}
       />
     </>
   );

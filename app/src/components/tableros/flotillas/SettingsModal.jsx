@@ -9,7 +9,8 @@ const SettingsModal = ({
   onClose, 
   updateInterval, 
   setUpdateInterval,
-  lastUpdate 
+  lastUpdate,
+  onIntervalChange // New prop to notify parent about interval changes
 }) => {
   const { primaryColor } = usePrimaryColor();
   const { 
@@ -21,6 +22,7 @@ const SettingsModal = ({
   const [localInterval, setLocalInterval] = useState(updateInterval);
   const [isSaving, setIsSaving] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const [intervalChangeTime, setIntervalChangeTime] = useState(null);
 
   // Calculate time remaining until next update
   useEffect(() => {
@@ -28,8 +30,11 @@ const SettingsModal = ({
 
     const updateCountdown = () => {
       const now = new Date().getTime();
-      const lastUpdateTime = lastUpdate.getTime();
-      const nextUpdateTime = lastUpdateTime + (updateInterval * 60 * 1000);
+      
+      // Use intervalChangeTime if available (when interval was recently changed)
+      // Otherwise use lastUpdate (when data was last fetched)
+      const referenceTime = intervalChangeTime || lastUpdate.getTime();
+      const nextUpdateTime = referenceTime + (updateInterval * 60 * 1000);
       const remaining = Math.max(0, nextUpdateTime - now);
       
       setTimeRemaining(Math.ceil(remaining / 1000)); // Convert to seconds
@@ -42,7 +47,7 @@ const SettingsModal = ({
     const interval = setInterval(updateCountdown, 1000);
 
     return () => clearInterval(interval);
-  }, [isOpen, lastUpdate, updateInterval]);
+  }, [isOpen, lastUpdate, updateInterval, intervalChangeTime]);
 
   // Load current reload time when modal opens
   useEffect(() => {
@@ -78,6 +83,15 @@ const SettingsModal = ({
       
       await updateReloadTime(localInterval);
       setUpdateInterval(localInterval);
+      
+      // Set the time when interval was changed to reset countdown
+      const changeTime = new Date().getTime();
+      setIntervalChangeTime(changeTime);
+      
+      // Notify parent component about the interval change
+      if (onIntervalChange) {
+        onIntervalChange(changeTime);
+      }
       
       // Close modal after successful save
       onClose();
