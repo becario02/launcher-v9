@@ -6,6 +6,7 @@ import FleetSidebar from '@/components/tableros/flotillas/FleetSidebar';
 import FleetMap from '@/components/tableros/flotillas/FleetMap';
 import SettingsModal from '@/components/tableros/flotillas/SettingsModal';
 import { useTokenManager } from '@/hooks/useTokenManager';
+import { useDashboardReload } from '@/hooks/useDashboardReload';
 
 const FleetLocationPage = () => {
   // Main states
@@ -21,11 +22,15 @@ const FleetLocationPage = () => {
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   
-  // Ref for map methods access
+  // Ref for map methods access and interval
   const mapMethodsRef = useRef(null);
+  const intervalRef = useRef(null);
 
   // Token manager hook
   const { tokenizedRequest, isProcessingTokens, tokenError, clearTokenError } = useTokenManager();
+  
+  // Dashboard reload hook
+  const { getReloadTime, currentDashboardId } = useDashboardReload();
 
   // Transform API data to match component structure
   const transformApiData = (apiData) => {
@@ -88,6 +93,28 @@ const FleetLocationPage = () => {
     }
   };
 
+  // Remove the separate loadReloadTimeConfig function since it's now inline
+
+  // Setup auto-refresh interval
+  const setupAutoRefresh = React.useCallback(() => {
+    // Clear existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    // Set up new interval
+    intervalRef.current = setInterval(() => {
+      console.log(`Auto-refreshing fleet data every ${updateInterval} minutes...`);
+      fetchFleetData();
+    }, updateInterval * 60 * 1000);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [updateInterval]);
+
   // Filter data based on search and status filter
   const filteredData = React.useMemo(() => {
     return fleetData.filter(unit => {
@@ -131,20 +158,38 @@ const FleetLocationPage = () => {
     fetchFleetData();
   }, [clearTokenError]);
 
-  // Initial data fetch
+  // Load initial data and configuration
   useEffect(() => {
-    fetchFleetData();
-  }, []);
+    const initializeData = async () => {
+      try {
+        // First load reload time config if dashboard is available
+        if (currentDashboardId) {
+          const reloadTime = await getReloadTime();
+          setUpdateInterval(reloadTime);
+          console.log(`Reload time configuration loaded: ${reloadTime} minutes`);
+        }
+        
+        // Then fetch fleet data once
+        await fetchFleetData();
+      } catch (err) {
+        console.error('Error during initialization:', err);
+      }
+    };
+    
+    // Only initialize once when dashboard ID is available and we haven't loaded data yet
+    if (currentDashboardId && fleetData.length === 0) {
+      initializeData();
+    }
+  }, [currentDashboardId]); // Remove getReloadTime dependency to avoid re-runs
 
-  // Auto-refresh functionality
+  // Setup auto-refresh when updateInterval changes (but not on initial load)
   useEffect(() => {
-    const interval = setInterval(() => {
-      console.log('Auto-refreshing fleet data...');
-      fetchFleetData();
-    }, updateInterval * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, [updateInterval]);
+    // Don't setup auto-refresh if we don't have data yet or if it's the initial default value
+    if (fleetData.length === 0 || updateInterval === 30) return;
+    
+    const cleanup = setupAutoRefresh();
+    return cleanup;
+  }, [setupAutoRefresh, fleetData.length]);
 
   // Show loading state
   if ((isLoading || isProcessingTokens) && fleetData.length === 0) {
@@ -239,6 +284,7 @@ const FleetLocationPage = () => {
         onClose={handleSettingsClose}
         updateInterval={updateInterval}
         setUpdateInterval={setUpdateInterval}
+        lastUpdate={lastUpdate}
       />
     </>
   );
