@@ -10,6 +10,7 @@ const SettingsModal = ({
   updateInterval, 
   setUpdateInterval,
   lastUpdate,
+  intervalChangeTime, // Receive from parent
   onIntervalChange // New prop to notify parent about interval changes
 }) => {
   const { primaryColor } = usePrimaryColor();
@@ -22,7 +23,6 @@ const SettingsModal = ({
   const [localInterval, setLocalInterval] = useState(updateInterval);
   const [isSaving, setIsSaving] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const [intervalChangeTime, setIntervalChangeTime] = useState(null);
 
   // Calculate time remaining until next update
   useEffect(() => {
@@ -86,7 +86,6 @@ const SettingsModal = ({
       
       // Set the time when interval was changed to reset countdown
       const changeTime = new Date().getTime();
-      setIntervalChangeTime(changeTime);
       
       // Notify parent component about the interval change
       if (onIntervalChange) {

@@ -64,6 +64,11 @@ const FleetLocationPage = () => {
         const transformedData = transformApiData(result.data);
         setFleetData(transformedData);
         setLastUpdate(new Date());
+        
+        // Clear intervalChangeTime when new data is fetched
+        // This ensures the countdown uses the fresh lastUpdate time
+        setIntervalChangeTime(null);
+        
         console.log(`Fleet data updated: ${transformedData.length} units loaded`);
       } else {
         throw new Error(result.message || 'Invalid response format');
@@ -153,11 +158,10 @@ const FleetLocationPage = () => {
   // Handle interval change from settings modal
   const handleIntervalChange = React.useCallback((changeTime) => {
     setIntervalChangeTime(changeTime);
-    // Clear the interval change time after the next update cycle
-    setTimeout(() => {
-      setIntervalChangeTime(null);
-    }, updateInterval * 60 * 1000);
-  }, [updateInterval]);
+    
+    // Clear the interval change time when the next data update occurs
+    // This will be handled by fetchFleetData when it updates lastUpdate
+  }, []);
 
   // Handle error retry
   const handleRetry = React.useCallback(() => {
