@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import Cookies from 'js-cookie';
 import { useSyncModules } from '@/hooks/useSyncModules';
 
 const CompanyContext = createContext();
@@ -46,6 +47,23 @@ export function CompanyProvider({ children }) {
     }
   }, [syncModules]);
 
+  // Helper function to save company data to both localStorage and cookies
+  const saveCompanyData = useCallback((company) => {
+    // Save to localStorage (existing functionality)
+    localStorage.setItem('selectedCompany', JSON.stringify(company));
+    
+    // Save idCompany to cookies for middleware access
+    if (company?.idCompany) {
+      Cookies.set('idCompany', company.idCompany.toString());
+    }
+  }, []);
+
+  // Helper function to clear company data
+  const clearCompanyData = useCallback(() => {
+    localStorage.removeItem('selectedCompany');
+    Cookies.remove('idCompany');
+  }, []);
+
   useEffect(() => {
     if (hasInitialized) return;
 
@@ -65,10 +83,15 @@ export function CompanyProvider({ children }) {
             const company = JSON.parse(savedCompany);
             setSelectedCompany(company);
             
+            // Ensure cookie is set for existing selected company
+            if (company?.idCompany) {
+              Cookies.set('idCompany', company.idCompany.toString());
+            }
+            
           } else if (parsedData.data.length === 1) {
             const onlyCompany = parsedData.data[0];
             setSelectedCompany(onlyCompany);
-            localStorage.setItem('selectedCompany', JSON.stringify(onlyCompany));
+            saveCompanyData(onlyCompany);
             
             setTimeout(() => {
               handleSyncModules(onlyCompany);
@@ -79,33 +102,35 @@ export function CompanyProvider({ children }) {
           }
         }
       } catch (error) {
+        console.error('Error parsing userData:', error);
       }
     } else {
+      console.log('No userData found in localStorage');
     }
     
     setLoading(false);
     setHasInitialized(true);
-  }, [handleSyncModules, hasInitialized]);
+  }, [handleSyncModules, hasInitialized, saveCompanyData]);
 
   const selectCompany = useCallback((company) => {
-    
+    console.log('Selecting company:', company.name);
     setSelectedCompany(company);
     setShowCompanyModal(false);
     setPreselectedCompany(null);
-    localStorage.setItem('selectedCompany', JSON.stringify(company));
-  }, []);
+    saveCompanyData(company);
+  }, [saveCompanyData]);
 
   const connectAndSync = useCallback((company) => {
-    
+    console.log('Connecting and syncing company:', company.name);
     setSelectedCompany(company);
     setShowCompanyModal(false);
     setPreselectedCompany(null);
-    localStorage.setItem('selectedCompany', JSON.stringify(company));
+    saveCompanyData(company);
     
     setTimeout(() => {
       handleSyncModules(company);
     }, 500);
-  }, [handleSyncModules]);
+  }, [handleSyncModules, saveCompanyData]);
 
   const openCompanySelector = useCallback(() => {
     setShowCompanyModal(true);
@@ -115,8 +140,17 @@ export function CompanyProvider({ children }) {
     if (selectedCompany) {
       handleSyncModules(selectedCompany);
     } else {
+      console.log('No company selected for manual sync');
     }
   }, [selectedCompany, handleSyncModules]);
+
+  // Clear company data when logging out (can be called from auth context)
+  const clearCompany = useCallback(() => {
+    setSelectedCompany(null);
+    setPreselectedCompany(null);
+    setShowCompanyModal(false);
+    clearCompanyData();
+  }, [clearCompanyData]);
 
   return (
     <CompanyContext.Provider
@@ -132,7 +166,8 @@ export function CompanyProvider({ children }) {
         selectCompany,
         connectAndSync,    
         openCompanySelector,
-        manualSync,     
+        manualSync,
+        clearCompany, // New function to clear company data
         
         loading,
         syncingModules,

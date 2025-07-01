@@ -39,11 +39,14 @@ export async function middleware(request) {
   const profileNameCookie = request.cookies.get('profileName');
   const profileName = profileNameCookie?.value;
   const userId = request.cookies.get('idUser')?.value;
+  const companyId = request.cookies.get('idCompany')?.value;
   
   console.log('Middleware Debug:', {
     pathname: request.nextUrl.pathname,
     isAuthenticated,
     profileName,
+    userId,
+    companyId,
     isAdminRoute,
     isPublicRoute,
     isDashboardRoute
@@ -71,13 +74,13 @@ export async function middleware(request) {
   }
   
   // Dashboard access validation
-  if (isAuthenticated && isDashboardRoute && userId) {
+  if (isAuthenticated && isDashboardRoute && userId && companyId) {
     try {
-      console.log('Validating dashboard access for user:', userId);
+      console.log('Validating dashboard access for user:', userId, 'company:', companyId);
       
-      // Get user dashboards
+      // Get user dashboards using new endpoint
       const dashboardsResponse = await fetch(
-        `${request.nextUrl.origin}/api/users/dashboards?userId=${userId}`,
+        `${request.nextUrl.origin}/api/dashboards/company/${companyId}/user/${userId}`,
         {
           headers: {
             'Cookie': request.headers.get('cookie') || '',
@@ -88,12 +91,15 @@ export async function middleware(request) {
       if (dashboardsResponse.ok) {
         const dashboardsData = await dashboardsResponse.json();
         
-        if (dashboardsData.statusCode === "200" && dashboardsData.data) {
+        if (dashboardsData.statusCode === "200") {
+          // Handle case where data could be null or empty array
+          const userDashboards = dashboardsData.data || [];
+          
           // Extract dashboard path from URL
           const currentDashboardPath = request.nextUrl.pathname.substring(1); // Remove leading '/'
           
           // Check if user has access to this dashboard
-          const hasAccess = dashboardsData.data.some(
+          const hasAccess = userDashboards.some(
             dashboard => dashboard.url === currentDashboardPath
           );
 
@@ -121,6 +127,10 @@ export async function middleware(request) {
       // On error, redirect to home for safety
       return NextResponse.redirect(new URL('/', request.url));
     }
+  } else if (isAuthenticated && isDashboardRoute && (!userId || !companyId)) {
+    // If accessing dashboard but missing userId or companyId, redirect to home
+    console.log('Redirecting to home - missing userId or companyId for dashboard access');
+    return NextResponse.redirect(new URL('/', request.url));
   }
   
   console.log('Allowing access to:', request.nextUrl.pathname);

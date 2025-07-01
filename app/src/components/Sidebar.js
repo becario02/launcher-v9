@@ -190,19 +190,29 @@ export default function Sidebar({ onClose }) {
   // Fetch user dashboards
   const fetchUserDashboards = useCallback(async () => {
     const userId = Cookies.get('idUser');
-    if (!userId) return;
+    const companyId = selectedCompany?.idCompany;
+    
+    if (!userId || !companyId) {
+      console.log('Missing userId or companyId for dashboard fetch');
+      return;
+    }
 
     try {
-      const response = await fetch(`/api/users/dashboards?userId=${userId}`);
+      const response = await fetch(`/api/dashboards/company/${companyId}/user/${userId}`);
       const data = await response.json();
       
-      if (data.statusCode === "200" && data.data) {
-        setDashboards(data.data);
+      if (data.statusCode === "200") {
+        // data.data can be an array or null/empty
+        setDashboards(data.data || []);
+      } else {
+        console.error('Error fetching dashboards:', data.message);
+        setDashboards([]);
       }
     } catch (error) {
       console.error('Error fetching user dashboards:', error);
+      setDashboards([]);
     }
-  }, []);
+  }, [selectedCompany?.idCompany]);
 
   // Fetch launcher version
   const fetchLauncherVersion = useCallback(async () => {
@@ -251,11 +261,18 @@ export default function Sidebar({ onClose }) {
     }
   }, []);
 
-  // Load data on component mount
+  // Load data on component mount and when company changes
   useEffect(() => {
     fetchLauncherVersion();
-    fetchUserDashboards();
-  }, [fetchLauncherVersion, fetchUserDashboards]);
+  }, [fetchLauncherVersion]);
+
+  useEffect(() => {
+    if (selectedCompany?.idCompany) {
+      fetchUserDashboards();
+    } else {
+      setDashboards([]);
+    }
+  }, [fetchUserDashboards, selectedCompany?.idCompany]);
 
   // Update active item when pathname changes
   useEffect(() => {
