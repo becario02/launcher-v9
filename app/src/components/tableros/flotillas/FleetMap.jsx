@@ -14,6 +14,7 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
   const [isLoadingApiKey, setIsLoadingApiKey] = useState(true);
   const [apiKeyError, setApiKeyError] = useState(null);
   const markersRef = useRef([]);
+  const currentInfoWindowRef = useRef(null); // Reference to currently open InfoWindow
 
   const { tokenizedRequest, isProcessingTokens, tokenError } = useTokenManager();
 
@@ -65,6 +66,13 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
     }
   };
 
+  const closeCurrentInfoWindow = () => {
+    if (currentInfoWindowRef.current) {
+      currentInfoWindowRef.current.close();
+      currentInfoWindowRef.current = null;
+    }
+  };
+
   const initializeMap = () => {
     if (!window.google || !window.google.maps || !mapRef.current) return;
     if (map) return;
@@ -94,6 +102,11 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
       ] : []
     });
 
+    // Close InfoWindow when clicking on map
+    googleMap.addListener('click', () => {
+      closeCurrentInfoWindow();
+    });
+
     setMap(googleMap);
     if (fleetData.length > 0) {
       createMarkers(googleMap, fleetData);
@@ -104,6 +117,9 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
     // Clear existing markers
     markersRef.current.forEach(marker => marker.setMap(null));
     markersRef.current = [];
+    
+    // Close any open InfoWindow
+    closeCurrentInfoWindow();
     
     // Filter data with valid coordinates
     const validData = data.filter(unit => 
@@ -150,8 +166,20 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
       });
 
       marker.addListener('click', () => {
+        // Close any currently open InfoWindow
+        closeCurrentInfoWindow();
+        
+        // Open new InfoWindow and set as current
         infoWindow.open(googleMap, marker);
+        currentInfoWindowRef.current = infoWindow;
+        
+        // Call unit select handler
         onUnitSelect(unit);
+      });
+
+      // Listen to InfoWindow close event to clear reference
+      infoWindow.addListener('closeclick', () => {
+        currentInfoWindowRef.current = null;
       });
 
       return marker;
@@ -216,6 +244,7 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
 
     return () => {
       markersRef.current.forEach(marker => marker.setMap(null));
+      closeCurrentInfoWindow();
     };
   }, [googleMapsApiKey]);
 
