@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, Settings, MapPin, Truck, RefreshCw } from 'lucide-react';
 import { usePrimaryColor } from '@/context/primaryColor';
+import Cookies from 'js-cookie';
 
 const FleetSidebar = ({
   searchTerm,
@@ -14,6 +15,12 @@ const FleetSidebar = ({
   isLoading = false
 }) => {
   const { primaryColor } = usePrimaryColor();
+
+  // Get profile name from cookies to check user type
+  const profileName = Cookies.get('profileName');
+  
+  // Check if user can access settings (exclude USERCUSTOMER only)
+  const canAccessSettings = profileName !== 'USERCUSTOMER';
 
   const getStatusBgColor = (status) => {
     switch (status) {
@@ -36,13 +43,15 @@ const FleetSidebar = ({
               <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />
             )}
           </div>
-          <button
-            onClick={onSettingsClick}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title="Configuración de actualización"
-          >
-            <Settings className="h-4 w-4" />
-          </button>
+          {canAccessSettings && (
+            <button
+              onClick={onSettingsClick}
+              className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              title="Configuración de actualización"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+          )}
         </div>
         
         <div className="space-y-4">
