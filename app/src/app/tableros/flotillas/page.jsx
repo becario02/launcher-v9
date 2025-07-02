@@ -123,7 +123,18 @@ const FleetLocationPage = () => {
   const filteredData = React.useMemo(() => {
     return fleetData.filter(unit => {
       const matchesSearch = unit.NumEco.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'ALL' || unit.StatusMantto === statusFilter;
+      
+      let matchesStatus = false;
+      if (statusFilter === 'ALL') {
+        matchesStatus = true;
+      } else if (statusFilter === 'OTHER') {
+        // Filter for states that are not in the known list
+        const knownStates = ['Vencido', 'Por Vencer', 'Realizado', 'No Requiere'];
+        matchesStatus = !knownStates.includes(unit.StatusMantto);
+      } else {
+        matchesStatus = unit.StatusMantto === statusFilter;
+      }
+      
       return matchesSearch && matchesStatus;
     });
   }, [fleetData, searchTerm, statusFilter]);

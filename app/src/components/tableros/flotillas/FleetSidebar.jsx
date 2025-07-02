@@ -86,6 +86,7 @@ const FleetSidebar = ({
             <option value="Por Vencer">Por Vencer</option>
             <option value="Realizado">Realizado</option>
             <option value="No Requiere">No Requiere</option>
+            <option value="OTHER">Otro / Desconocido</option>
           </select>
         </div>
       </div>
