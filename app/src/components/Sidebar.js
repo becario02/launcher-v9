@@ -187,18 +187,17 @@ export default function Sidebar({ onClose }) {
   const profileName = Cookies.get('profileName');
   const isUserAdvan = profileName?.includes('USERADVAN');
 
-  // Fetch user dashboards
+  // Fetch user dashboards - Updated to use new endpoint
   const fetchUserDashboards = useCallback(async () => {
     const userId = Cookies.get('idUser');
-    const companyId = selectedCompany?.idCompany;
     
-    if (!userId || !companyId) {
-      console.log('Missing userId or companyId for dashboard fetch');
+    if (!userId) {
+      console.log('Missing userId for dashboard fetch');
       return;
     }
 
     try {
-      const response = await fetch(`/api/dashboards/company/${companyId}/user/${userId}`);
+      const response = await fetch(`/api/dashboards/user/${userId}`);
       const data = await response.json();
       
       if (data.statusCode === "200") {
@@ -212,7 +211,7 @@ export default function Sidebar({ onClose }) {
       console.error('Error fetching user dashboards:', error);
       setDashboards([]);
     }
-  }, [selectedCompany?.idCompany]);
+  }, []); // Removed selectedCompany dependency since endpoint doesn't need it
 
   // Fetch launcher version
   const fetchLauncherVersion = useCallback(async () => {
@@ -261,18 +260,11 @@ export default function Sidebar({ onClose }) {
     }
   }, []);
 
-  // Load data on component mount and when company changes
+  // Load data on component mount
   useEffect(() => {
     fetchLauncherVersion();
-  }, [fetchLauncherVersion]);
-
-  useEffect(() => {
-    if (selectedCompany?.idCompany) {
-      fetchUserDashboards();
-    } else {
-      setDashboards([]);
-    }
-  }, [fetchUserDashboards, selectedCompany?.idCompany]);
+    fetchUserDashboards(); // Now fetches regardless of company selection
+  }, [fetchLauncherVersion, fetchUserDashboards]);
 
   // Update active item when pathname changes
   useEffect(() => {

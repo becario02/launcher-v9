@@ -1,21 +1,21 @@
-// app/api/dashboards/company/[companyId]/user/[userId]/route.js
+// app/api/dashboards/user/[userId]/route.js
 import { NextResponse } from "next/server";
 import { callApiGateway } from "@/utils/serverApi";
 
 export async function GET(request, { params }) {
   try {
-    const { companyId, userId } = params;
+    const { userId } = params;
 
-    if (!companyId || !userId) {
+    if (!userId) {
       return NextResponse.json({
         statusCode: "400",
-        message: "Company ID and User ID are required",
+        message: "User ID is required",
         data: null
       }, { status: 400 });
     }
 
     const data = await callApiGateway({
-      endpoint: `/mslauncher/api/v1/dashboards/company/${companyId}/user/${userId}`,
+      endpoint: `/mslauncher/api/v1/user/${userId}/dashboards`,
       method: "GET",
     });
 

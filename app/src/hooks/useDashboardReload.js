@@ -22,21 +22,8 @@ export const useDashboardReload = () => {
         throw new Error('User ID not found in cookies');
       }
 
-      // Get company ID from localStorage or cookies
-      const selectedCompany = localStorage.getItem('selectedCompany');
-      if (!selectedCompany) {
-        throw new Error('No company selected');
-      }
-
-      const companyData = JSON.parse(selectedCompany);
-      const companyId = companyData.id || companyData.idCompany;
-
-      if (!companyId) {
-        throw new Error('Company ID not found');
-      }
-
-      // Fetch user dashboards using existing API route
-      const response = await fetch(`/api/dashboards/company/${companyId}/user/${userId}`);
+      // Fetch user dashboards using new simplified API route
+      const response = await fetch(`/api/dashboards/user/${userId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch dashboards');
       }

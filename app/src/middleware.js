@@ -39,14 +39,12 @@ export async function middleware(request) {
   const profileNameCookie = request.cookies.get('profileName');
   const profileName = profileNameCookie?.value;
   const userId = request.cookies.get('idUser')?.value;
-  const companyId = request.cookies.get('idCompany')?.value;
   
   console.log('Middleware Debug:', {
     pathname: request.nextUrl.pathname,
     isAuthenticated,
     profileName,
     userId,
-    companyId,
     isAdminRoute,
     isPublicRoute,
     isDashboardRoute
@@ -73,14 +71,14 @@ export async function middleware(request) {
     return NextResponse.redirect(new URL('/', request.url));
   }
   
-  // Dashboard access validation
-  if (isAuthenticated && isDashboardRoute && userId && companyId) {
+  // Dashboard access validation - Updated to use new endpoint
+  if (isAuthenticated && isDashboardRoute && userId) {
     try {
-      console.log('Validating dashboard access for user:', userId, 'company:', companyId);
+      console.log('Validating dashboard access for user:', userId);
       
-      // Get user dashboards using new endpoint
+      // Get user dashboards using new endpoint (removed companyId dependency)
       const dashboardsResponse = await fetch(
-        `${request.nextUrl.origin}/api/dashboards/company/${companyId}/user/${userId}`,
+        `${request.nextUrl.origin}/api/dashboards/user/${userId}`,
         {
           headers: {
             'Cookie': request.headers.get('cookie') || '',
@@ -127,9 +125,9 @@ export async function middleware(request) {
       // On error, redirect to home for safety
       return NextResponse.redirect(new URL('/', request.url));
     }
-  } else if (isAuthenticated && isDashboardRoute && (!userId || !companyId)) {
-    // If accessing dashboard but missing userId or companyId, redirect to home
-    console.log('Redirecting to home - missing userId or companyId for dashboard access');
+  } else if (isAuthenticated && isDashboardRoute && !userId) {
+    // If accessing dashboard but missing userId, redirect to home
+    console.log('Redirecting to home - missing userId for dashboard access');
     return NextResponse.redirect(new URL('/', request.url));
   }
   

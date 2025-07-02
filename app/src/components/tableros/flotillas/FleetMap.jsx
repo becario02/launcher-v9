@@ -14,7 +14,8 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
   const [isLoadingApiKey, setIsLoadingApiKey] = useState(true);
   const [apiKeyError, setApiKeyError] = useState(null);
   const markersRef = useRef([]);
-  const currentInfoWindowRef = useRef(null); // Reference to currently open InfoWindow
+  const labelsRef = useRef([]); // New ref for labels
+  const currentInfoWindowRef = useRef(null);
 
   const { tokenizedRequest, isProcessingTokens, tokenError } = useTokenManager();
 
@@ -114,9 +115,11 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
   };
 
   const createMarkers = useCallback((googleMap, data) => {
-    // Clear existing markers
+    // Clear existing markers and labels
     markersRef.current.forEach(marker => marker.setMap(null));
+    labelsRef.current.forEach(label => label.setMap(null));
     markersRef.current = [];
+    labelsRef.current = [];
     
     // Close any open InfoWindow
     closeCurrentInfoWindow();
@@ -129,12 +132,18 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
 
     if (validData.length === 0) return;
 
-    const newMarkers = validData.map(unit => {
+    const newMarkers = [];
+    const newLabels = [];
+
+    validData.forEach(unit => {
+      const position = { lat: unit.latitud, lng: unit.Longitud };
+      const statusColor = getStatusColor(unit.StatusMantto);
+
       // Create custom truck icon SVG
       const truckIcon = {
         url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M1 17V13C1 12.45 1.196 11.979 1.588 11.588C1.98 11.196 2.45 11 3 11H12V7C12 6.45 12.196 5.979 12.588 5.588C12.98 5.196 13.45 5 14 5H19L22 8V17C22 17.55 21.804 18.021 21.412 18.412C21.021 18.804 20.55 19 20 19H19C19 19.8 18.683 20.483 18.05 21.05C17.417 21.617 16.767 21.9 16.1 21.9C15.433 21.9 14.783 21.617 14.15 21.05C13.517 20.483 13.2 19.8 13.2 19H8.8C8.8 19.8 8.483 20.483 7.85 21.05C7.217 21.617 6.567 21.9 5.9 21.9C5.233 21.9 4.583 21.617 3.95 21.05C3.317 20.483 3 19.8 3 19H2C1.45 19 0.979 18.804 0.588 18.412C0.196 18.021 0 17.55 0 17H1ZM14 7V11H20V9L18 7H14ZM5.9 20C6.367 20 6.767 19.833 7.1 19.5C7.433 19.167 7.6 18.767 7.6 18.3C7.6 17.833 7.433 17.433 7.1 17.1C6.767 16.767 6.367 16.6 5.9 16.6C5.433 16.6 5.033 16.767 4.7 17.1C4.367 17.433 4.2 17.833 4.2 18.3C4.2 18.767 4.367 19.167 4.7 19.5C5.033 19.833 5.433 20 5.9 20ZM16.1 20C16.567 20 16.967 19.833 17.3 19.5C17.633 19.167 17.8 18.767 17.8 18.3C17.8 17.833 17.633 17.433 17.3 17.1C16.967 16.767 16.567 16.6 16.1 16.6C15.633 16.6 15.233 16.767 14.9 17.1C14.567 17.433 14.4 17.833 14.4 18.3C14.4 18.767 14.567 19.167 14.9 19.5C15.233 19.833 15.633 20 16.1 20Z" fill="${getStatusColor(unit.StatusMantto)}" stroke="#ffffff" stroke-width="0.5"/>
+            <path d="M1 17V13C1 12.45 1.196 11.979 1.588 11.588C1.98 11.196 2.45 11 3 11H12V7C12 6.45 12.196 5.979 12.588 5.588C12.98 5.196 13.45 5 14 5H19L22 8V17C22 17.55 21.804 18.021 21.412 18.412C21.021 18.804 20.55 19 20 19H19C19 19.8 18.683 20.483 18.05 21.05C17.417 21.617 16.767 21.9 16.1 21.9C15.433 21.9 14.783 21.617 14.15 21.05C13.517 20.483 13.2 19.8 13.2 19H8.8C8.8 19.8 8.483 20.483 7.85 21.05C7.217 21.617 6.567 21.9 5.9 21.9C5.233 21.9 4.583 21.617 3.95 21.05C3.317 20.483 3 19.8 3 19H2C1.45 19 0.979 18.804 0.588 18.412C0.196 18.021 0 17.55 0 17H1ZM14 7V11H20V9L18 7H14ZM5.9 20C6.367 20 6.767 19.833 7.1 19.5C7.433 19.167 7.6 18.767 7.6 18.3C7.6 17.833 7.433 17.433 7.1 17.1C6.767 16.767 6.367 16.6 5.9 16.6C5.433 16.6 5.033 16.767 4.7 17.1C4.367 17.433 4.2 17.833 4.2 18.3C4.2 18.767 4.367 19.167 4.7 19.5C5.033 19.833 5.433 20 5.9 20ZM16.1 20C16.567 20 16.967 19.833 17.3 19.5C17.633 19.167 17.8 18.767 17.8 18.3C17.8 17.833 17.633 17.433 17.3 17.1C16.967 16.767 16.567 16.6 16.1 16.6C15.633 16.6 15.233 16.767 14.9 17.1C14.567 17.433 14.4 17.833 14.4 18.3C14.4 18.767 14.567 19.167 14.9 19.5C15.233 19.833 15.633 20 16.1 20Z" fill="${statusColor}" stroke="#ffffff" stroke-width="0.5"/>
           </svg>
         `)}`,
         size: new window.google.maps.Size(24, 24),
@@ -142,13 +151,61 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
         anchor: new window.google.maps.Point(12, 12)
       };
 
+      // Create marker
       const marker = new window.google.maps.Marker({
-        position: { lat: unit.latitud, lng: unit.Longitud },
+        position: position,
         map: googleMap,
         title: `${unit.NumEco} - ${unit.StatusMantto}`,
-        icon: truckIcon
+        icon: truckIcon,
+        zIndex: 100
       });
 
+      // Create label for unit number
+      const labelDiv = document.createElement('div');
+      labelDiv.style.cssText = `
+        position: absolute;
+        background: ${isDark ? '#1f2937' : '#ffffff'};
+        color: ${isDark ? '#ffffff' : '#1f2937'};
+        border: 2px solid ${statusColor};
+        border-radius: 6px;
+        padding: 2px 6px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        transform: translate(-50%, -100%);
+        margin-top: -8px;
+        z-index: 200;
+        pointer-events: none;
+        user-select: none;
+      `;
+      labelDiv.textContent = unit.NumEco;
+
+      const label = new window.google.maps.OverlayView();
+      label.onAdd = function() {
+        const panes = this.getPanes();
+        panes.overlayMouseTarget.appendChild(labelDiv);
+      };
+
+      label.draw = function() {
+        const projection = this.getProjection();
+        const point = projection.fromLatLngToDivPixel(position);
+        
+        if (point) {
+          labelDiv.style.left = point.x + 'px';
+          labelDiv.style.top = point.y + 'px';
+        }
+      };
+
+      label.onRemove = function() {
+        if (labelDiv.parentNode) {
+          labelDiv.parentNode.removeChild(labelDiv);
+        }
+      };
+
+      label.setMap(googleMap);
+
+      // Create InfoWindow
       const infoWindow = new window.google.maps.InfoWindow({
         content: `
           <div class="p-3">
@@ -165,6 +222,7 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
         `
       });
 
+      // Add click event to marker
       marker.addListener('click', () => {
         // Close any currently open InfoWindow
         closeCurrentInfoWindow();
@@ -182,10 +240,12 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
         currentInfoWindowRef.current = null;
       });
 
-      return marker;
+      newMarkers.push(marker);
+      newLabels.push(label);
     });
 
     markersRef.current = newMarkers;
+    labelsRef.current = newLabels;
 
     // Auto-fit map bounds to show all markers
     if (newMarkers.length > 0) {
@@ -244,6 +304,7 @@ const FleetMap = ({ fleetData, filteredData, onUnitSelect, onMapReady, isLoading
 
     return () => {
       markersRef.current.forEach(marker => marker.setMap(null));
+      labelsRef.current.forEach(label => label.setMap(null));
       closeCurrentInfoWindow();
     };
   }, [googleMapsApiKey]);
