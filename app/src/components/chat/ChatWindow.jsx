@@ -93,7 +93,7 @@ const ChatWindow = ({ messages, onSendMessage, onClose, loading, isClosing }) =>
     >
       {/* Header */}
       <div 
-        className="flex items-center justify-between px-6 py-4 rounded-t-2xl text-white relative overflow-hidden"
+        className="flex items-center justify-between px-6 py-4 rounded-t-2xl text-white relative overflow-hidden flex-shrink-0"
         style={{ backgroundColor: primaryColor }}
       >
         {/* Background gradient overlay */}
