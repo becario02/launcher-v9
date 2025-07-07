@@ -21,7 +21,9 @@ import {
   HelpCircle,
   FileText as DocumentIcon,
   BarChart3,
-  Truck
+  Truck,
+  Building2,
+  UserCheck
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -61,6 +63,10 @@ function getActiveItemFromPath(pathname) {
     return 'AdminAddendas';
   } else if (pathname.includes('/admin/promociones')) {
     return 'AdminPromociones';
+  } else if (pathname.includes('/advanpac/pacs')) {
+    return 'AdvanPacPacs';
+  } else if (pathname.includes('/advanpac/clientes')) {
+    return 'AdvanPacClientes';
   } else if (pathname.includes('/nucleares')) {
     return 'NUCLEARES';
   } else if (pathname.includes('/financieros')) {
@@ -186,6 +192,10 @@ export default function Sidebar({ onClose }) {
   
   const profileName = Cookies.get('profileName');
   const isUserAdvan = profileName?.includes('USERADVAN');
+  const isAdminAdvan = profileName?.includes('ADMINADVAN');
+  
+  // Check if user has access to AdvanPAC (ADMINADVAN or USERADVAN)
+  const hasAdvanPacAccess = isAdminAdvan || isUserAdvan;
 
   // Fetch user dashboards - Updated to use new endpoint
   const fetchUserDashboards = useCallback(async () => {
@@ -293,6 +303,7 @@ export default function Sidebar({ onClose }) {
   const isDivisionActive = ['NUCLEARES', 'FINANCIAL', 'AUXILIARES'].includes(activeItem);
   const isHelpCenterActive = ['AdminVideos', 'AdminDocumentos'].includes(activeItem);
   const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminDocumentos', 'AdminMenus', 'AdminNotifications', 'AdminIntegradores', 'AdminAddendas', 'AdminPromociones'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
+  const isAdvanPacActive = ['AdvanPacPacs', 'AdvanPacClientes'].includes(activeItem);
 
   function formatServer(server) {
     if (!server) return '';
@@ -477,6 +488,31 @@ export default function Sidebar({ onClose }) {
                 onClick={() => navigateTo('/admin/promociones', 'AdminPromociones')}
               />
             )}
+          </ExpandableItem>
+        )}
+
+        {/* AdvanPAC Section - Only for ADMINADVAN and USERADVAN */}
+        {hasAdvanPacAccess && (
+          <ExpandableItem
+            icon={Shield}
+            text="AdvanPAC"
+            defaultOpen={false}
+            isChildActive={isAdvanPacActive}
+          >
+            <SidebarItem
+              icon={Building2}
+              text="PAC's"
+              indent
+              active={activeItem === 'AdvanPacPacs'}
+              onClick={() => navigateTo('/advanpac/pacs', 'AdvanPacPacs')}
+            />
+            <SidebarItem
+              icon={UserCheck}
+              text="Clientes"
+              indent
+              active={activeItem === 'AdvanPacClientes'}
+              onClick={() => navigateTo('/advanpac/clientes', 'AdvanPacClientes')}
+            />
           </ExpandableItem>
         )}
           
