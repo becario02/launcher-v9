@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
-import { UserCheck, Search, ChevronLeft, ChevronRight, XCircle, Building } from 'lucide-react';
+import { UserCheck, Search, ChevronLeft, ChevronRight, XCircle, Building, Plus } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useTheme } from '@/context/ThemeContext';
 import Toast from '@/components/Toast';
 import StatusConfirmModal from '@/components/advanpac/clientes/StatusConfirmModal';
+import AddClientModal from '@/components/advanpac/clientes/AddClientModal';
 
 export default function AdvanPacClientesPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -23,7 +24,6 @@ export default function AdvanPacClientesPage() {
   // Estados para la tabla de clientes
   const [clientes, setClientes] = useState([]);
   const [filteredClientes, setFilteredClientes] = useState([]);
-  const [summary, setSummary] = useState({ total: 0, active: 0, inactive: 0 });
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 10,
@@ -47,10 +47,12 @@ export default function AdvanPacClientesPage() {
     newStatus: null
   });
 
+  // Estado para modal de agregar cliente
+  const [addClientModalOpen, setAddClientModalOpen] = useState(false);
+
   // Cargar clientes al montar el componente
   useEffect(() => {
     fetchClientes();
-    fetchSummary();
   }, [pagination.page, search, statusFilter]);
 
   // Función para cargar clientes desde la API
@@ -101,30 +103,6 @@ export default function AdvanPacClientesPage() {
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Función para cargar resumen de clientes
-  const fetchSummary = async () => {
-    try {
-      const params = new URLSearchParams();
-
-      if (search.trim()) {
-        params.append('search', search);
-      }
-
-      if (statusFilter !== 'all') {
-        params.append('status', statusFilter);
-      }
-
-      const response = await fetch(`/api/companies/dashboard/summary?${params}`);
-      const result = await response.json();
-      
-      if (result.statusCode === "200" && result.data) {
-        setSummary(result.data);
-      }
-    } catch (error) {
-      console.error('Error al cargar resumen:', error);
     }
   };
 
@@ -211,9 +189,6 @@ export default function AdvanPacClientesPage() {
           )
         );
 
-        // Actualizar resumen
-        fetchSummary();
-
         setToast({
           visible: true,
           message: result.message || `Estado actualizado a ${newStatus === 'ACTIVE' ? 'Activo' : 'Inactivo'}`,
@@ -232,6 +207,36 @@ export default function AdvanPacClientesPage() {
     } finally {
       // Quitar el loading de este cliente
       setUpdatingStatus(prev => ({ ...prev, [clienteId]: false }));
+    }
+  };
+
+  // Función para abrir modal de crear cliente
+  const handleOpenAddClientModal = () => {
+    setAddClientModalOpen(true);
+  };
+
+  // Función para cerrar modal de crear cliente
+  const handleCloseAddClientModal = () => {
+    setAddClientModalOpen(false);
+  };
+
+  // Función para manejar submit del modal de cliente
+  const handleAddClientSubmit = (result) => {
+    if (result.success) {
+      setToast({
+        visible: true,
+        message: result.message,
+        type: 'success'
+      });
+      
+      // Recargar la lista de clientes
+      fetchClientes();
+    } else {
+      setToast({
+        visible: true,
+        message: result.message || 'Error al crear el cliente',
+        type: 'error'
+      });
     }
   };
 
@@ -312,6 +317,17 @@ export default function AdvanPacClientesPage() {
                     Gestión y administración de empresas clientes del sistema.
                   </p>
                 </div>
+                <div className="flex gap-2">
+                  <button
+                    className="flex items-center gap-2 text-sm font-medium text-white px-4 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: primaryColor }}
+                    onClick={handleOpenAddClientModal}
+                    disabled={isLoading}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Agregar Cliente
+                  </button>
+                </div>
               </div>
 
               {/* Buscador y filtros */}
@@ -347,45 +363,6 @@ export default function AdvanPacClientesPage() {
                     <option value="ACTIVE">Activos</option>
                     <option value="INACTIVE">Inactivos</option>
                   </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Estadísticas rápidas */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-lg p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Clientes</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {summary.total}
-                    </p>
-                  </div>
-                  <Building className="w-8 h-8 text-blue-500" />
-                </div>
-              </div>
-              
-              <div className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-lg p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Clientes Activos</p>
-                    <p className="text-2xl font-bold text-green-600">
-                      {summary.active}
-                    </p>
-                  </div>
-                  <UserCheck className="w-8 h-8 text-green-500" />
-                </div>
-              </div>
-              
-              <div className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-lg p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Clientes Inactivos</p>
-                    <p className="text-2xl font-bold text-red-600">
-                      {summary.inactive}
-                    </p>
-                  </div>
-                  <XCircle className="w-8 h-8 text-red-500" />
                 </div>
               </div>
             </div>
@@ -546,6 +523,13 @@ export default function AdvanPacClientesPage() {
           newStatus={confirmModal.newStatus}
           onClose={handleCloseConfirmModal}
           onConfirm={handleStatusChange}
+        />
+
+        {/* Modal de agregar cliente */}
+        <AddClientModal
+          isOpen={addClientModalOpen}
+          onClose={handleCloseAddClientModal}
+          onSubmit={handleAddClientSubmit}
         />
       </div>
     </div>
