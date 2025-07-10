@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
-import { X, Building, Plus, AlertCircle, Search, ChevronDown, Check } from 'lucide-react';
+import { X, Building, Plus, AlertCircle, Search, ChevronDown, Check, XCircle } from 'lucide-react';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -25,17 +25,20 @@ export default function AddClientModal({
     customerIdentifier: '',
     name: '',
     stampsWarning: '',
-    stampsWarningNotification: '',
+    stampsWarningEmails: [],
+    stampsWarningEmailInput: '',
     stampsCritical: '',
-    stampsCriticalNotification: '',
+    stampsCriticalEmails: [],
+    stampsCriticalEmailInput: '',
     stampsFatal: '',
-    stampsFatalNotification: ''
+    stampsFatalEmails: [],
+    stampsFatalEmailInput: ''
   });
 
   // Estados para el selector de compañías
   const [companySearch, setCompanySearch] = useState('');
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
-  const [filteredCompanies, setFilteredCompanies] = useState(companies);
+  const [filteredCompanies, setFilteredCompanies] = useState([]);
   const companyDropdownRef = useRef(null);
 
   // Estados de UI
@@ -57,7 +60,6 @@ export default function AddClientModal({
       const result = await response.json();
       
       if (result.statusCode === "200" && result.data) {
-        // Mapear los datos para que coincidan con la estructura esperada
         const mappedCompanies = result.data.map(company => ({
           id: company.idCompany,
           idCompany: company.idCompany,
@@ -79,6 +81,7 @@ export default function AddClientModal({
       setIsLoadingCompanies(false);
     }
   };
+
   // Filtrar compañías según búsqueda
   useEffect(() => {
     if (companySearch.trim() === '') {
@@ -114,11 +117,14 @@ export default function AddClientModal({
         customerIdentifier: '',
         name: '',
         stampsWarning: '',
-        stampsWarningNotification: '',
+        stampsWarningEmails: [],
+        stampsWarningEmailInput: '',
         stampsCritical: '',
-        stampsCriticalNotification: '',
+        stampsCriticalEmails: [],
+        stampsCriticalEmailInput: '',
         stampsFatal: '',
-        stampsFatalNotification: ''
+        stampsFatalEmails: [],
+        stampsFatalEmailInput: ''
       });
       setCompanySearch('');
       setIsCompanyDropdownOpen(false);
@@ -134,11 +140,11 @@ export default function AddClientModal({
     return (
       formData.selectedCompany &&
       formData.stampsWarning.trim() &&
-      formData.stampsWarningNotification.trim() &&
+      formData.stampsWarningEmails.length > 0 &&
       formData.stampsCritical.trim() &&
-      formData.stampsCriticalNotification.trim() &&
+      formData.stampsCriticalEmails.length > 0 &&
       formData.stampsFatal.trim() &&
-      formData.stampsFatalNotification.trim()
+      formData.stampsFatalEmails.length > 0
     );
   };
 
@@ -149,25 +155,78 @@ export default function AddClientModal({
       customerIdentifier: '',
       name: '',
       stampsWarning: '',
-      stampsWarningNotification: '',
+      stampsWarningEmails: [],
+      stampsWarningEmailInput: '',
       stampsCritical: '',
-      stampsCriticalNotification: '',
+      stampsCriticalEmails: [],
+      stampsCriticalEmailInput: '',
       stampsFatal: '',
-      stampsFatalNotification: ''
+      stampsFatalEmails: [],
+      stampsFatalEmailInput: ''
     });
     setCompanySearch('');
     setErrors({});
     setIsSubmitting(false);
   };
 
-  // Validar emails (pueden ser múltiples separados por ;)
-  const validateEmails = (emailString) => {
-    if (!emailString.trim()) return false;
-    
-    const emails = emailString.split(';').map(email => email.trim()).filter(email => email !== '');
+  // Validar un solo email
+  const validateSingleEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim());
+  };
+
+  // Agregar email a una categoría específica
+  const addEmail = (category, email) => {
+    const trimmedEmail = email.trim();
     
-    return emails.every(email => emailRegex.test(email));
+    if (!trimmedEmail) return;
+    
+    if (!validateSingleEmail(trimmedEmail)) {
+      setErrors(prev => ({
+        ...prev,
+        [`${category}EmailInput`]: 'Formato de email inválido'
+      }));
+      return;
+    }
+
+    // Verificar si el email ya existe en esta categoría
+    if (formData[`${category}Emails`].includes(trimmedEmail)) {
+      setErrors(prev => ({
+        ...prev,
+        [`${category}EmailInput`]: 'Este email ya está agregado'
+      }));
+      return;
+    }
+
+    // Agregar el email y limpiar el input
+    setFormData(prev => ({
+      ...prev,
+      [`${category}Emails`]: [...prev[`${category}Emails`], trimmedEmail],
+      [`${category}EmailInput`]: ''
+    }));
+
+    // Limpiar errores
+    setErrors(prev => ({
+      ...prev,
+      [`${category}EmailInput`]: undefined,
+      [category]: undefined
+    }));
+  };
+
+  // Remover email de una categoría específica
+  const removeEmail = (category, emailToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      [`${category}Emails`]: prev[`${category}Emails`].filter(email => email !== emailToRemove)
+    }));
+  };
+
+  // Manejar Enter en campos de email
+  const handleEmailKeyPress = (e, category) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addEmail(category, formData[`${category}EmailInput`]);
+    }
   };
 
   // Manejar selección de compañía
@@ -181,7 +240,6 @@ export default function AddClientModal({
     setCompanySearch(`${company.companyIdentifier} - ${company.name}`);
     setIsCompanyDropdownOpen(false);
     
-    // Limpiar error de compañía si existía
     if (errors.selectedCompany) {
       setErrors(prev => ({ ...prev, selectedCompany: undefined }));
     }
@@ -195,7 +253,6 @@ export default function AddClientModal({
       [name]: value
     }));
 
-    // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -203,7 +260,6 @@ export default function AddClientModal({
       }));
     }
 
-    // Limpiar errores de servidor cuando el usuario haga cambios
     if (errors.server) {
       setErrors(prev => ({
         ...prev,
@@ -220,7 +276,6 @@ export default function AddClientModal({
       newErrors.selectedCompany = 'Debe seleccionar una compañía';
     }
 
-    // Validar números de stamps
     if (!formData.stampsWarning.trim()) {
       newErrors.stampsWarning = 'El límite de advertencia es requerido';
     } else if (isNaN(Number(formData.stampsWarning)) || Number(formData.stampsWarning) < 1) {
@@ -239,7 +294,6 @@ export default function AddClientModal({
       newErrors.stampsFatal = 'Debe ser un número válido mayor a 0';
     }
 
-    // Validar que fatal < crítico < advertencia
     const warning = Number(formData.stampsWarning);
     const critical = Number(formData.stampsCritical);
     const fatal = Number(formData.stampsFatal);
@@ -253,23 +307,16 @@ export default function AddClientModal({
       }
     }
 
-    // Validar emails
-    if (!formData.stampsWarningNotification.trim()) {
-      newErrors.stampsWarningNotification = 'Los emails de advertencia son requeridos';
-    } else if (!validateEmails(formData.stampsWarningNotification)) {
-      newErrors.stampsWarningNotification = 'Formato de email inválido. Use ";" para separar múltiples emails';
+    if (formData.stampsWarningEmails.length === 0) {
+      newErrors.stampsWarningEmails = 'Debe agregar al menos un email de advertencia';
     }
 
-    if (!formData.stampsCriticalNotification.trim()) {
-      newErrors.stampsCriticalNotification = 'Los emails críticos son requeridos';
-    } else if (!validateEmails(formData.stampsCriticalNotification)) {
-      newErrors.stampsCriticalNotification = 'Formato de email inválido. Use ";" para separar múltiples emails';
+    if (formData.stampsCriticalEmails.length === 0) {
+      newErrors.stampsCriticalEmails = 'Debe agregar al menos un email crítico';
     }
 
-    if (!formData.stampsFatalNotification.trim()) {
-      newErrors.stampsFatalNotification = 'Los emails fatales son requeridos';
-    } else if (!validateEmails(formData.stampsFatalNotification)) {
-      newErrors.stampsFatalNotification = 'Formato de email inválido. Use ";" para separar múltiples emails';
+    if (formData.stampsFatalEmails.length === 0) {
+      newErrors.stampsFatalEmails = 'Debe agregar al menos un email fatal';
     }
 
     setErrors(newErrors);
@@ -287,19 +334,17 @@ export default function AddClientModal({
     setIsSubmitting(true);
 
     try {
-      // Preparar datos para envío - limpiar espacios en emails
       const submitData = {
         CustomerIdentifier: formData.customerIdentifier,
         Name: formData.name,
         StampsWarning: formData.stampsWarning.toString(),
-        StampsWarningNotification: formData.stampsWarningNotification.split(';').map(email => email.trim()).join(';'),
+        StampsWarningNotification: formData.stampsWarningEmails.join(';'),
         StampsCritical: formData.stampsCritical.toString(),
-        StampsCriticalNotification: formData.stampsCriticalNotification.split(';').map(email => email.trim()).join(';'),
+        StampsCriticalNotification: formData.stampsCriticalEmails.join(';'),
         StampsFatal: formData.stampsFatal.toString(),
-        StampsFatalNotification: formData.stampsFatalNotification.split(';').map(email => email.trim()).join(';')
+        StampsFatalNotification: formData.stampsFatalEmails.join(';')
       };
 
-      // Llamada real a la API
       const response = await fetch('/api/companies/advanpac/customer/add', {
         method: 'POST',
         headers: {
@@ -311,7 +356,6 @@ export default function AddClientModal({
       const result = await response.json();
 
       if (response.ok && result.statusCode === "200") {
-        // Éxito
         onSubmit({
           success: true,
           message: result.message || 'Cliente agregado exitosamente'
@@ -319,7 +363,6 @@ export default function AddClientModal({
         
         handleClose();
       } else {
-        // Error del servidor
         if (result.message) {
           if (result.message.toLowerCase().includes('identificador') || result.message.toLowerCase().includes('customer')) {
             setErrors(prev => ({
@@ -331,16 +374,6 @@ export default function AddClientModal({
             setErrors(prev => ({
               ...prev,
               name: result.message,
-              server: result.message
-            }));
-          } else if (result.message.toLowerCase().includes('email') || result.message.toLowerCase().includes('notification')) {
-            setErrors(prev => ({
-              ...prev,
-              server: result.message
-            }));
-          } else if (result.message.toLowerCase().includes('stamp') || result.message.toLowerCase().includes('límite')) {
-            setErrors(prev => ({
-              ...prev,
               server: result.message
             }));
           } else {
@@ -379,23 +412,17 @@ export default function AddClientModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50"
         onClick={handleClose}
       />
       
-      {/* Modal */}
       <div className="relative bg-white dark:bg-[#1C1C24] rounded-lg shadow-xl w-full max-w-xl max-h-[90vh] flex flex-col">
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-[#2C2C38] flex-shrink-0">
           <div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               Agregar Cliente AdvanPAC
             </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Configura los límites de timbres y notificaciones para el nuevo cliente
-            </p>
           </div>
           <button
             onClick={handleClose}
@@ -406,11 +433,9 @@ export default function AddClientModal({
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto custom-scrollbar">
           <div className="p-6 space-y-6">
             
-            {/* Selector de Compañía */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Seleccionar Compañía *
@@ -448,7 +473,6 @@ export default function AddClientModal({
                   </button>
                 </div>
 
-                {/* Dropdown */}
                 {isCompanyDropdownOpen && (
                   <div className="absolute z-50 w-full mt-1 bg-white dark:bg-[#1C1C24] border border-gray-300 dark:border-[#2C2C38] rounded-md shadow-lg max-h-60 overflow-y-auto">
                     {isLoadingCompanies ? (
@@ -498,10 +522,8 @@ export default function AddClientModal({
                   {errors.selectedCompany}
                 </p>
               )}
-              
             </div>
 
-            {/* Información de la compañía seleccionada */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -529,196 +551,318 @@ export default function AddClientModal({
               </div>
             </div>
 
-            {/* Configuración de Timbres */}
-            <>
-                <div className="border-t border-gray-200 dark:border-[#2C2C38] pt-6">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                    Configuración de Límites de Timbres
-                  </h3>
-                  
-                  {/* Límites de Advertencia */}
-                  <div className="space-y-4 mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                    <h4 className="font-medium text-yellow-800 dark:text-yellow-200">Advertencia</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Límite de Timbres *
-                        </label>
-                        <input
-                          type="number"
-                          name="stampsWarning"
-                          value={formData.stampsWarning}
-                          onChange={handleInputChange}
-                          placeholder="200"
-                          min="1"
-                          disabled={isSubmitting}
-                          className={clsx(
-                            "w-full px-3 py-2 border rounded-md bg-white dark:bg-[#13131a] text-gray-900 dark:text-white focus:ring-2 focus:ring-opacity-50",
-                            errors.stampsWarning
-                              ? "border-red-300 dark:border-red-500"
-                              : "border-gray-300 dark:border-[#2C2C38]"
-                          )}
-                          style={!errors.stampsWarning ? { '--tw-ring-color': primaryColor } : {}}
-                        />
-                        {errors.stampsWarning && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                            <AlertCircle className="w-4 h-4" />
-                            {errors.stampsWarning}
-                          </p>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Emails de Notificación *
-                        </label>
-                        <input
-                          type="text"
-                          name="stampsWarningNotification"
-                          value={formData.stampsWarningNotification}
-                          onChange={handleInputChange}
-                          placeholder="email1@dominio.com; email2@dominio.com"
-                          disabled={isSubmitting}
-                          className={clsx(
-                            "w-full px-3 py-2 border rounded-md bg-white dark:bg-[#13131a] text-gray-900 dark:text-white focus:ring-2 focus:ring-opacity-50",
-                            errors.stampsWarningNotification
-                              ? "border-red-300 dark:border-red-500"
-                              : "border-gray-300 dark:border-[#2C2C38]"
-                          )}
-                          style={!errors.stampsWarningNotification ? { '--tw-ring-color': primaryColor } : {}}
-                        />
-                        {errors.stampsWarningNotification && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                            <AlertCircle className="w-4 h-4" />
-                            {errors.stampsWarningNotification}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+            <div className="border-t border-gray-200 dark:border-[#2C2C38] pt-6">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                Configuración de Límites de Timbres
+              </h3>
+              
+              {/* Límites de Advertencia */}
+              <div className="space-y-4 mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <h4 className="font-medium text-yellow-800 dark:text-yellow-200">Advertencia</h4>
+                <div className="grid grid-cols-12 gap-4">
+                  <div className="col-span-12 md:col-span-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Límite de Timbres *
+                    </label>
+                    <input
+                      type="number"
+                      name="stampsWarning"
+                      value={formData.stampsWarning}
+                      onChange={handleInputChange}
+                      placeholder="200"
+                      min="1"
+                      disabled={isSubmitting}
+                      className={clsx(
+                        "w-full px-3 py-2 border rounded-md bg-white dark:bg-[#13131a] text-gray-900 dark:text-white focus:ring-2 focus:ring-opacity-50",
+                        errors.stampsWarning
+                          ? "border-red-300 dark:border-red-500"
+                          : "border-gray-300 dark:border-[#2C2C38]"
+                      )}
+                      style={!errors.stampsWarning ? { '--tw-ring-color': primaryColor } : {}}
+                    />
+                    {errors.stampsWarning && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.stampsWarning}
+                      </p>
+                    )}
                   </div>
-
-                  {/* Límites Críticos */}
-                  <div className="space-y-4 mb-6 p-4 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 rounded-lg">
-                    <h4 className="font-medium text-orange-800 dark:text-orange-200">Crítico</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Límite de Timbres *
-                        </label>
-                        <input
-                          type="number"
-                          name="stampsCritical"
-                          value={formData.stampsCritical}
-                          onChange={handleInputChange}
-                          placeholder="130"
-                          min="1"
-                          disabled={isSubmitting}
-                          className={clsx(
-                            "w-full px-3 py-2 border rounded-md bg-white dark:bg-[#13131a] text-gray-900 dark:text-white focus:ring-2 focus:ring-opacity-50",
-                            errors.stampsCritical
-                              ? "border-red-300 dark:border-red-500"
-                              : "border-gray-300 dark:border-[#2C2C38]"
-                          )}
-                          style={!errors.stampsCritical ? { '--tw-ring-color': primaryColor } : {}}
-                        />
-                        {errors.stampsCritical && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                            <AlertCircle className="w-4 h-4" />
-                            {errors.stampsCritical}
-                          </p>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Emails de Notificación *
-                        </label>
+                  <div className="col-span-12 md:col-span-8">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Emails de Notificación *
+                    </label>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
                         <input
                           type="text"
-                          name="stampsCriticalNotification"
-                          value={formData.stampsCriticalNotification}
+                          name="stampsWarningEmailInput"
+                          value={formData.stampsWarningEmailInput}
                           onChange={handleInputChange}
-                          placeholder="email1@dominio.com; email2@dominio.com"
+                          onKeyPress={(e) => handleEmailKeyPress(e, 'stampsWarning')}
+                          placeholder="Agregar email y presionar Enter"
                           disabled={isSubmitting}
                           className={clsx(
-                            "w-full px-3 py-2 border rounded-md bg-white dark:bg-[#13131a] text-gray-900 dark:text-white focus:ring-2 focus:ring-opacity-50",
-                            errors.stampsCriticalNotification
+                            "flex-1 min-w-0 px-3 py-2 border rounded-md bg-white dark:bg-[#13131a] text-gray-900 dark:text-white focus:ring-2 focus:ring-opacity-50",
+                            errors.stampsWarningEmailInput
                               ? "border-red-300 dark:border-red-500"
                               : "border-gray-300 dark:border-[#2C2C38]"
                           )}
-                          style={!errors.stampsCriticalNotification ? { '--tw-ring-color': primaryColor } : {}}
+                          style={!errors.stampsWarningEmailInput ? { '--tw-ring-color': primaryColor } : {}}
                         />
-                        {errors.stampsCriticalNotification && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                            <AlertCircle className="w-4 h-4" />
-                            {errors.stampsCriticalNotification}
-                          </p>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => addEmail('stampsWarning', formData.stampsWarningEmailInput)}
+                          disabled={isSubmitting || !formData.stampsWarningEmailInput.trim()}
+                          className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{ backgroundColor: primaryColor }}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Límites Fatales */}
-                  <div className="space-y-4 mb-6 p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg">
-                    <h4 className="font-medium text-red-800 dark:text-red-200">Fatal</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Límite de Timbres *
-                        </label>
-                        <input
-                          type="number"
-                          name="stampsFatal"
-                          value={formData.stampsFatal}
-                          onChange={handleInputChange}
-                          placeholder="50"
-                          min="1"
-                          disabled={isSubmitting}
-                          className={clsx(
-                            "w-full px-3 py-2 border rounded-md bg-white dark:bg-[#13131a] text-gray-900 dark:text-white focus:ring-2 focus:ring-opacity-50",
-                            errors.stampsFatal
-                              ? "border-red-300 dark:border-red-500"
-                              : "border-gray-300 dark:border-[#2C2C38]"
-                          )}
-                          style={!errors.stampsFatal ? { '--tw-ring-color': primaryColor } : {}}
-                        />
-                        {errors.stampsFatal && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                            <AlertCircle className="w-4 h-4" />
-                            {errors.stampsFatal}
-                          </p>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Emails de Notificación *
-                        </label>
-                        <input
-                          type="text"
-                          name="stampsFatalNotification"
-                          value={formData.stampsFatalNotification}
-                          onChange={handleInputChange}
-                          placeholder="email1@dominio.com; email2@dominio.com"
-                          disabled={isSubmitting}
-                          className={clsx(
-                            "w-full px-3 py-2 border rounded-md bg-white dark:bg-[#13131a] text-gray-900 dark:text-white focus:ring-2 focus:ring-opacity-50",
-                            errors.stampsFatalNotification
-                              ? "border-red-300 dark:border-red-500"
-                              : "border-gray-300 dark:border-[#2C2C38]"
-                          )}
-                          style={!errors.stampsFatalNotification ? { '--tw-ring-color': primaryColor } : {}}
-                        />
-                        {errors.stampsFatalNotification && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                            <AlertCircle className="w-4 h-4" />
-                            {errors.stampsFatalNotification}
-                          </p>
-                        )}
-                      </div>
+                      
+                      {errors.stampsWarningEmailInput && (
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.stampsWarningEmailInput}
+                        </p>
+                      )}
+                      
+                      {errors.stampsWarningEmails && (
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.stampsWarningEmails}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
-              </>
+                
+                {formData.stampsWarningEmails.length > 0 && (
+                  <div className="flex flex-wrap gap-2 p-2 rounded-md min-h-[2.5rem]">
+                    {formData.stampsWarningEmails.map((email, index) => (
+                      <div
+                        key={index}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 text-xs rounded-full"
+                      >
+                        <span>{email}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeEmail('stampsWarning', email)}
+                          className="hover:bg-yellow-200 dark:hover:bg-yellow-800/50 rounded-full p-0.5 transition-colors"
+                        >
+                          <XCircle className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Límites Críticos */}
+              <div className="space-y-4 mb-6 p-4 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 rounded-lg">
+                <h4 className="font-medium text-orange-800 dark:text-orange-200">Crítico</h4>
+                <div className="grid grid-cols-12 gap-4">
+                  <div className="col-span-12 md:col-span-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Límite de Timbres *
+                    </label>
+                    <input
+                      type="number"
+                      name="stampsCritical"
+                      value={formData.stampsCritical}
+                      onChange={handleInputChange}
+                      placeholder="130"
+                      min="1"
+                      disabled={isSubmitting}
+                      className={clsx(
+                        "w-full px-3 py-2 border rounded-md bg-white dark:bg-[#13131a] text-gray-900 dark:text-white focus:ring-2 focus:ring-opacity-50",
+                        errors.stampsCritical
+                          ? "border-red-300 dark:border-red-500"
+                          : "border-gray-300 dark:border-[#2C2C38]"
+                      )}
+                      style={!errors.stampsCritical ? { '--tw-ring-color': primaryColor } : {}}
+                    />
+                    {errors.stampsCritical && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.stampsCritical}
+                      </p>
+                    )}
+                  </div>
+                  <div className="col-span-12 md:col-span-8">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Emails de Notificación *
+                    </label>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          name="stampsCriticalEmailInput"
+                          value={formData.stampsCriticalEmailInput}
+                          onChange={handleInputChange}
+                          onKeyPress={(e) => handleEmailKeyPress(e, 'stampsCritical')}
+                          placeholder="Agregar email y presionar Enter"
+                          disabled={isSubmitting}
+                          className={clsx(
+                            "flex-1 min-w-0 px-3 py-2 border rounded-md bg-white dark:bg-[#13131a] text-gray-900 dark:text-white focus:ring-2 focus:ring-opacity-50",
+                            errors.stampsCriticalEmailInput
+                              ? "border-red-300 dark:border-red-500"
+                              : "border-gray-300 dark:border-[#2C2C38]"
+                          )}
+                          style={!errors.stampsCriticalEmailInput ? { '--tw-ring-color': primaryColor } : {}}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => addEmail('stampsCritical', formData.stampsCriticalEmailInput)}
+                          disabled={isSubmitting || !formData.stampsCriticalEmailInput.trim()}
+                          className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{ backgroundColor: primaryColor }}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                      
+                      {errors.stampsCriticalEmailInput && (
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.stampsCriticalEmailInput}
+                        </p>
+                      )}
+                      
+                      {errors.stampsCriticalEmails && (
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.stampsCriticalEmails}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {formData.stampsCriticalEmails.length > 0 && (
+                  <div className="flex flex-wrap gap-2 p-2 rounded-md min-h-[2.5rem]">
+                    {formData.stampsCriticalEmails.map((email, index) => (
+                      <div
+                        key={index}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 text-xs rounded-full"
+                      >
+                        <span>{email}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeEmail('stampsCritical', email)}
+                          className="hover:bg-orange-200 dark:hover:bg-orange-800/50 rounded-full p-0.5 transition-colors"
+                        >
+                          <XCircle className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Límites Fatales */}
+              <div className="space-y-4 mb-6 p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg">
+                <h4 className="font-medium text-red-800 dark:text-red-200">Fatal</h4>
+                <div className="grid grid-cols-12 gap-4">
+                  <div className="col-span-12 md:col-span-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Límite de Timbres *
+                    </label>
+                    <input
+                      type="number"
+                      name="stampsFatal"
+                      value={formData.stampsFatal}
+                      onChange={handleInputChange}
+                      placeholder="50"
+                      min="1"
+                      disabled={isSubmitting}
+                      className={clsx(
+                        "w-full px-3 py-2 border rounded-md bg-white dark:bg-[#13131a] text-gray-900 dark:text-white focus:ring-2 focus:ring-opacity-50",
+                        errors.stampsFatal
+                          ? "border-red-300 dark:border-red-500"
+                          : "border-gray-300 dark:border-[#2C2C38]"
+                      )}
+                      style={!errors.stampsFatal ? { '--tw-ring-color': primaryColor } : {}}
+                    />
+                    {errors.stampsFatal && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.stampsFatal}
+                      </p>
+                    )}
+                  </div>
+                  <div className="col-span-12 md:col-span-8">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Emails de Notificación *
+                    </label>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          name="stampsFatalEmailInput"
+                          value={formData.stampsFatalEmailInput}
+                          onChange={handleInputChange}
+                          onKeyPress={(e) => handleEmailKeyPress(e, 'stampsFatal')}
+                          placeholder="Agregar email y presionar Enter"
+                          disabled={isSubmitting}
+                          className={clsx(
+                            "flex-1 min-w-0 px-3 py-2 border rounded-md bg-white dark:bg-[#13131a] text-gray-900 dark:text-white focus:ring-2 focus:ring-opacity-50",
+                            errors.stampsFatalEmailInput
+                              ? "border-red-300 dark:border-red-500"
+                              : "border-gray-300 dark:border-[#2C2C38]"
+                          )}
+                          style={!errors.stampsFatalEmailInput ? { '--tw-ring-color': primaryColor } : {}}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => addEmail('stampsFatal', formData.stampsFatalEmailInput)}
+                          disabled={isSubmitting || !formData.stampsFatalEmailInput.trim()}
+                          className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{ backgroundColor: primaryColor }}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                      
+                      {errors.stampsFatalEmailInput && (
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.stampsFatalEmailInput}
+                        </p>
+                      )}
+                      
+                      {errors.stampsFatalEmails && (
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.stampsFatalEmails}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {formData.stampsFatalEmails.length > 0 && (
+                  <div className="flex flex-wrap gap-2 p-2 rounded-md min-h-[2.5rem]">
+                    {formData.stampsFatalEmails.map((email, index) => (
+                      <div
+                        key={index}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 text-xs rounded-full"
+                      >
+                        <span>{email}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeEmail('stampsFatal', email)}
+                          className="hover:bg-red-200 dark:hover:bg-red-800/50 rounded-full p-0.5 transition-colors"
+                        >
+                          <XCircle className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
             
-            {/* Mensajes de error del servidor */}
             {errors.server && (
               <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
                 <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
@@ -727,9 +871,8 @@ export default function AddClientModal({
                 </p>
               </div>
             )}
-            
-            {/* Botones */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-[#2C2C38]">
+
+            <div className="flex justify-end gap-3 pt-4">
               <button
                 type="button"
                 onClick={handleClose}
