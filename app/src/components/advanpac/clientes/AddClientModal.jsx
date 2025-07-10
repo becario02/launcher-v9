@@ -15,17 +15,9 @@ export default function AddClientModal({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Datos de ejemplo de compañías
-  const [companies] = useState([
-    { id: 1, companyIdentifier: 'COMP-001', name: 'Empresa Tecnológica SA' },
-    { id: 2, companyIdentifier: 'INT-TRAN', name: 'Internacional de Transporte' },
-    { id: 3, companyIdentifier: 'RETAIL-MX', name: 'Retail México Corp' },
-    { id: 4, companyIdentifier: 'LOGIS-PRO', name: 'Logística Profesional' },
-    { id: 5, companyIdentifier: 'CONSTRUCT', name: 'Constructora del Norte' },
-    { id: 6, companyIdentifier: 'PHARMA-LAB', name: 'Laboratorios Farmacéuticos Unidos' },
-    { id: 7, companyIdentifier: 'AUTO-PARTS', name: 'Autopartes Industriales' },
-    { id: 8, companyIdentifier: 'FOOD-DIST', name: 'Distribuidora de Alimentos' }
-  ]);
+  // Estados para cargar compañías
+  const [companies, setCompanies] = useState([]);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
 
   // Estados del formulario
   const [formData, setFormData] = useState({
@@ -50,6 +42,43 @@ export default function AddClientModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // Cargar compañías al abrir el modal
+  useEffect(() => {
+    if (isOpen) {
+      fetchCompanies();
+    }
+  }, [isOpen]);
+
+  // Función para cargar compañías desde la API
+  const fetchCompanies = async () => {
+    setIsLoadingCompanies(true);
+    try {
+      const response = await fetch('/api/companies/advanpac/non-customer');
+      const result = await response.json();
+      
+      if (result.statusCode === "200" && result.data) {
+        // Mapear los datos para que coincidan con la estructura esperada
+        const mappedCompanies = result.data.map(company => ({
+          id: company.idCompany,
+          idCompany: company.idCompany,
+          companyIdentifier: company.companyIdentifier,
+          name: company.name
+        }));
+        setCompanies(mappedCompanies);
+        setFilteredCompanies(mappedCompanies);
+      } else {
+        console.error('Error al cargar compañías:', result.message);
+        setCompanies([]);
+        setFilteredCompanies([]);
+      }
+    } catch (error) {
+      console.error('Error al conectar con la API de compañías:', error);
+      setCompanies([]);
+      setFilteredCompanies([]);
+    } finally {
+      setIsLoadingCompanies(false);
+    }
+  };
   // Filtrar compañías según búsqueda
   useEffect(() => {
     if (companySearch.trim() === '') {
@@ -95,6 +124,8 @@ export default function AddClientModal({
       setIsCompanyDropdownOpen(false);
       setErrors({});
       setIsSubmitting(false);
+      setCompanies([]);
+      setFilteredCompanies([]);
     }
   }, [isOpen]);
 
@@ -256,31 +287,75 @@ export default function AddClientModal({
     setIsSubmitting(true);
 
     try {
-      // Preparar datos para envío
+      // Preparar datos para envío - limpiar espacios en emails
       const submitData = {
         CustomerIdentifier: formData.customerIdentifier,
         Name: formData.name,
-        StampsWarning: formData.stampsWarning,
-        StampsWarningNotification: formData.stampsWarningNotification,
-        StampsCritical: formData.stampsCritical,
-        StampsCriticalNotification: formData.stampsCriticalNotification,
-        StampsFatal: formData.stampsFatal,
-        StampsFatalNotification: formData.stampsFatalNotification
+        StampsWarning: formData.stampsWarning.toString(),
+        StampsWarningNotification: formData.stampsWarningNotification.split(';').map(email => email.trim()).join(';'),
+        StampsCritical: formData.stampsCritical.toString(),
+        StampsCriticalNotification: formData.stampsCriticalNotification.split(';').map(email => email.trim()).join(';'),
+        StampsFatal: formData.stampsFatal.toString(),
+        StampsFatalNotification: formData.stampsFatalNotification.split(';').map(email => email.trim()).join(';')
       };
 
-      // TODO: Implementar llamada real a la API
-      console.log('Datos a enviar:', submitData);
-
-      // Simulación temporal de éxito
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      onSubmit({
-        success: true,
-        message: 'Cliente agregado exitosamente'
+      // Llamada real a la API
+      const response = await fetch('/api/companies/advanpac/customer/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(submitData)
       });
-      
-      handleClose();
 
+      const result = await response.json();
+
+      if (response.ok && result.statusCode === "200") {
+        // Éxito
+        onSubmit({
+          success: true,
+          message: result.message || 'Cliente agregado exitosamente'
+        });
+        
+        handleClose();
+      } else {
+        // Error del servidor
+        if (result.message) {
+          if (result.message.toLowerCase().includes('identificador') || result.message.toLowerCase().includes('customer')) {
+            setErrors(prev => ({
+              ...prev,
+              selectedCompany: result.message,
+              server: result.message
+            }));
+          } else if (result.message.toLowerCase().includes('nombre') || result.message.toLowerCase().includes('name')) {
+            setErrors(prev => ({
+              ...prev,
+              name: result.message,
+              server: result.message
+            }));
+          } else if (result.message.toLowerCase().includes('email') || result.message.toLowerCase().includes('notification')) {
+            setErrors(prev => ({
+              ...prev,
+              server: result.message
+            }));
+          } else if (result.message.toLowerCase().includes('stamp') || result.message.toLowerCase().includes('límite')) {
+            setErrors(prev => ({
+              ...prev,
+              server: result.message
+            }));
+          } else {
+            setErrors(prev => ({
+              ...prev,
+              server: result.message
+            }));
+          }
+        } else {
+          setErrors(prev => ({
+            ...prev,
+            server: 'Error al procesar la solicitud'
+          }));
+        }
+      }
     } catch (error) {
       console.error('Error al crear cliente:', error);
       setErrors(prev => ({
@@ -376,7 +451,14 @@ export default function AddClientModal({
                 {/* Dropdown */}
                 {isCompanyDropdownOpen && (
                   <div className="absolute z-50 w-full mt-1 bg-white dark:bg-[#1C1C24] border border-gray-300 dark:border-[#2C2C38] rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    {filteredCompanies.length > 0 ? (
+                    {isLoadingCompanies ? (
+                      <div className="px-3 py-8 text-center">
+                        <div className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                          <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
+                          Cargando compañías...
+                        </div>
+                      </div>
+                    ) : filteredCompanies.length > 0 ? (
                       filteredCompanies.map((company) => (
                         <div
                           key={company.id}
@@ -401,7 +483,10 @@ export default function AddClientModal({
                       ))
                     ) : (
                       <div className="px-3 py-2 text-gray-500 dark:text-gray-400 text-center">
-                        No se encontraron compañías
+                        {companies.length === 0 && !isLoadingCompanies 
+                          ? 'Error al cargar compañías'
+                          : 'No se encontraron compañías'
+                        }
                       </div>
                     )}
                   </div>
@@ -642,7 +727,7 @@ export default function AddClientModal({
                 </p>
               </div>
             )}
-
+            
             {/* Botones */}
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-[#2C2C38]">
               <button

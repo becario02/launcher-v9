@@ -1,4 +1,4 @@
-// app/api/companies/dashboard/route.js
+// app/api/companies/advanpac/route.js
 import { NextResponse } from "next/server";
 import { callApiGateway } from "@/utils/serverApi";
 
@@ -29,7 +29,7 @@ export async function GET(req) {
     }
 
     const data = await callApiGateway({
-      endpoint: "/mslauncher/api/v1/companies/dashboard",
+      endpoint: "/mslauncher/api/v1/companies/advanpac/customer",
       method: "GET",
       params,
       headers: { "Accept-Language": language },
@@ -37,7 +37,7 @@ export async function GET(req) {
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error fetching companies dashboard:', error);
+    console.error('Error fetching companies advanpac customer:', error);
     return NextResponse.json({
       statusCode: "500",
       message: "Error interno del servidor",

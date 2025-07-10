@@ -72,7 +72,7 @@ export default function AdvanPacClientesPage() {
         params.append('status', statusFilter);
       }
 
-      const response = await fetch(`/api/companies/dashboard?${params}`);
+      const response = await fetch(`/api/companies/advanpac?${params}`);
       const result = await response.json();
       
       if (result.statusCode === "200") {
