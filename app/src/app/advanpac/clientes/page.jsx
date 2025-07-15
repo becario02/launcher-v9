@@ -55,6 +55,23 @@ export default function AdvanPacClientesPage() {
     fetchClientes();
   }, [pagination.page, search, statusFilter]);
 
+  // Función para obtener estados de AdvanPAC
+  const fetchAdvanPacStatuses = async () => {
+    try {
+      const response = await fetch('http://10.50.77.181:83/msadvan_pac/api/v1/customer');
+      if (response.ok) {
+        const advanPacCustomers = await response.json();
+        return advanPacCustomers;
+      } else {
+        console.error('Error al obtener estados de AdvanPAC:', response.status);
+        return [];
+      }
+    } catch (error) {
+      console.error('Error al conectar con AdvanPAC:', error);
+      return [];
+    }
+  };
+
   // Función para cargar clientes desde la API
   const fetchClientes = async () => {
     setIsLoading(true);
@@ -72,25 +89,53 @@ export default function AdvanPacClientesPage() {
         params.append('status', statusFilter);
       }
 
-      const response = await fetch(`/api/companies/advanpac?${params}`);
-      const result = await response.json();
+      // Obtener datos de clientes y estados de AdvanPAC en paralelo
+      const [clientesResponse, advanPacCustomers] = await Promise.all([
+        fetch(`/api/companies/advanpac?${params}`),
+        fetchAdvanPacStatuses()
+      ]);
+
+      const clientesResult = await clientesResponse.json();
       
-      if (result.statusCode === "200") {
-        setClientes(result.data || []);
-        setFilteredClientes(result.data || []);
+      if (clientesResult.statusCode === "200") {
+        // Combinar datos de clientes con estados reales de AdvanPAC
+        const clientesWithRealStatus = clientesResult.data.map(cliente => {
+          // Buscar el estado real en AdvanPAC usando idCustomerAdvanPac
+          const advanPacCustomer = advanPacCustomers.find(
+            customer => customer.idCustomer === cliente.idCustomerAdvanPac
+          );
+          
+          return {
+            ...cliente,
+            // Usar el estado real de AdvanPAC si existe, sino mantener el original
+            status: advanPacCustomer ? advanPacCustomer.status : cliente.status,
+            // Agregar información adicional para debugging
+            advanPacStatus: advanPacCustomer ? advanPacCustomer.status : null,
+            hasAdvanPacData: !!advanPacCustomer
+          };
+        });
+
+        // Filtrar por estado si es necesario (ahora usando el estado real)
+        let filteredData = clientesWithRealStatus;
+        if (statusFilter !== 'all') {
+          filteredData = clientesWithRealStatus.filter(cliente => cliente.status === statusFilter);
+        }
+
+        setClientes(clientesWithRealStatus);
+        setFilteredClientes(filteredData);
         
-        if (result.pagination) {
+        if (clientesResult.pagination) {
           setPagination(prev => ({
             ...prev,
-            totalItems: result.pagination.totalItems,
-            totalPages: result.pagination.totalPages
+            totalItems: filteredData.length, // Actualizar con datos filtrados
+            totalPages: Math.ceil(filteredData.length / prev.pageSize)
           }));
         }
       } else {
-        console.error('Error al cargar clientes:', result.message);
+        console.error('Error al cargar clientes:', clientesResult.message);
         setToast({
           visible: true,
-          message: result.message || 'Error al cargar los clientes',
+          message: clientesResult.message || 'Error al cargar los clientes',
           type: 'error'
         });
       }
@@ -152,50 +197,59 @@ export default function AdvanPacClientesPage() {
     });
   };
 
-  // Función para cambiar el estado del cliente (ahora se llama desde el modal)
+  // Función para cambiar el estado del cliente directamente en AdvanPAC
   const handleStatusChange = async (clienteId, newStatus) => {
     // Marcar este cliente como "actualizando"
     setUpdatingStatus(prev => ({ ...prev, [clienteId]: true }));
 
     try {
-      const response = await fetch('/api/companies/status', {
-        method: 'PUT',
+      // Buscar el cliente para obtener su idCustomerAdvanPac
+      const cliente = clientes.find(c => c.idCompany === clienteId);
+      if (!cliente || !cliente.idCustomerAdvanPac) {
+        throw new Error('No se encontró el ID de cliente de AdvanPAC');
+      }
+
+      // Determinar endpoint según el nuevo estado
+      const action = newStatus === 'ACTIVE' ? 'activate' : 'inactivate';
+      const endpoint = `http://10.50.77.181:83/msadvan_pac/api/v1/customer/${action}/${cliente.idCustomerAdvanPac}`;
+
+      // Llamar al endpoint de AdvanPAC para activar/inactivar
+      const response = await fetch(endpoint, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          idCompany: clienteId,
-          status: newStatus
-        })
+        body: '' // Cuerpo vacío como indica el curl
       });
 
-      const result = await response.json();
-
-      if (result.statusCode === "200") {
-        // Actualizar el estado local
+      if (response.ok) {
+        const result = await response.json();
+        
+        // Actualizar el estado local inmediatamente
         setClientes(prev => 
-          prev.map(cliente => 
-            cliente.idCompany === clienteId 
-              ? { ...cliente, status: newStatus }
-              : cliente
+          prev.map(c => 
+            c.idCompany === clienteId 
+              ? { ...c, status: newStatus, advanPacStatus: newStatus }
+              : c
           )
         );
 
         setFilteredClientes(prev => 
-          prev.map(cliente => 
-            cliente.idCompany === clienteId 
-              ? { ...cliente, status: newStatus }
-              : cliente
+          prev.map(c => 
+            c.idCompany === clienteId 
+              ? { ...c, status: newStatus, advanPacStatus: newStatus }
+              : c
           )
         );
 
         setToast({
           visible: true,
-          message: result.message || `Estado actualizado a ${newStatus === 'ACTIVE' ? 'Activo' : 'Inactivo'}`,
+          message: result.message || `Cliente ${newStatus === 'ACTIVE' ? 'activado' : 'inactivado'} exitosamente`,
           type: 'success'
         });
       } else {
-        throw new Error(result.message || 'Error en la respuesta del servidor');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Error en la respuesta del servidor');
       }
     } catch (error) {
       console.error('Error al cambiar estado:', error);
@@ -243,7 +297,7 @@ export default function AdvanPacClientesPage() {
   // Paginación
   const startIndex = (pagination.page - 1) * pagination.pageSize;
   const endIndex = Math.min(startIndex + pagination.pageSize, pagination.totalItems);
-  const currentClientes = filteredClientes;
+  const currentClientes = filteredClientes.slice(startIndex, Math.min(startIndex + pagination.pageSize, filteredClientes.length));
 
   // Componente de estado vacío
   const EmptyState = () => (
@@ -402,6 +456,12 @@ export default function AdvanPacClientesPage() {
                               <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
                                 {cliente.companyIdentifier}
                               </span>
+                              {/* Indicador si hay datos de AdvanPAC */}
+                              {!cliente.hasAdvanPacData && (
+                                <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-1 py-0.5 rounded" title="Sin datos en AdvanPAC">
+                                  !
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td className="px-6 py-4 font-medium max-w-xs">
@@ -423,7 +483,7 @@ export default function AdvanPacClientesPage() {
                                     isUpdating && "opacity-70"
                                   )}
                                   style={cliente.status === 'ACTIVE' ? { backgroundColor: primaryColor } : {}}
-                                  disabled={isLoading || isUpdating}
+                                  disabled={isLoading || isUpdating || !cliente.hasAdvanPacData}
                                 >
                                   <span
                                     className={clsx(
@@ -446,7 +506,8 @@ export default function AdvanPacClientesPage() {
                                 cliente.status === 'ACTIVE' 
                                   ? "" 
                                   : "text-gray-500 dark:text-gray-400",
-                                isUpdating && "opacity-70"
+                                isUpdating && "opacity-70",
+                                !cliente.hasAdvanPacData && "opacity-60"
                               )}
                               style={cliente.status === 'ACTIVE' ? { color: primaryColor } : {}}>
                                 {isUpdating 
@@ -455,6 +516,9 @@ export default function AdvanPacClientesPage() {
                                     ? 'Activo' 
                                     : 'Inactivo'
                                 }
+                                {!cliente.hasAdvanPacData && (
+                                  <span className="text-xs text-gray-400 ml-1">(sin sync)</span>
+                                )}
                               </span>
                             </div>
                           </td>
