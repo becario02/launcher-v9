@@ -2,15 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
-import { Shield, Search, ChevronLeft, ChevronRight, XCircle, Building, Plus, User, Key, Clock, Edit } from 'lucide-react';
+import { Shield, Search, ChevronLeft, ChevronRight, XCircle, Building, Plus, User, Key, Clock, Edit, Package } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useTheme } from '@/context/ThemeContext';
 import Toast from '@/components/Toast';
 import StatusConfirmModal from '@/components/advanpac/pacs/StatusConfirmModal';
+import PrimaryPacConfirmModal from '@/components/advanpac/pacs/PrimaryPacConfirmModal';
 import AddPacModal from '@/components/advanpac/pacs/AddPacModal';
 import EditPacModal from '@/components/advanpac/pacs/EditPacModal';
+import StampsModal from '@/components/advanpac/pacs/StampsModal';
 
 export default function AdvanPacPacsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -48,11 +50,23 @@ export default function AdvanPacPacsPage() {
     newStatus: null
   });
 
+  // Estado para modal de confirmación de PAC primario
+  const [confirmPrimaryModal, setConfirmPrimaryModal] = useState({
+    isOpen: false,
+    pac: null
+  });
+
   // Estado para modal de agregar PAC
   const [addPacModalOpen, setAddPacModalOpen] = useState(false);
 
   // Estado para modal de editar PAC
   const [editPacModal, setEditPacModal] = useState({
+    isOpen: false,
+    pac: null
+  });
+
+  // Estado para modal de timbres
+  const [stampsModal, setStampsModal] = useState({
     isOpen: false,
     pac: null
   });
@@ -163,6 +177,27 @@ export default function AdvanPacPacsPage() {
       isOpen: false,
       pac: null,
       newStatus: null
+    });
+  };
+
+  // Función para mostrar modal de confirmación de PAC primario
+  const handlePrimaryPacRequest = (pac) => {
+    // Si ya es primario, no hacer nada
+    if (pac.primaryPac === 1) {
+      return;
+    }
+
+    setConfirmPrimaryModal({
+      isOpen: true,
+      pac: pac
+    });
+  };
+
+  // Función para cerrar modal de confirmación de PAC primario
+  const handleClosePrimaryConfirmModal = () => {
+    setConfirmPrimaryModal({
+      isOpen: false,
+      pac: null
     });
   };
 
@@ -284,49 +319,67 @@ export default function AdvanPacPacsPage() {
     }
   };
 
+  // Función para abrir modal de timbres
+  const handleOpenStampsModal = (pac) => {
+    setStampsModal({
+      isOpen: true,
+      pac: pac
+    });
+  };
+
+  // Función para cerrar modal de timbres
+  const handleCloseStampsModal = () => {
+    setStampsModal({
+      isOpen: false,
+      pac: null
+    });
+  };
+
   // Función para marcar/desmarcar PAC como primario
   const handlePrimaryPacToggle = async (pacId) => {
     setUpdatingStatus(prev => ({ ...prev, [`primary_${pacId}`]: true }));
 
     try {
-      // TODO: Implementar llamada a la API para cambiar PAC primario
-      // const response = await fetch(`http://10.50.77.181:83/msadvan_pac/api/v1/pacprovider/${pacId}/primary`, {
-      //   method: 'PUT',
-      //   headers: {
-      //     'Content-Type': 'application/json'
-      //   },
-      //   body: JSON.stringify({ isPrimary: true })
-      // });
-      
-      // Por ahora simular la actualización
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Actualizar el estado local - solo un PAC puede ser primario
-      setPacs(prev => 
-        prev.map(pac => ({
-          ...pac,
-          primaryPac: pac.idProvider === pacId ? pac.idProvider : (pac.primaryPac === pac.idProvider ? 0 : pac.primaryPac)
-        }))
-      );
-
-      setFilteredPacs(prev => 
-        prev.map(pac => ({
-          ...pac,
-          primaryPac: pac.idProvider === pacId ? pac.idProvider : (pac.primaryPac === pac.idProvider ? 0 : pac.primaryPac)
-        }))
-      );
-
-      setToast({
-        visible: true,
-        message: 'PAC primario actualizado correctamente',
-        type: 'success'
+      const response = await fetch(`http://10.50.77.181:83/msadvan_pac/api/v1/provider/primary/${pacId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: ''
       });
+
+      const result = await response.json();
+
+      if (response.ok && result.statusCode === "200") {
+        // Actualizar el estado local - solo un PAC puede ser primario (primaryPac = 1)
+        setPacs(prev => 
+          prev.map(pac => ({
+            ...pac,
+            primaryPac: pac.idProvider === pacId ? 1 : 0
+          }))
+        );
+
+        setFilteredPacs(prev => 
+          prev.map(pac => ({
+            ...pac,
+            primaryPac: pac.idProvider === pacId ? 1 : 0
+          }))
+        );
+
+        setToast({
+          visible: true,
+          message: result.message || 'PAC primario establecido correctamente',
+          type: 'success'
+        });
+      } else {
+        throw new Error(result.message || 'Error en la respuesta del servidor');
+      }
       
     } catch (error) {
       console.error('Error al cambiar PAC primario:', error);
       setToast({
         visible: true,
-        message: 'Error al actualizar el PAC primario',
+        message: `Error al actualizar el PAC primario: ${error.message}`,
         type: 'error'
       });
     } finally {
@@ -378,6 +431,9 @@ export default function AdvanPacPacsPage() {
       </td>
       <td className="px-6 py-4">
         <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
       </td>
       <td className="px-6 py-4">
         <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
@@ -474,181 +530,193 @@ export default function AdvanPacPacsPage() {
             </div>
 
             {/* Tabla de PACs */}
-            <div className="rounded-lg border border-gray-200 dark:border-[#2C2C38] shadow-sm bg-white dark:bg-[#1C1C24] overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-[#F9FAFB] dark:bg-[#2C2C38] text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">
-                  <tr>
-                    {['Nombre', 'Usuario', 'Contraseña', 'Contrato', 'Estado', 'PAC Primario', 'Acciones'].map((label, i) => (
-                      <th key={i} className="px-6 py-4 whitespace-nowrap">{label}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-[#2C2C38] text-gray-800 dark:text-gray-200">
-                  {isLoading ? (
-                    <>
-                      {[...Array(pagination.pageSize)].map((_, index) => (
-                        <TableRowSkeleton key={index} />
-                      ))}
-                    </>
-                  ) : currentPacs.length === 0 ? (
+            <div className="rounded-lg border border-gray-200 dark:border-[#2C2C38] shadow-sm bg-white dark:bg-[#1C1C24]">
+              <div className="overflow-x-auto custom-scrollbar">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-[#F9FAFB] dark:bg-[#2C2C38] text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">
                     <tr>
-                      <td colSpan={7} className="px-6 py-4">
-                        <EmptyState />
-                      </td>
+                      {['Nombre', 'Usuario', 'Contraseña', 'Contrato', 'Estado', 'PAC Primario', 'Timbres', 'Acciones'].map((label, i) => (
+                        <th key={i} className="px-6 py-4 whitespace-nowrap">{label}</th>
+                      ))}
                     </tr>
-                  ) : (
-                    currentPacs.map(pac => {
-                      const isUpdating = updatingStatus[pac.idProvider];
-                      const isPrimaryUpdating = updatingStatus[`primary_${pac.idProvider}`];
-                      
-                      return (
-                        <tr key={pac.idProvider} className="hover:bg-gray-50 dark:hover:bg-[#262636] transition">
-                          <td className="px-6 py-4 font-medium">
-                            <div className="flex items-center gap-2">
-                              <Building className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                              <span className="truncate">{pac.name}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <User className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                              <span className="text-sm font-mono text-gray-600 dark:text-gray-400 truncate max-w-xs">
-                                {pac.user}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <Key className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                              <span className="text-sm font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-gray-600 dark:text-gray-400">
-                                {pac.password}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            {pac.contract ? (
-                              <span className="text-xs font-mono bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
-                                {pac.contract}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400 dark:text-gray-500 text-sm">
-                                Sin contrato
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center">
-                              <div className="relative">
-                                <button
-                                  onClick={() => handleStatusChangeRequest(
-                                    pac, 
-                                    pac.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
-                                  )}
-                                  className={clsx(
-                                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800",
-                                    pac.status === 'ACTIVE'
-                                      ? "focus:ring-primary"
-                                      : "bg-gray-300 dark:bg-gray-600 focus:ring-gray-300",
-                                    isUpdating && "opacity-70"
-                                  )}
-                                  style={pac.status === 'ACTIVE' ? { backgroundColor: primaryColor } : {}}
-                                  disabled={isLoading || isUpdating}
-                                >
-                                  <span
-                                    className={clsx(
-                                      "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                                      pac.status === 'ACTIVE' ? "translate-x-6" : "translate-x-1"
-                                    )}
-                                  />
-                                </button>
-                                
-                                {isUpdating && (
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                                  </div>
-                                )}
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-[#2C2C38] text-gray-800 dark:text-gray-200">
+                    {isLoading ? (
+                      <>
+                        {[...Array(pagination.pageSize)].map((_, index) => (
+                          <TableRowSkeleton key={index} />
+                        ))}
+                      </>
+                    ) : currentPacs.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="px-6 py-4">
+                          <EmptyState />
+                        </td>
+                      </tr>
+                    ) : (
+                      currentPacs.map(pac => {
+                        const isUpdating = updatingStatus[pac.idProvider];
+                        const isPrimaryUpdating = updatingStatus[`primary_${pac.idProvider}`];
+                        
+                        return (
+                          <tr key={pac.idProvider} className="hover:bg-gray-50 dark:hover:bg-[#262636] transition">
+                            <td className="px-6 py-4 font-medium">
+                              <div className="flex items-center gap-2">
+                                <Building className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                                <span className="truncate">{pac.name}</span>
                               </div>
-                              
-                              <span className={clsx(
-                                "ml-3 text-sm font-medium transition-colors",
-                                pac.status === 'ACTIVE' 
-                                  ? "" 
-                                  : "text-gray-500 dark:text-gray-400",
-                                isUpdating && "opacity-70"
-                              )}
-                              style={pac.status === 'ACTIVE' ? { color: primaryColor } : {}}>
-                                {isUpdating 
-                                  ? 'Actualizando...'
-                                  : pac.status === 'ACTIVE' 
-                                    ? 'Activo' 
-                                    : 'Inactivo'
-                                }
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center">
-                              <div className="relative">
-                                <button
-                                  onClick={() => handlePrimaryPacToggle(pac.idProvider)}
-                                  className={clsx(
-                                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800",
-                                    pac.primaryPac === pac.idProvider
-                                      ? "focus:ring-primary"
-                                      : "bg-gray-300 dark:bg-gray-600 focus:ring-gray-300",
-                                    isPrimaryUpdating && "opacity-70"
-                                  )}
-                                  style={pac.primaryPac === pac.idProvider ? { backgroundColor: primaryColor } : {}}
-                                  disabled={isLoading || isPrimaryUpdating}
-                                >
-                                  <span
-                                    className={clsx(
-                                      "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                                      pac.primaryPac === pac.idProvider ? "translate-x-6" : "translate-x-1"
-                                    )}
-                                  />
-                                </button>
-                                
-                                {isPrimaryUpdating && (
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                                  </div>
-                                )}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                <User className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                                <span className="text-sm font-mono text-gray-600 dark:text-gray-400 truncate max-w-xs">
+                                  {pac.user}
+                                </span>
                               </div>
-                              
-                              <span className={clsx(
-                                "ml-3 text-sm font-medium transition-colors",
-                                pac.primaryPac === pac.idProvider 
-                                  ? "" 
-                                  : "text-gray-500 dark:text-gray-400",
-                                isPrimaryUpdating && "opacity-70"
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                <Key className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                                <span className="text-sm font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-gray-600 dark:text-gray-400">
+                                  {pac.password}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              {pac.contract ? (
+                                <span className="text-xs font-mono bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+                                  {pac.contract}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 dark:text-gray-500 text-sm">
+                                  Sin contrato
+                                </span>
                               )}
-                              style={pac.primaryPac === pac.idProvider ? { color: primaryColor } : {}}>
-                                {isPrimaryUpdating 
-                                  ? 'Actualizando...'
-                                  : pac.primaryPac === pac.idProvider 
-                                    ? 'Primario' 
-                                    : 'Secundario'
-                                }
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <button
-                              onClick={() => handleOpenEditPacModal(pac)}
-                              disabled={isLoading}
-                              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 hover:bg-gray-200 dark:bg-[#2C2C38] dark:hover:bg-[#3C3C48] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <Edit className="w-4 h-4" />
-                              Editar
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center">
+                                <div className="relative">
+                                  <button
+                                    onClick={() => handleStatusChangeRequest(
+                                      pac, 
+                                      pac.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
+                                    )}
+                                    className={clsx(
+                                      "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800",
+                                      pac.status === 'ACTIVE'
+                                        ? "focus:ring-primary"
+                                        : "bg-gray-300 dark:bg-gray-600 focus:ring-gray-300",
+                                      isUpdating && "opacity-70"
+                                    )}
+                                    style={pac.status === 'ACTIVE' ? { backgroundColor: primaryColor } : {}}
+                                    disabled={isLoading || isUpdating}
+                                  >
+                                    <span
+                                      className={clsx(
+                                        "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                                        pac.status === 'ACTIVE' ? "translate-x-6" : "translate-x-1"
+                                      )}
+                                    />
+                                  </button>
+                                  
+                                  {isUpdating && (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                <span className={clsx(
+                                  "ml-3 text-sm font-medium transition-colors",
+                                  pac.status === 'ACTIVE' 
+                                    ? "" 
+                                    : "text-gray-500 dark:text-gray-400",
+                                  isUpdating && "opacity-70"
+                                )}
+                                style={pac.status === 'ACTIVE' ? { color: primaryColor } : {}}>
+                                  {isUpdating 
+                                    ? 'Actualizando...'
+                                    : pac.status === 'ACTIVE' 
+                                      ? 'Activo' 
+                                      : 'Inactivo'
+                                  }
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center">
+                                <div className="relative">
+                                  <button
+                                    onClick={() => handlePrimaryPacRequest(pac)}
+                                    className={clsx(
+                                      "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800",
+                                      pac.primaryPac === 1
+                                        ? "focus:ring-primary"
+                                        : "bg-gray-300 dark:bg-gray-600 focus:ring-gray-300",
+                                      isPrimaryUpdating && "opacity-70"
+                                    )}
+                                    style={pac.primaryPac === 1 ? { backgroundColor: primaryColor } : {}}
+                                    disabled={isLoading || isPrimaryUpdating}
+                                  >
+                                    <span
+                                      className={clsx(
+                                        "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                                        pac.primaryPac === 1 ? "translate-x-6" : "translate-x-1"
+                                      )}
+                                    />
+                                  </button>
+                                  
+                                  {isPrimaryUpdating && (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                <span className={clsx(
+                                  "ml-3 text-sm font-medium transition-colors",
+                                  pac.primaryPac === 1 
+                                    ? "" 
+                                    : "text-gray-500 dark:text-gray-400",
+                                  isPrimaryUpdating && "opacity-70"
+                                )}
+                                style={pac.primaryPac === 1 ? { color: primaryColor } : {}}>
+                                  {isPrimaryUpdating 
+                                    ? 'Actualizando...'
+                                    : pac.primaryPac === 1 
+                                      ? 'Primario' 
+                                      : 'Secundario'
+                                  }
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <button
+                                onClick={() => handleOpenStampsModal(pac)}
+                                disabled={isLoading}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 hover:bg-gray-200 dark:bg-[#2C2C38] dark:hover:bg-[#3C3C48] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <Package className="w-4 h-4" />
+                                Gestionar
+                              </button>
+                            </td>
+                            <td className="px-6 py-4">
+                              <button
+                                onClick={() => handleOpenEditPacModal(pac)}
+                                disabled={isLoading}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 hover:bg-gray-200 dark:bg-[#2C2C38] dark:hover:bg-[#3C3C48] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <Edit className="w-4 h-4" />
+                                Editar
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
               {/* Paginación */}
               {pagination.totalItems > 0 && (
@@ -710,6 +778,14 @@ export default function AdvanPacPacsPage() {
           onConfirm={handleStatusChange}
         />
 
+        {/* Modal de confirmación de PAC primario */}
+        <PrimaryPacConfirmModal
+          isOpen={confirmPrimaryModal.isOpen}
+          pac={confirmPrimaryModal.pac}
+          onClose={handleClosePrimaryConfirmModal}
+          onConfirm={handlePrimaryPacToggle}
+        />
+
         {/* Modal de agregar PAC */}
         <AddPacModal
           isOpen={addPacModalOpen}
@@ -723,6 +799,13 @@ export default function AdvanPacPacsPage() {
           pac={editPacModal.pac}
           onClose={handleCloseEditPacModal}
           onSubmit={handleEditPacSubmit}
+        />
+
+        {/* Modal de gestión de timbres */}
+        <StampsModal
+          isOpen={stampsModal.isOpen}
+          pac={stampsModal.pac}
+          onClose={handleCloseStampsModal}
         />
       </div>
     </div>

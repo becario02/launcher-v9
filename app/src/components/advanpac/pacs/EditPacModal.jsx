@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
-import { X, Shield, AlertCircle, Save } from 'lucide-react';
+import { X, Shield, AlertCircle, Save, Eye, EyeOff } from 'lucide-react';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -21,14 +21,13 @@ export default function EditPacModal({
     name: '',
     contract: '',
     user: '',
-    password: '',
-    status: 'ACTIVE',
-    primaryPac: false
+    password: ''
   });
 
   // Estados de UI
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
 
   // Cargar datos del PAC cuando se abre el modal
   useEffect(() => {
@@ -37,12 +36,12 @@ export default function EditPacModal({
         name: pac.name || '',
         contract: pac.contract || '',
         user: pac.user || '',
-        password: pac.password || '',
-        status: pac.status || 'ACTIVE',
-        primaryPac: pac.primaryPac === pac.idProvider
+        password: pac.password || ''
       });
       setErrors({});
       setIsSubmitting(false);
+      setShowPassword(false);
+      setShowPassword(false);
     }
   }, [isOpen, pac]);
 
@@ -53,9 +52,7 @@ export default function EditPacModal({
         name: '',
         contract: '',
         user: '',
-        password: '',
-        status: 'ACTIVE',
-        primaryPac: false
+        password: ''
       });
       setErrors({});
       setIsSubmitting(false);
@@ -73,11 +70,11 @@ export default function EditPacModal({
 
   // Manejar cambios en los inputs
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: value
     }));
 
     // Limpiar errores del campo modificado
@@ -149,8 +146,8 @@ export default function EditPacModal({
         Contract: formData.contract.trim() || null,
         User: formData.user.trim(),
         Password: formData.password.trim(),
-        Status: formData.status,
-        PrimaryPac: formData.primaryPac ? pac.idProvider.toString() : "0"
+        Status: pac.status, // Mantener el estado actual
+        PrimaryPac: pac.primaryPac.toString() // Mantener el valor actual
       };
 
       const response = await fetch('http://10.50.77.181:83/msadvan_pac/api/v1/pacprovider', {
@@ -231,14 +228,14 @@ export default function EditPacModal({
         onClick={handleClose}
       />
       
-      <div className="relative bg-white dark:bg-[#1C1C24] rounded-lg shadow-xl w-full max-w-xl max-h-[90vh] flex flex-col">
+      <div className="relative bg-white dark:bg-[#1C1C24] rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-[#2C2C38] flex-shrink-0">
           <div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               Editar PAC
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Modifica la información del proveedor autorizado de certificación
+              Modifica la información de un PAC
             </p>
           </div>
           <button
@@ -253,14 +250,10 @@ export default function EditPacModal({
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto custom-scrollbar">
           <div className="p-6 space-y-6">
             
-            {/* Información básica */}
+            {/* Campos del formulario */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                <Shield className="w-5 h-5" />
-                Información Básica
-              </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Nombre del PAC *
@@ -317,9 +310,7 @@ export default function EditPacModal({
                     Opcional. Algunos PACs requieren un contrato específico.
                   </p>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Usuario (Email) *
@@ -351,21 +342,35 @@ export default function EditPacModal({
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Contraseña *
                   </label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder="••••••••"
-                    disabled={isSubmitting}
-                    className={clsx(
-                      "w-full px-3 py-2 border rounded-md bg-white dark:bg-[#13131a] text-gray-900 dark:text-white focus:ring-2 focus:ring-opacity-50",
-                      errors.password
-                        ? "border-red-300 dark:border-red-500"
-                        : "border-gray-300 dark:border-[#2C2C38]"
-                    )}
-                    style={!errors.password ? { '--tw-ring-color': primaryColor } : {}}
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder="••••••••"
+                      disabled={isSubmitting}
+                      className={clsx(
+                        "w-full px-3 py-2 pr-10 border rounded-md bg-white dark:bg-[#13131a] text-gray-900 dark:text-white focus:ring-2 focus:ring-opacity-50",
+                        errors.password
+                          ? "border-red-300 dark:border-red-500"
+                          : "border-gray-300 dark:border-[#2C2C38]"
+                      )}
+                      style={!errors.password ? { '--tw-ring-color': primaryColor } : {}}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      disabled={isSubmitting}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                   {errors.password && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
                       <AlertCircle className="w-4 h-4" />
@@ -373,51 +378,6 @@ export default function EditPacModal({
                     </p>
                   )}
                 </div>
-              </div>
-            </div>
-
-            {/* Configuración */}
-            <div className="border-t border-gray-200 dark:border-[#2C2C38] pt-6">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                Configuración
-              </h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Estado
-                  </label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-[#2C2C38] rounded-md bg-white dark:bg-[#13131a] text-gray-900 dark:text-white focus:ring-2 focus:ring-opacity-50"
-                    style={{ '--tw-ring-color': primaryColor }}
-                  >
-                    <option value="ACTIVE">Activo</option>
-                    <option value="INACTIVE">Inactivo</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="primaryPac"
-                    name="primaryPac"
-                    checked={formData.primaryPac}
-                    onChange={handleInputChange}
-                    disabled={isSubmitting}
-                    className="h-4 w-4 rounded border-gray-300 focus:ring-2 focus:ring-opacity-50"
-                    style={{ '--tw-ring-color': primaryColor, 'accentColor': primaryColor }}
-                  />
-                  <label htmlFor="primaryPac" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                    Establecer como PAC primario
-                  </label>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Solo puede haber un PAC primario activo a la vez.
-                </p>
               </div>
             </div>
             
@@ -451,10 +411,7 @@ export default function EditPacModal({
                     Actualizando PAC...
                   </>
                 ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    Guardar Cambios
-                  </>
+                  'Guardar Cambios'
                 )}
               </button>
             </div>
