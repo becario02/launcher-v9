@@ -5,15 +5,15 @@ import { useTheme } from '@/context/ThemeContext';
 import { usePrimaryColor } from '@/context/primaryColor';
 import clsx from 'clsx';
 
-export default function StatusConfirmModal({ isOpen, cliente, newStatus, onClose, onConfirm }) {
+export default function StatusConfirmModal({ isOpen, pac, newStatus, onClose, onConfirm }) {
   const { theme } = useTheme();
   const { primaryColor } = usePrimaryColor();
   const isDark = theme === 'dark';
 
-  if (!isOpen || !cliente) return null;
+  if (!isOpen || !pac) return null;
 
   const handleConfirm = () => {
-    onConfirm(cliente.idCompany, newStatus);
+    onConfirm(pac.idProvider, newStatus);
     onClose();
   };
 
@@ -48,15 +48,15 @@ export default function StatusConfirmModal({ isOpen, cliente, newStatus, onClose
             <span className={clsx("font-medium", statusColor)}>
               {statusText}
             </span>
-            {' '}al cliente{' '}
+            {' '}el PAC{' '}
             <span className="font-medium text-gray-900 dark:text-white">
-              "{cliente.name}"
+              "{pac.name}"
             </span>?
           </p>
 
-          {/* Identificador */}
+          {/* Usuario */}
           <p className="text-gray-500 dark:text-gray-500 text-xs mb-6">
-            Identificador: <span className="text-gray-700 dark:text-gray-300">{cliente.companyIdentifier}</span>
+            Usuario: <span className="text-gray-700 dark:text-gray-300">{pac.user}</span>
           </p>
 
           {/* Botones */}

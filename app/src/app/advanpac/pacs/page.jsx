@@ -206,40 +206,46 @@ export default function AdvanPacPacsPage() {
     setUpdatingStatus(prev => ({ ...prev, [pacId]: true }));
 
     try {
-      // TODO: Implementar llamada a la API para cambiar estado
-      // const response = await fetch(`http://10.50.77.181:83/msadvan_pac/api/v1/pacprovider/${pacId}/status`, {
-      //   method: 'PUT',
-      //   headers: {
-      //     'Content-Type': 'application/json'
-      //   },
-      //   body: JSON.stringify({ status: newStatus })
-      // });
-      
-      // Por ahora simular la actualización
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Actualizar el estado local
-      setPacs(prev => 
-        prev.map(pac => 
-          pac.idProvider === pacId 
-            ? { ...pac, status: newStatus }
-            : pac
-        )
-      );
+      const endpoint = newStatus === 'ACTIVE' 
+        ? `http://10.50.77.181:83/msadvan_pac/api/v1/provider/active/${pacId}`
+        : `http://10.50.77.181:83/msadvan_pac/api/v1/provider/inactive/${pacId}`;
 
-      setFilteredPacs(prev => 
-        prev.map(pac => 
-          pac.idProvider === pacId 
-            ? { ...pac, status: newStatus }
-            : pac
-        )
-      );
-
-      setToast({
-        visible: true,
-        message: `Estado del PAC actualizado a ${newStatus === 'ACTIVE' ? 'Activo' : 'Inactivo'}`,
-        type: 'success'
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: ''
       });
+
+      const result = await response.json();
+
+      if (response.ok && result.idProvider) {
+        // Actualizar el estado local usando los datos de la respuesta
+        setPacs(prev => 
+          prev.map(pac => 
+            pac.idProvider === pacId 
+              ? { ...pac, status: result.status }
+              : pac
+          )
+        );
+
+        setFilteredPacs(prev => 
+          prev.map(pac => 
+            pac.idProvider === pacId 
+              ? { ...pac, status: result.status }
+              : pac
+          )
+        );
+
+        setToast({
+          visible: true,
+          message: `PAC "${result.name}" ${result.status === 'ACTIVE' ? 'activado' : 'desactivado'} correctamente`,
+          type: 'success'
+        });
+      } else {
+        throw new Error('Error en la respuesta del servidor');
+      }
       
     } catch (error) {
       console.error('Error al cambiar estado:', error);
@@ -478,17 +484,6 @@ export default function AdvanPacPacsPage() {
                   <p className="text-sm text-[#696974] dark:text-[#92929d] mt-1 ml-8">
                     Administración de Proveedores Autorizados de Certificación.
                   </p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    className="flex items-center gap-2 text-sm font-medium text-white px-4 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: primaryColor }}
-                    onClick={handleOpenAddPacModal}
-                    disabled={isLoading}
-                  >
-                    <Plus className="w-4 h-4" />
-                    Agregar PAC
-                  </button>
                 </div>
               </div>
 
