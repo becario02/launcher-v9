@@ -6,11 +6,14 @@ import Navbar from "@/components/Navbar";
 import Notification from "@/components/Notification";
 import SubMenu from "@/components/SubMenu";
 import InstanceModal from "@/components/InstanceModal";
-
-import { Flag, Search, Eye, X, Plus, Award } from "lucide-react";
+import { useEffect } from "react";
+import { Flag, Search, Eye, X, Plus, Award, Layers } from "lucide-react";
 import { useModulePage } from "@/hooks/useModulePage";
+import { useCompany } from "@/context/CompanyContext";
 
 export default function ModulePage() {
+  const { selectedCompany } = useCompany();
+
   const {
     division,
     moduleParam,
@@ -48,30 +51,127 @@ export default function ModulePage() {
     hasMenuPermission,
     hasAnyChildPermission,
     getCurrentSession,
+    selectedShortcut,
+    matchingInstances,
+    setSelectedShortcut,
+    setMatchingInstances,
+    shortcuts,
   } = useModulePage();
 
   const formatModuleName = (moduleName) => {
-    return moduleName ? moduleName.replace(/-/g, ' ') : '';
+    return moduleName ? moduleName.replace(/-/g, " ") : "";
   };
 
   const breadcrumbItems = [
     { name: division, path: `/divisiones/${division}` },
-    { 
-      name: formatModuleName(moduleParam), 
-      path: `/divisiones/${division}/${moduleParam}` 
+    {
+      name: formatModuleName(moduleParam),
+      path: `/divisiones/${division}/${moduleParam}`,
     },
   ];
 
   const handleCopyToClipboard = ({ success, message, text }) => {
     if (success) {
-      // Mostrar notificación de éxito con duración más larga
-      showNotification('success', message, 'toast', 5000);
+      showNotification("success", message, "toast", 5000);
     } else {
-      // Mostrar notificación de error/warning con duración más larga
-      const notificationType = message.includes('privilegios') || message.includes('permisos') ? 'warning' : 'error';
-      showNotification(notificationType, message, 'toast', 5000);
+      const notificationType =
+        message.includes("privilegios") || message.includes("permisos")
+          ? "warning"
+          : "error";
+      showNotification(notificationType, message, "toast", 5000);
     }
   };
+
+  const handleShortcutIntent = async () => {
+    const intentRaw = localStorage.getItem("shortcutIntent");
+    if (!intentRaw) return;
+
+    const parsedIntent = JSON.parse(intentRaw);
+    localStorage.removeItem("shortcutIntent");
+
+    const waitForModuleLoad = () => {
+      return new Promise((resolve, reject) => {
+        const interval = setInterval(() => {
+          const data = localStorage.getItem("currentModuleData");
+          if (data) {
+            clearInterval(interval);
+            resolve(JSON.parse(data));
+          }
+        }, 100);
+
+        setTimeout(() => {
+          clearInterval(interval);
+          reject(new Error("Timeout al esperar currentModuleData"));
+        }, 3000);
+      });
+    };
+
+    let parsed;
+    try {
+      parsed = await waitForModuleLoad();
+    } catch (e) {
+      console.error("❌ No se pudo cargar el módulo:", e);
+      return;
+    }
+
+    const idCompanyModule = parsed.idCompanyModule;
+    const exeName = parsed.exeName;
+
+    const normalizeExe = (exe) => exe?.replace(/\.exe$/i, "").toLowerCase();
+    const globalInstances = getGlobalInstances();
+    const matching = globalInstances.filter(
+      (inst) =>
+        inst.idCompanyModule === idCompanyModule &&
+        normalizeExe(inst.exeName) === normalizeExe(exeName) &&
+        inst.idUserCompanyConnection === selectedCompany.idUserCompanyConnection
+    );
+
+    if (matching.length === 0) {
+      showNotification(
+        "info",
+        "No hay instancias abiertas, creando una nueva...",
+        "toast"
+      );
+
+      const newInst = await addNewInstance();
+
+      if (newInst && newInst.session) {
+        const padded = newInst.idSession.toString().padStart(10, "0");
+        const combined = padded + parsedIntent.acronym + parsedIntent.idName;
+        const encoded = btoa(combined);
+        await navigator.clipboard.writeText(encoded);
+        showNotification(
+          "success",
+          `"${parsedIntent.textOption}" copiado correctamente`,
+          "toast"
+        );
+      }
+
+      return;
+    }
+
+    if (matching.length === 1) {
+      const inst = matching[0];
+      const padded = inst.idSession.toString().padStart(10, "0");
+      const combined = padded + parsedIntent.acronym + parsedIntent.idName;
+      const encoded = btoa(combined);
+      navigator.clipboard.writeText(encoded);
+      showNotification(
+        "success",
+        `"${parsedIntent.textOption}" copiado en instancia`,
+        "toast"
+      );
+      return;
+    }
+
+    setSelectedShortcut(parsedIntent); // debe estar en tu useModulePage()
+    setMatchingInstances(matching); // también
+    setShowInstancesModal(true);
+  };
+
+  useEffect(() => {
+    handleShortcutIntent();
+  }, []);
 
   return (
     <div className="flex h-screen">
@@ -98,7 +198,6 @@ export default function ModulePage() {
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
         <div className="bg-[#F2F6FD] dark:bg-[#13131a] flex-1 pt-2">
-
           {notification.visible && notification.style === "toast" && (
             <div className="fixed top-4 right-4 z-[9999]">
               <Notification
@@ -148,7 +247,6 @@ export default function ModulePage() {
                   px-[10px] pr-[20px]
                 "
               >
-
                 <div
                   className="
                     flex items-center justify-center
@@ -203,7 +301,8 @@ export default function ModulePage() {
                     style={{ color: primaryColor || "#FF4081" }}
                   />
                   <h1 className="text-xl font-semibold text-gray-300 dark:text-white">
-                    {formatModuleName(moduleParam).charAt(0).toUpperCase() + formatModuleName(moduleParam).slice(1)}
+                    {formatModuleName(moduleParam).charAt(0).toUpperCase() +
+                      formatModuleName(moduleParam).slice(1)}
                   </h1>
                 </div>
                 <div className="flex items-center gap-4">
@@ -290,7 +389,8 @@ export default function ModulePage() {
                         w-full h-[40px]
                         pl-4 pr-9 bg-[#F2F6FD] border-gray-300
                         dark:bg-[#13131a] border dark:border-[#31313e]
-                        rounded-md text-p text-white
+                        rounded-md text-p
+                        text-gray-800 dark:text-white
                         placeholder:text-gray-400
                         font-medium
                         focus:outline-none
@@ -307,7 +407,13 @@ export default function ModulePage() {
                 {instances.map((inst, index) => (
                   <div
                     key={inst.id}
-                    onClick={() => setActiveInstance(inst.id)}
+                    onClick={() => {
+                      setActiveInstance(inst.id);
+                      localStorage.setItem(
+                        `activeInstance-${division}-${moduleParam}`,
+                        inst.id.toString()
+                      );
+                    }}
                     className={`
                       flex items-center px-4 py-2.5 text-p cursor-pointer border-r border-gray-300 dark:border-gray-700
                       ${
@@ -468,6 +574,7 @@ export default function ModulePage() {
                         searchTerm={searchTerm}
                         acronym={acronym}
                         currentSession={getCurrentSession()}
+                        shortcuts={shortcuts}
                       />
                     )
                   )}
@@ -478,14 +585,116 @@ export default function ModulePage() {
         </div>
       </div>
 
-      <InstanceModal
-        isOpen={showInstancesModal}
-        onClose={() => setShowInstancesModal(false)}
-        instances={getGlobalInstances()}
-        division={division}
-        moduleParam={moduleParam}
-        primaryColor={primaryColor}
-      />
+      {!selectedShortcut && (
+        <InstanceModal
+          isOpen={showInstancesModal}
+          onClose={() => setShowInstancesModal(false)}
+          instances={getGlobalInstances()}
+          division={division}
+          moduleParam={moduleParam}
+          primaryColor={primaryColor}
+        />
+      )}
+
+      {showInstancesModal && selectedShortcut && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-[#1C1C24] rounded-lg w-full max-w-lg mx-4">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
+              <div className="flex items-center">
+                <Layers className="w-5 h-5 mr-2 text-primary" />
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+                  ¿En qué instancia deseas abrir{" "}
+                  <span className="font-bold text-primary">
+                    {selectedShortcut.textOption}
+                  </span>
+                  ?
+                </h2>
+              </div>
+              <button
+                onClick={() => {
+                  setShowInstancesModal(false);
+                  setSelectedShortcut(null);
+                  setMatchingInstances([]);
+                }}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Lista de opciones */}
+            <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
+              {matchingInstances.map((inst) => {
+                const padded = inst.idSession.toString().padStart(10, "0");
+                const combined =
+                  padded + selectedShortcut.acronym + selectedShortcut.idName;
+                const encoded = btoa(combined);
+
+                return (
+                  <button
+                    key={`${inst.session}-${inst.name || "no-name"}-${
+                      inst.exeName || "exe"
+                    }`}
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(encoded);
+                      showNotification(
+                        "success",
+                        `"${selectedShortcut.textOption}" copiado`,
+                        "toast"
+                      );
+                      setActiveInstance(inst.id);
+                      localStorage.setItem(
+                        `activeInstance-${division}-${moduleParam}`,
+                        inst.id.toString()
+                      );
+                      setShowInstancesModal(false);
+                      setSelectedShortcut(null);
+                      setMatchingInstances([]);
+                    }}
+                    className={`
+                      group w-full px-4 py-3 rounded-lg border transition flex justify-between items-center
+                      bg-gray-50 dark:bg-[#252530] border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white
+                      hover:bg-primary dark:hover:bg-primary dark:hover:text-white hover:text-white hover:border-transparent
+                    `}
+                  >
+                    <span>
+                      Instancia {inst.id} - {inst.name || "sin nombre"}
+                    </span>
+                    <svg
+                      className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Botón Cancelar */}
+            <div className="p-4 pt-0">
+              <button
+                onClick={() => {
+                  setShowInstancesModal(false);
+                  setSelectedShortcut(null);
+                  setMatchingInstances([]);
+                }}
+                className="w-full mt-3 py-2 border border-primary dark:border-primary dark:hover:border-primary rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 hover:border-primary dark:hover:bg-[#2a2a3b] transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

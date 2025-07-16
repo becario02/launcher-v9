@@ -1,4 +1,3 @@
-// app/api/dashboards/user/[userId]/route.js
 import { NextResponse } from "next/server";
 import { callApiGateway } from "@/utils/serverApi";
 

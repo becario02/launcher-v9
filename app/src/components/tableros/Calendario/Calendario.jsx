@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
-  Calendar,
+  Settings,
   Filter,
   BarChart3,
   Clock,
@@ -15,11 +15,63 @@ import {
   ChevronRight,
 } from "lucide-react";
 import clsx from "clsx";
+import { useDashboardReload } from "@/hooks/useDashboardReload";
+import Notification from "@/components/Notification";
 
-const Calendario = () => {
+const Calendario = ({ selectedStatuses }) => {
   const today = new Date();
   const minMonth = new Date(today.getFullYear(), today.getMonth() - 2, 1);
   const maxMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+  const [showConfig, setShowConfig] = useState(false);
+  const [updateInterval, setUpdateInterval] = useState(null);
+  const [isIntervalLoaded, setIsIntervalLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [notification, setNotification] = useState({
+    visible: false,
+    type: "info",
+    message: "",
+    style: "inline",
+  });
+  const { getReloadTime, updateReloadTime, currentDashboardId } =
+    useDashboardReload();
+
+  useEffect(() => {
+    const loadReloadTime = async () => {
+      try {
+        const reloadTime = await getReloadTime(); // minutos
+
+        // Si viene vacío, null o 0, ponle 60 minutos = 1 hora
+        const safeReloadTime = reloadTime && reloadTime > 0 ? reloadTime : 60;
+
+        setUpdateInterval(Math.floor(safeReloadTime / 60)); // horas
+        setIsIntervalLoaded(true);
+      } catch (err) {
+        console.error("Error loading reload time:", err);
+        // Fallback a 1 hora si falla
+        setUpdateInterval(1);
+        setIsIntervalLoaded(true);
+      }
+    };
+
+    if (showConfig && currentDashboardId) {
+      loadReloadTime();
+    }
+  }, [showConfig, currentDashboardId, getReloadTime]);
+
+  const showNotification = (type, message, style = "inline") => {
+    setNotification({
+      visible: false,
+      type: "info",
+      message: "",
+      style: "inline",
+    });
+    setTimeout(
+      () => setNotification({ visible: true, type, message, style }),
+      50
+    );
+  };
+  const closeNotification = () =>
+    setNotification((n) => ({ ...n, visible: false }));
 
   const staticData = [
     {
@@ -71,7 +123,6 @@ const Calendario = () => {
       FechaEntrega: "2021-10-20",
       StatusOrdenTrabajo: "Terminada Fuera de Tiempo",
     },
-    // Additional mock data for better visualization
     {
       OT: "MT100",
       tipoUnidad: "Tracto",
@@ -116,6 +167,48 @@ const Calendario = () => {
     },
     {
       OT: "MT106",
+      tipoUnidad: "Remolque",
+      NumEco: "2003",
+      FechaEntrega: "2025-07-01",
+      StatusOrdenTrabajo: "Interrumpida fuera tiempo",
+    },
+    {
+      OT: "MT1061",
+      tipoUnidad: "Remolque",
+      NumEco: "2003",
+      FechaEntrega: "2025-07-01",
+      StatusOrdenTrabajo: "Interrumpida fuera tiempo",
+    },
+    {
+      OT: "MT1062",
+      tipoUnidad: "Remolque",
+      NumEco: "2003",
+      FechaEntrega: "2025-07-01",
+      StatusOrdenTrabajo: "Interrumpida fuera tiempo",
+    },
+    {
+      OT: "MT1006",
+      tipoUnidad: "Remolque",
+      NumEco: "2003",
+      FechaEntrega: "2025-07-01",
+      StatusOrdenTrabajo: "Interrumpida fuera tiempo",
+    },
+    {
+      OT: "MT1006",
+      tipoUnidad: "Remolque",
+      NumEco: "2003",
+      FechaEntrega: "2025-07-01",
+      StatusOrdenTrabajo: "Interrumpida fuera tiempo",
+    },
+    {
+      OT: "MT1006",
+      tipoUnidad: "Remolque",
+      NumEco: "2003",
+      FechaEntrega: "2025-07-01",
+      StatusOrdenTrabajo: "Interrumpida fuera tiempo",
+    },
+    {
+      OT: "MT1006",
       tipoUnidad: "Remolque",
       NumEco: "2003",
       FechaEntrega: "2025-07-01",
@@ -209,7 +302,6 @@ const Calendario = () => {
     },
   };
 
-  const [selectedStatuses, setSelectedStatuses] = useState(new Set());
   const [viewMode, setViewMode] = useState("month");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [dateRange, setDateRange] = useState({
@@ -298,22 +390,18 @@ const Calendario = () => {
     const newDate = new Date(currentDate);
     if (viewMode === "month") {
       newDate.setMonth(currentDate.getMonth() + direction);
-      const newMonth = new Date(newDate.getFullYear(), newDate.getMonth(), 1);
-      if (
-        newMonth.getTime() >= minMonth.getTime() &&
-        newMonth.getTime() <= maxMonth.getTime()
-      ) {
-        setCurrentDate(newDate);
-      }
-    } else {
+    } else if (viewMode === "week") {
       newDate.setDate(currentDate.getDate() + direction * 7);
-      const newMonth = new Date(newDate.getFullYear(), newDate.getMonth(), 1);
-      if (
-        newMonth.getTime() >= minMonth.getTime() &&
-        newMonth.getTime() <= maxMonth.getTime()
-      ) {
-        setCurrentDate(newDate);
-      }
+    } else if (viewMode === "day") {
+      newDate.setDate(currentDate.getDate() + direction);
+    }
+
+    const newMonth = new Date(newDate.getFullYear(), newDate.getMonth(), 1);
+    if (
+      newMonth.getTime() >= minMonth.getTime() &&
+      newMonth.getTime() <= maxMonth.getTime()
+    ) {
+      setCurrentDate(newDate);
     }
   };
 
@@ -360,6 +448,26 @@ const Calendario = () => {
     }
   };
 
+  const handleSaveUpdateInterval = async () => {
+    setIsLoading(true);
+    try {
+      await updateReloadTime(updateInterval * 60);
+      showNotification(
+        "success",
+        "Frecuencia actualizada correctamente",
+        "toast"
+      );
+      setShowConfig(false);
+    } catch (err) {
+      console.error("Error saving reload time:", err);
+      showNotification("error", "Error al guardar la frecuencia", "toast");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+
   return (
     <div className="flex font-poppins">
       <div className="flex-1 w-full ">
@@ -367,12 +475,21 @@ const Calendario = () => {
           <div className="max-w-7xl mx-auto space-y-6">
             {/* Header del calendario */}
             <div className="flex items-center justify-between border border-gray-300 dark:border-[#2C2C38] rounded px-4 py-2 bg-white dark:bg-[#1C1C24]">
-              <button
-                onClick={goToToday}
-                className="px-4 py-1 text-sm bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded"
-              >
-                Actual
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={goToToday}
+                  className="px-4 py-1 text-sm bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded"
+                >
+                  Actual
+                </button>
+
+                <button
+                  onClick={() => setShowConfig(true)}
+                  className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                >
+                  <Settings className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                </button>
+              </div>
 
               <div className="flex items-center space-x-2">
                 <button
@@ -456,7 +573,7 @@ const Calendario = () => {
                         "h-24 border text-xs p-1 overflow-hidden transition relative bg-white dark:bg-[#1C1C24] hover:bg-blue-100 dark:hover:bg-blue-500",
                         dayData?.date.toDateString() ===
                           new Date().toDateString()
-                          ? "ring-2 ring-primary dark:ring-primary border-primary dark:border-primary"
+                          ? "ring-2 ring-primary dark:ring-primary z-10 relative"
                           : "border-gray-200 dark:border-[#2C2C38]"
                       )}
                     >
@@ -483,9 +600,17 @@ const Calendario = () => {
                                 </div>
                               );
                             })}
+
                             {dayData.data.length > 2 && (
-                              <div className="text-[10px] text-gray-500 dark:text-gray-400">
-                                +{dayData.data.length - 2} más
+                              <div
+                                onClick={() => {
+                                  setViewMode("day");
+                                  setCurrentDate(dayData.date);
+                                }}
+                                className="absolute bottom-1 right-1 w-5 h-5 bg-primary text-white text-[10px] flex items-center justify-center rounded-full cursor-pointer hover:scale-110 transition-transform"
+                                title={`Ver ${dayData.data.length - 2} más`}
+                              >
+                                +{dayData.data.length - 2}
                               </div>
                             )}
                           </div>
@@ -498,69 +623,56 @@ const Calendario = () => {
 
               {/* VISTA SEMANA */}
               {viewMode === "week" && (
-                <div className="grid grid-cols-7 gap-3 mt-4">
+                <div className="grid grid-cols-7 gap-[1px] mt-1">
                   {calendarDays.map((dayData, index) => (
-                    <div key={index} className="space-y-2">
-                      <div
-                        className={clsx(
-                          "text-center p-3 rounded-lg border relative transition hover:bg-blue-100 dark:hover:bg-blue-500",
-                          dayData.date.toDateString() ===
-                            new Date().toDateString()
-                            ? "ring-2 ring-primary dark:ring-primary border-primary dark:border-primary"
-                            : dayData.isCurrentMonth
-                            ? "border-gray-200 dark:border-[#2C2C38] bg-gray-50 dark:bg-[#2C2C38]"
-                            : "border-gray-100 dark:border-gray-700 bg-gray-25 dark:bg-gray-800"
-                        )}
-                      >
-                        <div
-                          className={`text-lg font-semibold ${
-                            dayData.isCurrentMonth
-                              ? "text-gray-900 dark:text-white"
-                              : "text-gray-400 dark:text-gray-600"
-                          }`}
-                        >
-                          {dayData.day}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {monthNames[dayData.date.getMonth()].slice(0, 3)}
-                        </div>
-                      </div>
-                      <div className="space-y-2 min-h-32">
-                        {dayData.data.map((ot, otIndex) => {
-                          const config = statusConfig[ot.StatusOrdenTrabajo];
-                          return (
-                            <div
-                              key={otIndex}
-                              className="p-2 rounded-lg border cursor-pointer hover:shadow-md transition-all duration-200"
-                              style={{
-                                backgroundColor: `${config.color}15`,
-                                borderColor: `${config.color}40`,
-                              }}
-                            >
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-semibold text-sm text-gray-900 dark:text-white">
-                                  {ot.OT}
-                                </span>
+                    <div
+                      key={index}
+                      className={clsx(
+                        "h-40 border text-xs p-1 overflow-hidden transition relative bg-white dark:bg-[#1C1C24] hover:bg-blue-100 dark:hover:bg-blue-500",
+                        dayData?.date.toDateString() ===
+                          new Date().toDateString()
+                          ? "ring-2 ring-primary dark:ring-primary z-10 relative"
+                          : "border-gray-200 dark:border-[#2C2C38]"
+                      )}
+                    >
+                      {dayData && (
+                        <>
+                          <div className="font-semibold text-[11px] text-gray-800 dark:text-gray-200">
+                            {dayData.day}
+                          </div>
+                          <div className="mt-1 space-y-[2px]">
+                            {dayData.data.slice(0, 5).map((ot, otIndex) => {
+                              const config =
+                                statusConfig[ot.StatusOrdenTrabajo];
+                              return (
                                 <div
-                                  className="w-2 h-2 rounded-full"
-                                  style={{ backgroundColor: config.color }}
-                                />
-                              </div>
-                              <div className="text-xs text-gray-600 dark:text-gray-400">
-                                {ot.tipoUnidad} {ot.NumEco}
-                              </div>
-                              <div className="text-xs mt-1">
-                                <span
-                                  className="px-1 py-0.5 rounded text-white font-medium"
-                                  style={{ backgroundColor: config.color }}
+                                  key={otIndex}
+                                  className={clsx(
+                                    "truncate text-[10px] px-[4px] py-[1px] rounded-sm",
+                                    config?.bgColor ||
+                                      "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
+                                  )}
+                                  title={`${ot.NumEco} - ${ot.StatusOrdenTrabajo}`}
                                 >
-                                  {config.label}
-                                </span>
+                                  {ot.NumEco}
+                                </div>
+                              );
+                            })}
+                            {dayData.data.length > 5 && (
+                              <div
+                                onClick={() => {
+                                  setViewMode("day");
+                                  setCurrentDate(dayData.date);
+                                }}
+                                className="absolute bottom-1 right-1 w-5 h-5 bg-primary text-white text-[10px] flex items-center justify-center rounded-full cursor-pointer hover:scale-110 transition-transform"
+                                title={`Ver ${dayData.data.length - 5} más`}
+                              >
+                                +{dayData.data.length - 5}
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -584,7 +696,10 @@ const Calendario = () => {
                       year: "numeric",
                     })}
                   </h2>
-                  <div className="space-y-3">
+                  <div
+                    className="space-y-3 overflow-y-auto pr-2"
+                    style={{ maxHeight: "calc(100vh - 270px)" }}
+                  >
                     {generateDayView().data.length > 0 ? (
                       generateDayView().data.map((ot, idx) => {
                         const config = statusConfig[ot.StatusOrdenTrabajo];
@@ -626,6 +741,108 @@ const Calendario = () => {
           </div>
         </main>
       </div>
+      {showConfig && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-[#1C1C24] rounded-lg p-6 w-full max-w-sm">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1 text-center">
+              Frecuencia de actualización de datos
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Define cada cuántas horas se debe actualizar la información
+              automáticamente. Puedes elegir entre 1 y 24 horas.
+            </p>
+
+            <div className="flex items-center justify-center space-x-4">
+              <button
+                onClick={() =>
+                  setUpdateInterval((prev) => Math.max(1, prev - 1))
+                }
+                className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <ChevronLeft className="h-5 w-5 text-gray-600 dark:text-white" />
+              </button>
+
+              <span className="text-lg font-medium text-gray-900 dark:text-white">
+                {isIntervalLoaded
+                  ? `${updateInterval} hora${updateInterval > 1 ? "s" : ""}`
+                  : "Cargando..."}
+              </span>
+
+              <button
+                onClick={() =>
+                  setUpdateInterval((prev) => Math.min(24, prev + 1))
+                }
+                className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <ChevronRight className="h-5 w-5 text-gray-600 dark:text-white" />
+              </button>
+            </div>
+
+            <div className="flex justify-end mt-6 space-x-2">
+              <button
+                onClick={() => setShowConfig(false)}
+                className="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded dark:bg-gray-700 dark:text-white"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveUpdateInterval}
+                disabled={isLoading}
+                className="px-4 py-2 text-sm bg-primary text-white hover:bg-primary/90 rounded flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <>
+                    <svg
+                      className="animate-spin h-4 w-4 text-white"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
+                    </svg>
+                    <span>Guardando...</span>
+                  </>
+                ) : (
+                  <span>Guardar</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notificaciones */}
+      {notification.visible && notification.style === "toast" && (
+        <div className="fixed top-4 right-4 z-[9999]">
+          <Notification
+            visible
+            type={notification.type}
+            message={notification.message}
+            style="toast"
+            onClose={closeNotification}
+          />
+        </div>
+      )}
+      {notification.visible && notification.style === "inline" && (
+        <Notification
+          visible
+          type={notification.type}
+          message={notification.message}
+          style="inline"
+          onClose={closeNotification}
+        />
+      )}
     </div>
   );
 };

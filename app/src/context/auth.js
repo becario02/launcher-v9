@@ -25,13 +25,13 @@ export function AuthProvider({ children }) {
     // Allow access to these pages without authentication
     const isPublicPage = isLoginPage || isRecuperarContraseñaPage;
     
-    console.log('Auth Context Debug:', {
+    /*console.log('Auth Context Debug:', {
       pathname,
       authCookie: !!authCookie,
       profileName,
       isAdminPath,
       isPublicPage
-    });
+    });*/
     
     // Update admin status if cookie exists
     if (profileName) {
@@ -40,26 +40,26 @@ export function AuthProvider({ children }) {
       setIsAdmin(adminStatus);
       setIsAdvan(advanStatus);
       
-      console.log('Role Status:', { adminStatus, advanStatus });
+      //console.log('Role Status:', { adminStatus, advanStatus });
     }
  
     // If not authenticated and not on a public page, redirect to login
     if (!authCookie && !isPublicPage) { 
-      console.log('Redirecting to login from auth context');
+      //console.log('Redirecting to login from auth context');
       router.push('/login'); 
       return;
     } 
     
     // If authenticated but accessing admin page without admin privileges
     if (authCookie && isAdminPath && profileName && !profileName.includes('ADMIN') && !profileName.includes('ADVAN')) {
-      console.log('Redirecting to home - no admin privileges');
+      //console.log('Redirecting to home - no admin privileges');
       router.push('/'); 
       return;
     }
  
     // If authenticated and on login page, redirect to home
     if (authCookie && isLoginPage) { 
-      console.log('Redirecting to home from login page');
+      //console.log('Redirecting to home from login page');
       router.push('/'); 
     } 
   }, [pathname, router]); 
@@ -81,7 +81,7 @@ export function AuthProvider({ children }) {
     setIsAdvan(advanStatus);
     setUser({...userData, isAdmin: adminStatus, isAdvan: advanStatus});
     
-    console.log('User logged in with roles:', { adminStatus, advanStatus });
+    //console.log('User logged in with roles:', { adminStatus, advanStatus });
     
     router.push('/'); 
   }; 

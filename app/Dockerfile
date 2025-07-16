@@ -3,15 +3,11 @@ FROM node:22-alpine
 WORKDIR /app
 
 COPY package*.json ./
-
 RUN npm install --production
 
 COPY . .
-
 RUN npm run build
 
-EXPOSE 8080
+EXPOSE 3000
 
-ENV PORT=8080
-
-CMD ["npm", "start"]
+CMD ["npm", "run", "start", "--", "-p", "3000", "-H", "0.0.0.0"]

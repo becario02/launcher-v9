@@ -1,8 +1,7 @@
-// utils/tokenManager.js
 
-// Token credentials from environment
 const USERNAME = process.env.NEXT_PUBLIC_MSERPSERVICE_USERNAME;
 const PASSWORD = process.env.NEXT_PUBLIC_MSERPSERVICE_PASSWORD;
+import { decryptAES } from "./aesDecrypt";
 
 /**
  * Get company configuration from localStorage
@@ -17,8 +16,10 @@ export const getCompanyConfig = () => {
     const companyData = JSON.parse(selectedCompany);
     
     // Decode base64 password
-    const base64Password = companyData.passwordErpDb;
-    const decodedPassword = atob(base64Password);
+    const encryptedPassword = companyData.passwordErpDb;
+    console.log(companyData.passwordErpDb)
+    const decodedPassword = decryptAES(encryptedPassword);
+    console.log('desencriptada', decodedPassword);
     
     return {
       urlErp: companyData.urlErp,

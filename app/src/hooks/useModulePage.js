@@ -13,6 +13,8 @@ import { CatalogoIcon } from "@/components/icons/CatalogoIcon";
 import { AdministracionIcon } from "@/components/icons/AdministracionIcon";
 import { DashboardIcon } from "@/components/icons/DashboardIcon";
 import { useModule } from "@/context/ModuleContext";
+import { decryptAES } from "@/utils/aesDecrypt";
+import { usePathname } from "next/navigation";
 
 export function useModulePage() {
   const { division, modulo: moduleParam } = useParams();
@@ -20,6 +22,7 @@ export function useModulePage() {
   const { selectedCompany } = useCompany();
   const { currentModule } = useModule();
   const { user } = useAuth();
+  const pathname = usePathname();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [menuData, setMenuData] = useState([]);
@@ -44,6 +47,8 @@ export function useModulePage() {
   const [hasPrivilege, setHasPrivilege] = useState(true);
   const [menuPermissions, setMenuPermissions] = useState([]);
   const [idCompanyModule, setIdCompanyModule] = useState(null);
+  const [selectedShortcut, setSelectedShortcut] = useState(null);
+  const [matchingInstances, setMatchingInstances] = useState([]);
 
   const getModuleId = useCallback(() => {
     if (currentModule?.idModule) {
@@ -57,7 +62,6 @@ export function useModulePage() {
         return moduleData.idModule;
       }
     } catch (error) {
-      console.error("Error reading from localStorage:", error);
     }
 
     return null;
@@ -75,7 +79,6 @@ export function useModulePage() {
         return moduleData.acronym;
       }
     } catch (error) {
-      console.error("Error reading acronym from localStorage:", error);
     }
 
     return null;
@@ -94,7 +97,6 @@ export function useModulePage() {
           exeName = moduleData.exeName;
         }
       } catch (error) {
-        console.error("Error reading exeName from localStorage:", error);
       }
     }
 
@@ -114,7 +116,6 @@ export function useModulePage() {
         return moduleData.idCompanyModule;
       }
     } catch (error) {
-      console.error("Error reading idCompanyModule from localStorage:", error);
     }
 
     return null;
@@ -136,7 +137,6 @@ export function useModulePage() {
       "Reportes",
       "Catálogo",
       "Administración",
-      "Dashboard",
     ],
     []
   );
@@ -174,14 +174,11 @@ export function useModulePage() {
     if (!idCompanyModule) return;
 
     try {
-      const response = await fetch(
-        '/api/menu-permissions',
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idCompanyModule }),
-        }
-      );
+      const response = await fetch("/api/menu-permissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idCompanyModule }),
+      });
 
       if (!response.ok) {
         setMenuPermissions([]);
@@ -227,8 +224,7 @@ export function useModulePage() {
   useEffect(() => {
     try {
       const storedModuleData = localStorage.getItem("currentModuleData");
-    } catch (error) {
-    }
+    } catch (error) {}
   }, [currentModule, selectedCompany, moduleId, acronym, exeName]);
 
   // Cargar permisos cuando cambie idCompanyModule
@@ -310,7 +306,6 @@ export function useModulePage() {
       }
       return [];
     } catch (error) {
-      console.error("Error getting global instances:", error);
       return [];
     }
   }, [selectedCompany]);
@@ -335,7 +330,6 @@ export function useModulePage() {
 
         return updatedInstances;
       } catch (error) {
-        console.error("Error saving global instance:", error);
         return [];
       }
     },
@@ -362,7 +356,6 @@ export function useModulePage() {
         localStorage.setItem(globalKey, JSON.stringify(updatedInstances));
         return updatedInstances;
       } catch (error) {
-        console.error("Error removing global instance:", error);
         return [];
       }
     },
@@ -385,7 +378,7 @@ export function useModulePage() {
   );
 
   const saveInstanceWithSession = useCallback(
-    (instanceId, sessionData) => {
+    (instanceId, sessionData, isActive = false) => {
       try {
         const storageKey = getStorageKey();
         const storedData = localStorage.getItem(storageKey);
@@ -403,6 +396,7 @@ export function useModulePage() {
               ...inst,
               idUser,
               session,
+              active: isActive,
             };
           }
           return inst;
@@ -412,56 +406,118 @@ export function useModulePage() {
           storageKey,
           JSON.stringify({
             instances: updatedInstances,
-            activeInstance: instancesData.activeInstance,
+            activeInstance: isActive
+              ? instanceId
+              : instancesData.activeInstance,
           })
         );
       } catch (error) {
-        console.error("Error saving session data:", error);
       }
     },
     [getStorageKey]
   );
 
-  useEffect(() => {
-    const loadInstancesFromStorage = () => {
-      try {
-        const storageKey = getStorageKey();
-        const storedInstances = localStorage.getItem(storageKey);
+  const reloadInstances = () => {
+    try {
+      const storageKey = getStorageKey();
+      const storedData = localStorage.getItem(storageKey);
 
-        if (storedInstances) {
-          const parsedInstances = JSON.parse(storedInstances);
-          setInstances(parsedInstances.instances || []);
-          setActiveInstance(parsedInstances.activeInstance || null);
-        } else {
-          setInstances([]);
-          setActiveInstance(null);
+      if (storedData) {
+        const parsed = JSON.parse(storedData);
+        setInstances(parsed.instances || []);
+        setActiveInstance(parsed.activeInstance || null);
+      } else {
+        setInstances([]);
+        setActiveInstance(null);
+      }
+    } catch (error) {
+      showNotification("error", "Error al recargar instancias", "toast");
+    }
+  };
+
+  useEffect(() => {
+    const tryReload = () => {
+      const key = getStorageKey();
+
+      if (
+        !key ||
+        !selectedCompany?.name ||
+        !selectedCompany?.fullname ||
+        !moduleParam
+      ) {
+        return;
+      }
+
+
+      try {
+        const storedData = localStorage.getItem(key);
+        let parsed;
+
+        if (storedData) {
+          parsed = JSON.parse(storedData);
         }
-      } catch (error) {
-        showNotification(
-          "error",
-          "Error al cargar instancias guardadas",
-          "toast"
-        );
+
+        const isEmpty =
+          !parsed ||
+          !Array.isArray(parsed.instances) ||
+          parsed.instances.length === 0;
+
+        if (isEmpty) {
+
+          const global = getGlobalInstances();
+          const filtered = global.filter(
+            (inst) =>
+              inst.division === division &&
+              inst.module === moduleParam &&
+              inst.idUserCompanyConnection ===
+                selectedCompany.idUserCompanyConnection
+          );
+
+          if (filtered.length > 0) {
+            setInstances(filtered);
+            setActiveInstance(filtered[0].id);
+          } else {
+            setInstances([]);
+            setActiveInstance(null);
+          }
+        } else {
+          setInstances(parsed.instances || []);
+          setActiveInstance(parsed.activeInstance || null);
+        }
+      } catch (err) {
+        showNotification("error", "Error al recargar instancias", "toast");
       }
     };
 
-    loadInstancesFromStorage();
+    /*console.log("📍 useEffect ejecutado con:", {
+      name: selectedCompany?.name,
+      fullname: selectedCompany?.fullname,
+      moduleParam,
+      pathname,
+    });*/
+
+    tryReload();
   }, [
-    getStorageKey,
-    saveInstancesToStorage,
-    saveGlobalInstance,
-    division,
+    selectedCompany,
     moduleParam,
-    showNotification,
+    pathname,
+    getStorageKey,
+    getGlobalInstances,
   ]);
 
   useEffect(() => {
-    if (instances.length > 0 && activeInstance !== null) {
-      saveInstancesToStorage(instances, activeInstance);
-    } else if (instances.length === 0) {
-      localStorage.removeItem(getStorageKey());
+    if (instances.length > 0) {
+      const savedId = localStorage.getItem(
+        `activeInstance-${division}-${moduleParam}`
+      );
+      const parsedId = Number(savedId);
+      if (savedId && instances.some((inst) => inst.id === parsedId)) {
+        setActiveInstance(parsedId);
+      } else {
+        setActiveInstance(instances[0].id);
+      }
     }
-  }, [instances, activeInstance, saveInstancesToStorage, getStorageKey]);
+  }, [instances, division, moduleParam]);
 
   useEffect(() => {
     const handleStorageChange = (event) => {
@@ -486,18 +542,14 @@ export function useModulePage() {
   const fetchShortcuts = useCallback(async () => {
     if (!selectedCompany?.idUser) return;
     try {
-      const response = await fetch(
-        '/api/menu-shortcuts-by-user',
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idUser: selectedCompany.idUser }),
-        }
-      );
+      const response = await fetch("/api/menu-shortcuts-by-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idUser: selectedCompany.idUser }),
+      });
       const data = await response.json();
       setShortcuts(data.data.data || []);
     } catch (error) {
-      console.error("Error getting shortcuts:", error);
     }
   }, [selectedCompany]);
 
@@ -535,6 +587,16 @@ export function useModulePage() {
       return;
     }
 
+    // 🚫 Validar si ya hay 5
+    if (shortcuts.length >= 5) {
+      showNotification(
+        "warning",
+        "Solo puedes tener hasta 5 accesos directos",
+        "toast"
+      );
+      return;
+    }
+
     const payload = {
       idMenu:
         item.originalData.moduleGroup === "CUSTOM"
@@ -546,16 +608,16 @@ export function useModulePage() {
           : 0,
       idUser: selectedCompany.idUser,
     };
+
     try {
-      const res = await fetch(
-        '/api/menu-shortcuts/add',
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+      const res = await fetch("/api/menu-shortcuts/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
       if (!res.ok) throw new Error("Error agregando shortcut");
+
       await res.json();
       await fetchShortcuts();
       showNotification("success", "Acceso directo agregado con éxito", "toast");
@@ -608,9 +670,7 @@ export function useModulePage() {
       } else if (map[parent]) {
         map[parent].children.push(map[item.keyValue]);
       } else {
-        console.warn(
-          `Parent ${parent} not found for item ${item.keyValue}, treating as root`
-        );
+        
         roots.push(map[item.keyValue]);
       }
     });
@@ -632,7 +692,7 @@ export function useModulePage() {
     try {
       const payload = { idModule: moduleId };
 
-      const res = await fetch('/api/menus', {
+      const res = await fetch("/api/menus", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -738,48 +798,81 @@ export function useModulePage() {
   }, []);
 
   const addNewInstance = async () => {
-    const newId = instances.length
-      ? Math.max(...instances.map((i) => i.id)) + 1
-      : 1;
-    const newInst = { id: newId, name: `Instancia ${newId}`, active: true };
-
-    setInstances((prevInstances) => [...prevInstances, newInst]);
-    setActiveInstance(newId);
-
     try {
-      // Crear la sesión primero
-      const parsedData = JSON.parse(localStorage.getItem("currentModuleData"));
-      const res = await fetch(
-        '/api/session',
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idCompanyModule: parsedData.idCompanyModule }),
-        }
+      const allGlobal = getGlobalInstances();
+
+      // Filtrar solo las instancias de este módulo y división
+      const moduleInstances = allGlobal.filter(
+        (i) => i.division === division && i.module === moduleParam
       );
+
+      // Obtener el siguiente ID por módulo/división
+      const nextId = moduleInstances.length
+        ? Math.max(...moduleInstances.map((i) => i.id)) + 1
+        : 1;
+
+      const newInst = {
+        id: nextId,
+        name: `Instancia ${nextId}`,
+        active: true,
+      };
+
+      setInstances((prev) => [...prev, newInst]);
+      setActiveInstance(nextId);
+
+      const parsedData = JSON.parse(localStorage.getItem("currentModuleData"));
+
+      // 🔐 Crear sesión
+      const res = await fetch("/api/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idCompanyModule: parsedData.idCompanyModule }),
+      });
+
       const data = await res.json();
 
-      // Crear la instancia con datos de sesión
       const instanceWithSession = {
         ...newInst,
         idCompanyModule: parsedData.idCompanyModule,
         exeName: exeName,
         session: data.data.session,
         idSession: data.data.idSession,
+        division,
+        module: moduleParam,
+        timestamp: Date.now(),
+        idUserCompanyConnection: selectedCompany.idUserCompanyConnection,
+        serverErpDb: selectedCompany.serverErpDb,
       };
 
-      // Guardar en instancias globales con datos de sesión
-      saveGlobalInstance(division, moduleParam, instanceWithSession);
+      // Verificar duplicado antes de guardar
+      const existing = allGlobal.some(
+        (inst) =>
+          inst.id === instanceWithSession.id &&
+          inst.division === division &&
+          inst.module === moduleParam
+      );
 
-      // Guardar sesión en la instancia específica
-      saveInstanceWithSession(newId, data);
+      const globalUpdated = existing
+        ? allGlobal
+        : [...allGlobal, instanceWithSession];
 
-      const sessionInfo = {
-        idCompanyModule: parsedData.idCompanyModule,
-        exeName: exeName,
-        session: data.data.session,
-      };
-      localStorage.setItem("sessionData", JSON.stringify(sessionInfo));
+      localStorage.setItem(
+        `${selectedCompany.name}-${selectedCompany.fullname}-global-instances`,
+        JSON.stringify(globalUpdated)
+      );
+
+      // 🔒 Guardar en instancias locales con sesión
+      saveInstanceWithSession(nextId, data, true); // ← se pasa `true` para `active`
+
+      // Guardar sesión global
+      localStorage.setItem(
+        "sessionData",
+        JSON.stringify({
+          idCompanyModule: parsedData.idCompanyModule,
+          exeName: exeName,
+          session: data.data.session,
+        })
+      );
 
       showNotification(
         "success",
@@ -787,23 +880,23 @@ export function useModulePage() {
         "toast"
       );
 
-      const idSession = data.data.idSession;
-      const base64Password = selectedCompany.passwordErpDb;
-      const decodedPassword = atob(base64Password);
+      document.cookie = `menuPermisos=0; path=/; SameSite=Lax`;
+
+      const encryptedPassword = selectedCompany.passwordErpDb;
+      const decodedPassword = decryptAES(encryptedPassword);
 
       setTimeout(() => {
-        window.location.href = `advanerpconnect://${exeName}?session=${data.data.idSession}?server=${selectedCompany.serverErpDb}?database=${selectedCompany.nameErpDb}?user=${selectedCompany.userErpDb}?password=${decodedPassword}?idSession=${idSession}`;
+        window.location.href = `advanerpconnect://${exeName}?session=${data.data.idSession}?server=${selectedCompany.serverErpDb}?database=${selectedCompany.nameErpDb}?user=${selectedCompany.userErpDb}?password=${decodedPassword}?idSession=${data.data.idSession}`;
       }, 2500);
 
       let attempts = 0;
       const intervalId = setInterval(() => {
         fetchMenuPermissions();
         attempts++;
-        if (attempts >= 10) {
-          clearInterval(intervalId);
-        }
+        if (attempts >= 10) clearInterval(intervalId);
       }, 5000);
 
+      return instanceWithSession;
     } catch (err) {
       showNotification(
         "error",
@@ -839,23 +932,18 @@ export function useModulePage() {
 
     if (idSession && idCompanyModule) {
       try {
-        const response = await fetch(
-          '/api/session',
-          {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              idSession: idSession,
-              idCompanyModule: idCompanyModule,          
-            }),
-          }
-        );
+        const response = await fetch("/api/session", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            idSession: idSession,
+            idCompanyModule: idCompanyModule,
+          }),
+        });
 
         if (!response.ok) {
-          console.error("Error al eliminar la sesión:", response.status);
         }
       } catch (error) {
-        console.error("Error calling delete session endpoint:", error);
       }
     }
 
@@ -884,7 +972,6 @@ export function useModulePage() {
         clearInterval(intervalId);
       }
     }, 2000);
-
   };
 
   const setInstanceActive = (id) => {
@@ -971,5 +1058,10 @@ export function useModulePage() {
     menuPermissions,
     fetchMenuPermissions,
     getCurrentSession,
+    matchingInstances,
+    setMatchingInstances,
+    selectedShortcut,
+    setSelectedShortcut,
+    shortcuts,
   };
 }

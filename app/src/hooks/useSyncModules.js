@@ -1,159 +1,160 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from "react";
+import { decryptAES } from "@/utils/aesDecrypt";
 
 export const useSyncModules = () => {
   const USERNAME = process.env.NEXT_PUBLIC_MSERPSERVICE_USERNAME;
   const PASSWORD = process.env.NEXT_PUBLIC_MSERPSERVICE_PASSWORD;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const selectedCompanyStorage = localStorage.getItem('selectedCompany');
+  const selectedCompanyStorage = localStorage.getItem("selectedCompany");
   const selectedCompany = JSON.parse(selectedCompanyStorage);
-  
-  // ✅ REF PARA CONTROLAR REQUESTS CONCURRENTES
+
   const activeRequestRef = useRef(null);
 
   // Funciones estables con useCallback
   const login = useCallback(async (urlErp) => {
     try {
       const response = await fetch(`${urlErp}/mserpservice/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: USERNAME,
-          password: PASSWORD
-        })
+          password: PASSWORD,
+        }),
       });
 
-      if (!response.ok) throw new Error('Login failed');
+      if (!response.ok) throw new Error("Login failed");
 
       const data = await response.json();
-      localStorage.setItem('token', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
-      
+      localStorage.setItem("token", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
+
       return data.accessToken;
     } catch (err) {
-      console.error('Error en login:', err);
       return null;
     }
   }, []);
 
   const refreshToken = useCallback(async (urlErp) => {
     try {
-      const refreshToken = localStorage.getItem('refreshToken');
+      const refreshToken = localStorage.getItem("refreshToken");
       const response = await fetch(`${urlErp}/mserpservice/api/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
       });
 
-      if (!response.ok) throw new Error('Refresh failed');
+      if (!response.ok) throw new Error("Refresh failed");
 
       const data = await response.json();
-      localStorage.setItem('token', data.token);
-      
+      localStorage.setItem("token", data.token);
+
       return data.token;
     } catch (err) {
-      console.error('Error al refrescar token:', err);
       return null;
     }
   }, []);
 
-  const syncModules = useCallback(async (company) => {
-    if (!company || !company.urlErp || !company.idUserCompanyConnection) {
-      setError('Datos de empresa incompletos');
-      return null;
-    }
+  const syncModules = useCallback(
+    async (company) => {
+      if (!company || !company.urlErp || !company.idUserCompanyConnection) {
+        setError("Datos de empresa incompletos");
+        return null;
+      }
 
-    if (isLoading || activeRequestRef.current) {
-      return null;
-    }
+      if (isLoading || activeRequestRef.current) {
+        return null;
+      }
 
-    const requestId = Date.now(); 
-    activeRequestRef.current = requestId;
+      const requestId = Date.now();
+      activeRequestRef.current = requestId;
 
-    setIsLoading(true);
-    setError(null);
+      setIsLoading(true);
+      setError(null);
 
       try {
         let token = await login(company.urlErp);
-        
+
         if (!token) {
-          throw new Error('No se pudo obtener token de autenticación');
+          setError("No se pudo obtener token de autenticación");
+          return null;
         }
-        const base64Password = selectedCompany.passwordErpDb;
-        const decodedPassword = atob(base64Password);
+
+        const encryptedPassword = company.passwordErpDb;
+        const decodedPassword = decryptAES(encryptedPassword);
+
         const payload = {
           urlErp: company.urlErp,
           idUserCompanyConnection: company.idUserCompanyConnection,
           accessToken: token,
-          Server_Erp_Db: selectedCompany.serverErpDb,
-          Name_Erp_Db: selectedCompany.nameErpDb,
-          User_Erp_Db: selectedCompany.userErpDb,
-          Password_Erp_Db: decodedPassword
+          Server_Erp_Db: company.serverErpDb,
+          Name_Erp_Db: company.nameErpDb,
+          User_Erp_Db: company.userErpDb,
+          Password_Erp_Db: decodedPassword,
         };
 
-        let response = await fetch('/api/sync-company-modules', {
-          method: 'POST',
+        let response = await fetch("/api/sync-company-modules", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'Accept-Language': 'es-MX'
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            "Accept-Language": "es-MX",
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
         });
 
-        // ✅ VERIFICAR SI ESTE REQUEST FUE CANCELADO
         if (activeRequestRef.current !== requestId) {
           return null;
         }
 
-      if (response.status === 401 || response.status === 404) {
-        
-        token = await refreshToken(company.urlErp);
-        if (!token) {
-          throw new Error('Error al refrescar token');
+        if (response.status === 401 || response.status === 404) {
+          token = await refreshToken(company.urlErp);
+          if (!token) {
+            setError("Error al refrescar token");
+            return null;
+          }
+
+          response = await fetch("/api/sync-company-modules", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+              "Accept-Language": "es-MX",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (!response.ok) {
+            setError("Error al sincronizar tras refrescar token");
+            return null;
+          }
+        } else if (!response.ok) {
+          setError(`Error ${response.status}: ${response.statusText}`);
+          return null;
         }
 
-        response = await fetch('/api/sync-company-modules', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'Accept-Language': 'es-MX'
-          },
-          body: JSON.stringify(payload)
-        });
+        const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error('Error al sincronizar tras refrescar token');
+        if (data.statusCode !== "200") {
+          setError(
+            data.message || "Error durante la sincronización de módulos"
+          );
+          return null;
         }
-      } else if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
 
-      const data = await response.json();
-      
-      // ✅ VERIFICAR NUEVAMENTE SI EL REQUEST FUE CANCELADO
-      if (activeRequestRef.current !== requestId) {
+        return data;
+      } catch (err) {
+        setError(err.message || "Error inesperado");
         return null;
+      } finally {
+        if (activeRequestRef.current === requestId) {
+          setIsLoading(false);
+          activeRequestRef.current = null;
+        }
       }
-      
-      if (data.statusCode === '200') {
-      } else {
-      }
-      
-      return data;
-
-    } catch (err) {
-      setError(err.message);
-      return null;
-    } finally {
-      // ✅ LIMPIAR SOLO SI ES EL REQUEST ACTIVO
-      if (activeRequestRef.current === requestId) {
-        setIsLoading(false);
-        activeRequestRef.current = null;
-      }
-    }
-  }, [login, refreshToken, isLoading]);
+    },
+    [login, refreshToken, isLoading]
+  );
 
   // ✅ FUNCIÓN PARA CANCELAR REQUESTS PENDIENTES
   const cancelPendingRequests = useCallback(() => {
@@ -167,6 +168,6 @@ export const useSyncModules = () => {
     syncModules,
     isLoading,
     error,
-    cancelPendingRequests
+    cancelPendingRequests,
   };
 };

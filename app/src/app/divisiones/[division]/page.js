@@ -320,10 +320,6 @@ function ModuleCard({
             </svg>
           </div>
         </div>
-
-        <p className="text-gray-500 dark:text-gray-400 text-p flex-grow">
-          {description}
-        </p>
       </div>
     </div>
   );
