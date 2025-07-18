@@ -880,7 +880,7 @@ export function useModulePage() {
         "toast"
       );
 
-      document.cookie = `menuPermisos=0; path=/; SameSite=Lax`;
+      //document.cookie = `menuPermisos=0; path=/; SameSite=Lax`;
 
       const encryptedPassword = selectedCompany.passwordErpDb;
       const decodedPassword = decryptAES(encryptedPassword);
