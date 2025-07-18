@@ -76,17 +76,20 @@ export default function AdvanPacPacsPage() {
     fetchPacs();
   }, [pagination.page, search, statusFilter]);
 
-  // Función para cargar PACs desde la API
+  // Función para cargar PACs desde la API usando Next.js API
   const fetchPacs = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://10.50.77.181:83/msadvan_pac/api/v1/pacprovider');
+      const response = await fetch('/api/advanpac/pacs');
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const data = await response.json();
+      const result = await response.json();
+      
+      // Verificar si la respuesta tiene el formato esperado
+      const data = Array.isArray(result) ? result : (result.data || []);
       
       // Aplicar filtros del lado del cliente
       let filteredData = [...data];
@@ -201,21 +204,19 @@ export default function AdvanPacPacsPage() {
     });
   };
 
-  // Función para cambiar el estado del PAC
+  // Función para cambiar el estado del PAC usando Next.js API
   const handleStatusChange = async (pacId, newStatus) => {
     setUpdatingStatus(prev => ({ ...prev, [pacId]: true }));
 
     try {
-      const endpoint = newStatus === 'ACTIVE' 
-        ? `http://10.50.77.181:83/msadvan_pac/api/v1/provider/active/${pacId}`
-        : `http://10.50.77.181:83/msadvan_pac/api/v1/provider/inactive/${pacId}`;
+      const action = newStatus === 'ACTIVE' ? 'activate' : 'inactivate';
+      const endpoint = `/api/advanpac/pacs/${pacId}/${action}`;
 
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        },
-        body: ''
+        }
       });
 
       const result = await response.json();
@@ -244,7 +245,7 @@ export default function AdvanPacPacsPage() {
           type: 'success'
         });
       } else {
-        throw new Error('Error en la respuesta del servidor');
+        throw new Error(result.message || 'Error en la respuesta del servidor');
       }
       
     } catch (error) {
@@ -341,17 +342,16 @@ export default function AdvanPacPacsPage() {
     });
   };
 
-  // Función para marcar/desmarcar PAC como primario
+  // Función para marcar/desmarcar PAC como primario usando Next.js API
   const handlePrimaryPacToggle = async (pacId) => {
     setUpdatingStatus(prev => ({ ...prev, [`primary_${pacId}`]: true }));
 
     try {
-      const response = await fetch(`http://10.50.77.181:83/msadvan_pac/api/v1/provider/primary/${pacId}`, {
+      const response = await fetch(`/api/advanpac/pacs/${pacId}/primary`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
-        },
-        body: ''
+        }
       });
 
       const result = await response.json();

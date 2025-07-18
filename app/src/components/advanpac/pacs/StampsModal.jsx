@@ -53,24 +53,27 @@ export default function StampsModal({
     }
   }, [isOpen, pac]);
 
-  // Función para cargar paquetes de timbres
+  // Función para cargar paquetes de timbres usando Next.js API
   const fetchPackages = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://10.50.77.181:83/msadvan_pac/api/v1/advan_stamps/get_packages/${pac.idProvider}`);
+      const response = await fetch(`/api/advanpac/stamps/${pac.idProvider}/packages`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const data = await response.json();
+      const result = await response.json();
       
       // Verificar si la respuesta es un array (tiene paquetes) o un objeto con mensaje de error
-      if (Array.isArray(data)) {
-        setPackages(data);
-      } else if (data.statusCode === "201" && data.message) {
+      if (Array.isArray(result)) {
+        setPackages(result);
+      } else if (result.statusCode === "201" && result.message) {
         // No hay paquetes disponibles
         setPackages([]);
+      } else if (result.data && Array.isArray(result.data)) {
+        // Si viene en formato de respuesta con data
+        setPackages(result.data);
       } else {
         // Cualquier otro caso, usar array vacío
         setPackages([]);
@@ -157,7 +160,7 @@ export default function StampsModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Crear nuevo paquete de timbres
+  // Crear nuevo paquete de timbres usando Next.js API
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -168,7 +171,7 @@ export default function StampsModal({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('http://10.50.77.181:83/msadvan_pac/api/v1/advan_stamps/add_stamps', {
+      const response = await fetch('/api/advanpac/stamps/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -194,7 +197,7 @@ export default function StampsModal({
         setCurrentView('list');
         setErrors({});
       } else {
-        setErrors({ server: 'Error al crear el paquete de timbres' });
+        setErrors({ server: result.message || 'Error al crear el paquete de timbres' });
       }
     } catch (error) {
       console.error('Error al crear paquete:', error);
@@ -204,7 +207,7 @@ export default function StampsModal({
     }
   };
 
-  // Restar timbres del proveedor (desde el más antiguo)
+  // Restar timbres del proveedor usando Next.js API
   const handleSubtractStamps = async () => {
     if (!subtractFormData.amount || subtractFormData.amount <= 0) {
       setErrors({ subtractAmount: 'La cantidad debe ser mayor a 0' });
@@ -220,12 +223,11 @@ export default function StampsModal({
     setIsSubtracting(true);
 
     try {
-      const response = await fetch(`http://10.50.77.181:83/msadvan_pac/api/v1/advan_stamps/substract_stamps/${pac.idProvider}/${subtractFormData.amount}`, {
+      const response = await fetch(`/api/advanpac/stamps/${pac.idProvider}/subtract/${subtractFormData.amount}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        },
-        body: ''
+        }
       });
 
       const result = await response.json();

@@ -41,7 +41,6 @@ export default function EditPacModal({
       setErrors({});
       setIsSubmitting(false);
       setShowPassword(false);
-      setShowPassword(false);
     }
   }, [isOpen, pac]);
 
@@ -129,7 +128,7 @@ export default function EditPacModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Enviar formulario
+  // Enviar formulario usando Next.js API
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -150,7 +149,7 @@ export default function EditPacModal({
         PrimaryPac: pac.primaryPac.toString() // Mantener el valor actual
       };
 
-      const response = await fetch('http://10.50.77.181:83/msadvan_pac/api/v1/pacprovider', {
+      const response = await fetch('/api/advanpac/pacs', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
