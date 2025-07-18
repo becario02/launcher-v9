@@ -58,10 +58,11 @@ export default function AdvanPacClientesPage() {
   // Función para obtener estados de AdvanPAC
   const fetchAdvanPacStatuses = async () => {
     try {
-      const response = await fetch('http://10.50.77.181:83/msadvan_pac/api/v1/customer');
+      const response = await fetch('/api/advanpac/customers');
       if (response.ok) {
-        const advanPacCustomers = await response.json();
-        return advanPacCustomers;
+        const result = await response.json();
+        // Si la respuesta es un array directo, lo retornamos; si no, extraemos data
+        return Array.isArray(result) ? result : (result.data || []);
       } else {
         console.error('Error al obtener estados de AdvanPAC:', response.status);
         return [];
@@ -197,7 +198,7 @@ export default function AdvanPacClientesPage() {
     });
   };
 
-  // Función para cambiar el estado del cliente directamente en AdvanPAC
+  // Función para cambiar el estado del cliente usando Next.js API
   const handleStatusChange = async (clienteId, newStatus) => {
     // Marcar este cliente como "actualizando"
     setUpdatingStatus(prev => ({ ...prev, [clienteId]: true }));
@@ -211,15 +212,14 @@ export default function AdvanPacClientesPage() {
 
       // Determinar endpoint según el nuevo estado
       const action = newStatus === 'ACTIVE' ? 'activate' : 'inactivate';
-      const endpoint = `http://10.50.77.181:83/msadvan_pac/api/v1/customer/${action}/${cliente.idCustomerAdvanPac}`;
+      const endpoint = `/api/advanpac/customers/${cliente.idCustomerAdvanPac}/${action}`;
 
-      // Llamar al endpoint de AdvanPAC para activar/inactivar
+      // Llamar al endpoint de Next.js que se conecta con AdvanPAC
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        },
-        body: '' // Cuerpo vacío como indica el curl
+        }
       });
 
       if (response.ok) {
