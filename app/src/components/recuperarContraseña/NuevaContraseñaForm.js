@@ -9,6 +9,7 @@ const NuevaContraseñaForm = ({ encryptedData }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [tokenExpired, setTokenExpired] = useState(false);
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: '',
@@ -119,26 +120,43 @@ const NuevaContraseñaForm = ({ encryptedData }) => {
       return;
     }
     
-    // Validación de requisitos - AHORA EXIGIMOS QUE SE CUMPLAN TODOS LOS REQUISITOS
+    // Validación de requisitos
     const validationErrors = validatePassword(formData.password);
     if (validationErrors.length > 0) {
       setError(validationErrors.join('. '));
       return;
     }
     
-    // Ya no dependemos solo del score, sino que validamos que todos los criterios se cumplan
-    // Esto asegura que incluso una contraseña con buen score pero que falte algún criterio será rechazada
-    
     setLoading(true);
     
     try {
-      await recuperarContraseña.cambiarContraseñaConToken(
+      const result = await recuperarContraseña.cambiarContraseñaConToken(
         formData.encryptedData, 
         formData.password
       );
-      setSuccess(true);
+      
+      // ✅ Ahora result será true (éxito) o false (token inválido/expirado)
+      if (result === true) {
+        setSuccess(true);
+      } else {
+        // result === false significa token inválido/expirado (NO es un error)
+        setTokenExpired(true);
+        setError('El enlace de recuperación ha expirado o no es válido.');
+      }
     } catch (error) {
-      setError(error.message);
+      // ✅ MEJORAR MANEJO DE ERRORES
+      console.error('Error al cambiar contraseña:', error);
+      
+      // Detectar diferentes tipos de errores
+      if (error.message.includes('expirado') || error.message.includes('expired')) {
+        setTokenExpired(true);
+        setError('El enlace de recuperación ha expirado. Por favor, solicita un nuevo enlace.');
+      } else if (error.message.includes('inválido') || error.message.includes('invalid')) {
+        setTokenExpired(true);
+        setError('El enlace de recuperación no es válido. Por favor, solicita un nuevo enlace.');
+      } else {
+        setError(error.message || 'Error al cambiar la contraseña. Inténtalo de nuevo.');
+      }
     } finally {
       setLoading(false);
     }
@@ -167,6 +185,40 @@ const NuevaContraseñaForm = ({ encryptedData }) => {
     );
   };
 
+  // Pantalla para token expirado/inválido
+  if (tokenExpired) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-white">
+        <div className="w-full max-w-md bg-white p-8 text-center">
+          <div className="mb-6">
+            <Image
+              src="/logoAdvan.svg"
+              alt="Advan Logo"
+              width={160}
+              height={50}
+              className="h-auto mx-auto"
+              priority
+            />
+          </div>
+          
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Enlace no válido</h2>
+          <p className="text-gray-600 mb-6">
+            El enlace de recuperación de contraseña ha expirado o no es válido. 
+            Los enlaces de recuperación tienen una validez de 24 horas.
+          </p>
+          
+          <Link 
+            href="/login" 
+            className="block w-full bg-[#0080ff] text-white py-3 rounded-md hover:bg-blue-600 transition-colors text-center"
+          >
+            Volver al inicio de sesión
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Pantalla de éxito
   if (success) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-white">
@@ -193,6 +245,7 @@ const NuevaContraseñaForm = ({ encryptedData }) => {
     );
   }
 
+  // Formulario principal
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-white">
       <div className="w-full max-w-md bg-white p-8">
