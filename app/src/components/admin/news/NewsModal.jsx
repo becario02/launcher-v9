@@ -23,7 +23,6 @@ export default function NewsModal({
     message: ''
   });
 
-  // Nuevas categorías de noticias
   const newsCategories = [
     { value: 'COMMUNICATION', label: 'Comunicados' },
     { value: 'MAINTENANCE_EXTERNAL', label: 'Ventana de mantenimiento externas' },
@@ -100,7 +99,17 @@ export default function NewsModal({
     reader.readAsDataURL(compressed);
   };
 
-  // Validate fields and submit
+  // URL validation helper
+  const isValidUrl = (url) => {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  };
+
+  // Validate fields and submit - FIXED: Added image and URL validation
   const validateAndSubmit = async () => {
     if (!formData.title.trim()) {
       setModalNotification({ visible: true, type: 'error', message: 'Por favor ingresa el título' });
@@ -114,6 +123,17 @@ export default function NewsModal({
       setModalNotification({ visible: true, type: 'error', message: 'Ingresa el enlace de la noticia' });
       return;
     }
+    // NEW: URL validation
+    if (!isValidUrl(formData.newsLink.trim())) {
+      setModalNotification({ visible: true, type: 'error', message: 'Ingresa una URL válida (debe comenzar con http:// o https://)' });
+      return;
+    }
+    // NEW: Image validation
+    if (!formData.imageUrl && !previewImage) {
+      setModalNotification({ visible: true, type: 'error', message: 'Por favor selecciona una imagen' });
+      return;
+    }
+    
     setIsSaving(true);
     try {
       await handleSaveNews();
@@ -254,10 +274,10 @@ export default function NewsModal({
               </div>
             </>
 
-            {/* Imagen */}
+            {/* Imagen - UPDATED: Added required indicator */}
             <div>
               <label className="block mb-1 font-medium text-gray-800 dark:text-white">
-                Imagen
+                Imagen <span className="text-red-500">*</span>
               </label>
               {!isView ? (
                 <div className="flex flex-col space-y-2">
