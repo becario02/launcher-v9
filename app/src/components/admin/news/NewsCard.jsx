@@ -1,53 +1,58 @@
-'use client';
+"use client";
 
-import { Eye, Edit, ArrowUpCircle, ArrowDownCircle, Users } from 'lucide-react';
-import { useTheme } from '@/context/ThemeContext';
+import {
+  Eye,
+  Edit,
+  ArrowUpCircle,
+  ArrowDownCircle,
+  Users,
+  Trash,
+} from "lucide-react";
 
 export default function NewsCard({
   item,
   handleOpenModal,
   handleConfirmStatusToggle,
   handleOpenPermissionsModal,
-  getCategoryColor
+  onDelete,
 }) {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const isExpired = item.expirationDate && new Date(item.expirationDate) < new Date();
 
-  // Usa la clase 'bg-primary' que apunta a tu CSS variable --primary
-  const categoryValueStyle = 'bg-primary text-white rounded-full px-2 py-0.5';
-  
-  // Traducciones actualizadas para las nuevas categorías
+  const categoryValueStyle = "bg-primary text-white rounded-full px-2 py-0.5";
+
   const categoryTranslations = {
-    // Nuevas categorías
-    'COMMUNICATION': 'Comunicados',
-    'MAINTENANCE_EXTERNAL': 'Mantenimiento Externo',
-    'GENERAL_NEWS': 'Noticias',
-    'LEGAL_NEWS': 'Noticias Normativas',
-    'BLOG': 'Blog',
-    'PRODUCTS_SERVICES': 'Productos y Servicios',
-    'SUCCESS_STORY': 'Casos de Éxito',
-    'PROMOTIONAL': 'Promocional',
-    'CLOUD_PROMO': 'Nube Promocional',
-    'UPCOMING_EVENTS': 'Eventos Próximos',
-    // Categorías legacy (por compatibilidad)
-    'NEWS': 'Noticias',
-    'ADVICE': 'Consejo',
-    'NOTIFICATION': 'Notificación'
+    COMMUNICATION: "Comunicados",
+    MAINTENANCE_EXTERNAL: "Mantenimiento Externo",
+    GENERAL_NEWS: "Noticias",
+    LEGAL_NEWS: "Noticias Normativas",
+    BLOG: "Blog",
+    PRODUCTS_SERVICES: "Productos y Servicios",
+    SUCCESS_STORY: "Casos de Éxito",
+    PROMOTIONAL: "Promocional",
+    CLOUD_PROMO: "Nube Promocional",
+    UPCOMING_EVENTS: "Eventos Próximos",
+    NEWS: "Noticias",
+    ADVICE: "Consejo",
+    NOTIFICATION: "Notificación",
   };
 
   return (
     <div
       className={`
-        bg-white dark:bg-gray-7
         rounded-lg overflow-hidden
-        border-b-4 ${item.status === 'ACTIVE'
-          ? 'border-primary'
-          : 'border-gray-3 dark:border-gray-6'}
+        border-b-4
+        ${isExpired
+          ? "border-red-500 bg-gray-200 dark:bg-gray-600 text-white"
+          : item.status === "ACTIVE"
+          ? "border-primary bg-white dark:bg-gray-7"
+          : "border-gray-3 dark:border-gray-6 bg-white dark:bg-gray-7"
+        }
         shadow-sm hover:shadow dark:hover:shadow-gray-900
         transition-all duration-300
         h-full flex flex-col font-poppins
-      `}
+      `} 
     >
+
       {/* Contenedor de imagen */}
       <div className="w-full min-h-[180px] aspect-[16/9] overflow-hidden bg-gray-1 dark:bg-gray-6 flex items-center justify-center">
         {item.imageUrl ? (
@@ -86,12 +91,14 @@ export default function NewsCard({
           <span
             className={`
               text-xs px-2 py-0.5 rounded-full
-              ${item.status === 'ACTIVE'
-                ? 'bg-primary text-white'
-                : 'bg-gray-2 text-gray-4 dark:bg-gray-6 dark:text-gray-3'}
+              ${
+                item.status === "ACTIVE"
+                  ? "bg-primary text-white"
+                  : "bg-gray-2 text-gray-4 dark:bg-gray-6 dark:text-gray-3"
+              }
             `}
           >
-            {item.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
+            {item.status === "ACTIVE" ? "Activo" : "Inactivo"}
           </span>
         </div>
 
@@ -101,7 +108,7 @@ export default function NewsCard({
         </h3>
 
         {/* Fecha */}
-        <p className="text-xs font-regular mb-1.5 text-gray-3 leading-tight">
+        <p className="text-xs font-regular mb-1.5 text-gray-3 dark:text-gray-3 leading-tight">
           {(() => {
             try {
               const originalDate = new Date(item.date);
@@ -110,15 +117,15 @@ export default function NewsCard({
                 originalDate.getTime() - 6 * 3600_000
               );
               const options = {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
               };
               return `Publicado: ${adjustedDate.toLocaleDateString(
-                'es-MX',
+                "es-MX",
                 options
               )}`;
             } catch {
@@ -127,24 +134,62 @@ export default function NewsCard({
           })()}
         </p>
 
+        <p className="text-xs font-regular mb-1.5 text-gray-3 dark:text-gray-3 leading-tight flex items-center gap-2">
+          {(() => {
+            try {
+              const originalDate = new Date(item.expirationDate);
+              if (isNaN(originalDate.getTime())) return "Fecha no disponible";
+              const adjustedDate = new Date(originalDate.getTime() - 6 * 3600_000);
+              const options = {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              };
+              return (
+                <>
+                  <span>
+                    Expira: {adjustedDate.toLocaleDateString("es-MX", options)}
+                  </span>
+                  {isExpired && (
+                    <span className="bg-red-200 text-red-700 dark:bg-[#402020] dark:text-red-400 text-[10px] font-semibold rounded-full px-2 py-0.5">
+                      Expirada
+                    </span>
+                  )}
+                </>
+              );
+            } catch {
+              return `Expira: ${item.expirationDate}`;
+            }
+          })()}
+        </p>
+
         {/* Acciones */}
         <div className="border-t border-gray-1 dark:border-gray-6 pt-1.5 flex justify-between items-center mt-auto">
           <div className="flex gap-1">
             <button
-              onClick={() => handleOpenModal('view', item)}
+              onClick={() => handleOpenModal("view", item)}
               className="p-1 rounded hover:bg-gray-1 dark:hover:bg-gray-6 transition-colors"
               title="Ver detalles"
               aria-label="Ver detalles"
             >
-              <Eye size={18} className="text-gray-4 dark:text-gray-3 hover:text-primary" />
+              <Eye
+                size={18}
+                className="text-gray-4 dark:text-gray-3 hover:text-primary"
+              />
             </button>
             <button
-              onClick={() => handleOpenModal('edit', item)}
+              onClick={() => handleOpenModal("edit", item)}
               className="p-1 rounded hover:bg-gray-1 dark:hover:bg-gray-6 transition-colors"
               title="Editar"
               aria-label="Editar"
             >
-              <Edit size={18} className="text-gray-4 dark:text-gray-3 hover:text-primary" />
+              <Edit
+                size={18}
+                className="text-gray-4 dark:text-gray-3 hover:text-primary"
+              />
             </button>
 
             <button
@@ -153,21 +198,42 @@ export default function NewsCard({
               title="Configurar audiencia"
               aria-label="Configurar audiencia"
             >
-              <Users size={18} className="text-gray-4 dark:text-gray-3 group-hover:text-primary" />
+              <Users
+                size={18}
+                className="text-gray-4 dark:text-gray-3 group-hover:text-primary"
+              />
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+
+            <button
+              onClick={() => onDelete(item)}
+              className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-800 transition-colors"
+              title="Eliminar"
+              aria-label="Eliminar"
+            >
+              <Trash
+                size={18}
+                className="text-gray-4 dark:text-gray-3 hover:text-red-500 dark:hover:text-red-400"
+              />
             </button>
           </div>
 
           <button
             onClick={() => handleConfirmStatusToggle(item.id)}
             className="p-1 rounded hover:bg-gray-1 dark:hover:bg-gray-6 transition-colors"
-            title={item.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
-            aria-label={item.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
+            title={item.status === "ACTIVE" ? "Desactivar" : "Activar"}
+            aria-label={item.status === "ACTIVE" ? "Desactivar" : "Activar"}
           >
-            {item.status === 'ACTIVE' ? (
-              <ArrowDownCircle size={18} className="text-gray-4 dark:text-gray-3 hover:text-primary" />
+            {item.status === "ACTIVE" ? (
+              <ArrowDownCircle
+                size={18}
+                className="text-gray-4 dark:text-gray-3 hover:text-primary"
+              />
             ) : (
-              <ArrowUpCircle size={18} className="text-gray-4 dark:text-gray-3 hover:text-primary" />
+              <ArrowUpCircle
+                size={18}
+                className="text-gray-4 dark:text-gray-3 hover:text-primary"
+              />
             )}
           </button>
         </div>

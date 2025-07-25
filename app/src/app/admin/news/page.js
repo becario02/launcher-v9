@@ -1,50 +1,61 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
-import Sidebar from '@/components/Sidebar';
-import NewsFilters from '@/components/admin/news/NewsFilters';
-import NewsGrid from '@/components/admin/news/NewsGrid';
-import NewsPagination from '@/components/admin/news/NewsPagination';
-import NewsModal from '@/components/admin/news/NewsModal';
-import ConfirmModal from '@/components/admin/news/ConfirmModal';
-import Notification from '@/components/Notification';
-import PermissionsModal from '@/components/admin/news/PermissionsModal';
-import { getCategoryColor } from '@/utils/categoryUtils';
-import { initialNewsData } from '@/services/newsService';
-import { newsService } from '@/services/api/newsService';
-import { useTheme } from '@/context/ThemeContext';
+import { useState, useEffect } from "react";
+import Navbar from "@/components/Navbar";
+import Sidebar from "@/components/Sidebar";
+import NewsFilters from "@/components/admin/news/NewsFilters";
+import NewsGrid from "@/components/admin/news/NewsGrid";
+import NewsPagination from "@/components/admin/news/NewsPagination";
+import NewsModal from "@/components/admin/news/NewsModal";
+import ConfirmModal from "@/components/admin/news/ConfirmModal";
+import Notification from "@/components/Notification";
+import PermissionsModal from "@/components/admin/news/PermissionsModal";
+import { getCategoryColor } from "@/utils/categoryUtils";
+import { initialNewsData } from "@/services/newsService";
+import { newsService } from "@/services/api/newsService";
+import { useTheme } from "@/context/ThemeContext";
+import DeleteConfirmModal from "@/components/admin/news/DeleteConfirmModal";
 
 export default function AdminNewsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const isDark = theme === "dark";
 
   // Estados principales
   const [news, setNews] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState('');
+  const [modalType, setModalType] = useState("");
   const [currentNews, setCurrentNews] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
-  const [currentNewsForPermissions, setCurrentNewsForPermissions] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedNewsToDelete, setSelectedNewsToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [currentNewsForPermissions, setCurrentNewsForPermissions] =
+    useState(null);
   const [newsPermissions, setNewsPermissions] = useState({});
-  const [notification, setNotification] = useState({ visible: false, type: 'info', message: '', style: 'inline' });
+  const [notification, setNotification] = useState({
+    visible: false,
+    type: "info",
+    message: "",
+    style: "inline",
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
-    title: '',
-    category: 'NEWS',
-    date: '',
-    newsLink: '',
-    status: 'ACTIVE',
-    imageUrl: '',
-    dateExpiration: ''
+    title: "",
+    category: "NEWS",
+    date: "",
+    newsLink: "",
+    status: "ACTIVE",
+    imageUrl: "",
+    dateExpiration: "",
   });
 
   // Carga inicial
@@ -55,20 +66,21 @@ export default function AdminNewsPage() {
         const resp = await initialNewsData();
         if (resp?.data?.length) {
           setNews(
-            resp.data.map(item => ({
+            resp.data.map((item) => ({
               id: item.idNews,
               title: item.title,
               category: item.newsType,
               status: item.status,
               date: item.creationDate,
-              newsLink: item.referenceUrl || '',
-              imageUrl: item.imageContent || '',
-              dateExpiration: item.expirationDate
+              expirationDate: item.expirationDate,
+              newsLink: item.referenceUrl || "",
+              imageUrl: item.imageContent || "",
+              dateExpiration: item.expirationDate,
             }))
           );
         }
       } catch (e) {
-        console.error('Error loading news:', e);
+        console.error("Error loading news:", e);
       } finally {
         setIsLoading(false);
       }
@@ -77,11 +89,20 @@ export default function AdminNewsPage() {
   }, []);
 
   // Notificaciones
-  const showNotification = (type, message, style = 'inline') => {
-    setNotification({ visible: false, type: 'info', message: '', style: 'inline' });
-    setTimeout(() => setNotification({ visible: true, type, message, style }), 50);
+  const showNotification = (type, message, style = "inline") => {
+    setNotification({
+      visible: false,
+      type: "info",
+      message: "",
+      style: "inline",
+    });
+    setTimeout(
+      () => setNotification({ visible: true, type, message, style }),
+      50
+    );
   };
-  const closeNotification = () => setNotification(n => ({ ...n, visible: false }));
+  const closeNotification = () =>
+    setNotification((n) => ({ ...n, visible: false }));
 
   // Handlers de modal
   const handleOpenModal = (type, newsItem = null) => {
@@ -95,17 +116,17 @@ export default function AdminNewsPage() {
         dateExpiration: newsItem.dateExpiration,
         newsLink: newsItem.newsLink,
         status: newsItem.status,
-        imageUrl: newsItem.imageUrl
+        imageUrl: newsItem.imageUrl,
       });
     } else {
       setFormData({
-        title: '',
-        category: 'NEWS',
-        date: new Date().toISOString().split('T')[0],
-        dateExpiration: '',
-        newsLink: '',
-        status: 'ACTIVE',
-        imageUrl: ''
+        title: "",
+        category: "NEWS",
+        date: new Date().toISOString().split("T")[0],
+        dateExpiration: "",
+        newsLink: "",
+        status: "ACTIVE",
+        imageUrl: "",
       });
     }
     setIsModalOpen(true);
@@ -113,89 +134,174 @@ export default function AdminNewsPage() {
   const handleCloseModal = () => setIsModalOpen(false);
 
   // Toggle estado activo/inactivo
-  const handleConfirmStatusToggle = id => {
-    const item = news.find(n => n.id === id);
+  const handleConfirmStatusToggle = (id) => {
+    const item = news.find((n) => n.id === id);
     if (!item) return;
     setCurrentNews(item);
     setConfirmAction(() => async () => {
-      const newStatus = item.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-      if (newStatus === 'ACTIVE') await newsService.activarNoticia({ idNews: id, status: newStatus });
-      else await newsService.desactivarNoticia({ idNews: id, status: newStatus });
-      setNews(prev => prev.map(n => n.id === id ? { ...n, status: newStatus } : n));
+      const newStatus = item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+      if (newStatus === "ACTIVE")
+        await newsService.activarNoticia({ idNews: id, status: newStatus });
+      else
+        await newsService.desactivarNoticia({ idNews: id, status: newStatus });
+      setNews((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, status: newStatus } : n))
+      );
       setIsConfirmModalOpen(false);
-      showNotification('success', 'Estado actualizado', 'toast');
+      showNotification("success", "Estado actualizado", "toast");
     });
     setIsConfirmModalOpen(true);
   };
   const handleCloseConfirmModal = () => setIsConfirmModalOpen(false);
 
   // Manejo de formulario
-  const handleFormChange = e => {
+  const handleFormChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   // Guardar noticia
   const handleSaveNews = async () => {
-    setIsLoading(true);
     try {
-      const isoDate = new Date(formData.dateExpiration || formData.date).toISOString();
+      const isoDate = new Date(
+        formData.dateExpiration || formData.date
+      ).toISOString();
+
       const data = {
         newsType: formData.category,
         expirationDate: isoDate,
         title: formData.title,
         referenceUrl: formData.newsLink,
         status: formData.status,
-        imageContent: formData.imageUrl
+        imageContent: formData.imageUrl,
       };
-      if (modalType === 'add') await newsService.agregarNoticia(data);
-      else if (modalType === 'edit' && currentNews) await newsService.actualizarNoticia({ ...data, idNews: currentNews.id });
-      const resp = await initialNewsData();
-      setNews(resp.data.map(item => ({
-        id: item.idNews,
-        title: item.title,
-        category: item.newsType,
-        status: item.status,
-        date: item.creationDate,
-        newsLink: item.referenceUrl,
-        imageUrl: item.imageContent,
-        dateExpiration: item.expirationDate
-      })));
+
+      if (modalType === "add") {
+        await newsService.agregarNoticia(data);
+      } else if (modalType === "edit" && currentNews) {
+        await newsService.actualizarNoticia({
+          ...data,
+          idNews: currentNews.id,
+        });
+      }
+
       handleCloseModal();
-      showNotification('success', `Noticia ${modalType === 'add' ? 'creada' : 'actualizada'} con éxito`, 'toast');
+
+      setIsLoading(true);
+
+      showNotification(
+        "success",
+        `Noticia ${modalType === "add" ? "creada" : "actualizada"} con éxito`,
+        "toast"
+      );
+      
+      const resp = await initialNewsData();
+
+      setNews(
+        resp.data.map((item) => ({
+          id: item.idNews,
+          title: item.title,
+          category: item.newsType,
+          status: item.status,
+          date: item.creationDate,
+          newsLink: item.referenceUrl,
+          imageUrl: item.imageContent,
+          expirationDate: item.expirationDate,
+        }))
+      );
+
+      
     } catch (e) {
       console.error(e);
-      showNotification('error', e.message || 'Error al guardar', 'toast');
+      showNotification("error", e.message || "Error al guardar", "toast");
     } finally {
       setIsLoading(false);
     }
   };
 
   // Filtros y paginación
-  const filteredNews = isLoading ? [] : news.filter(item => {
-    const matchSearch = !searchTerm || item.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchStatus = statusFilter === 'all' || item.status === statusFilter;
-    const matchCategory = categoryFilter === 'all' || item.category === categoryFilter;
-    return matchSearch && matchStatus && matchCategory;
-  });
+  const filteredNews = isLoading
+    ? []
+    : news.filter((item) => {
+        const matchSearch =
+          !searchTerm ||
+          item.title.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchStatus =
+          statusFilter === "all" || item.status === statusFilter;
+        const matchCategory =
+          categoryFilter === "all" || item.category === categoryFilter;
+        return matchSearch && matchStatus && matchCategory;
+      });
   const totalPages = Math.ceil(filteredNews.length / itemsPerPage);
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
   const currentItems = filteredNews.slice(indexOfFirst, indexOfLast);
 
-  const categories = ['all', ...new Set(news.map(n => n.category))];
+  const categories = ["all", ...new Set(news.map((n) => n.category))];
 
   // Permisos
-  const handleOpenPermissionsModal = id => {
+  const handleOpenPermissionsModal = (id) => {
     setCurrentNewsForPermissions(id);
     setIsPermissionsModalOpen(true);
   };
   const handleSavePermissions = (id, perms) => {
-    setNewsPermissions(prev => ({ ...prev, [id]: perms }));
+    setNewsPermissions((prev) => ({ ...prev, [id]: perms }));
     setIsPermissionsModalOpen(false);
-    showNotification('success', 'Permisos guardados', 'toast');
+    showNotification("success", "Permisos guardados", "toast");
   };
   const handleClosePermissionsModal = () => setIsPermissionsModalOpen(false);
+
+  const DeleteNews = async () => {
+    if (!selectedNewsToDelete) return;
+    setIsDeleting(true);
+
+    try {
+      const res = await fetch("/api/news/delete", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept-Language": "es-MX",
+        },
+        body: JSON.stringify({ idNews: selectedNewsToDelete.id }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.message || "Error al eliminar noticia");
+      }
+
+      const updated = await initialNewsData();
+      setNews(
+        updated.data.map((item) => ({
+          id: item.idNews,
+          title: item.title,
+          category: item.newsType,
+          status: item.status,
+          date: item.creationDate,
+          expirationDate: item.expirationDate,
+          newsLink: item.referenceUrl || "",
+          imageUrl: item.imageContent || "",
+          dateExpiration: item.expirationDate,
+        }))
+      );
+
+      setIsDeleteModalOpen(false);
+      setSelectedNewsToDelete(null);
+
+      setTimeout(() => {
+        showNotification("success", "Noticia eliminada con éxito", "toast");
+      }, 100);
+    } catch (e) {
+      showNotification(
+        "error",
+        e.message || "Error al eliminar noticia",
+        "toast"
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="flex h-screen">
@@ -210,7 +316,10 @@ export default function AdminNewsPage() {
           <div className="relative z-50 w-60 h-full bg-white dark:bg-[#1c1c24] shadow-lg">
             <Sidebar onClose={() => setSidebarOpen(false)} />
           </div>
-          <div className="fixed inset-0 bg-black/30" onClick={() => setSidebarOpen(false)} />
+          <div
+            className="fixed inset-0 bg-black/30"
+            onClick={() => setSidebarOpen(false)}
+          />
         </div>
       )}
 
@@ -225,7 +334,7 @@ export default function AdminNewsPage() {
                        dark:bg-[#1c1c24] dark:text-white"
           >
             {/* Notificaciones */}
-            {notification.visible && notification.style === 'toast' && (
+            {notification.visible && notification.style === "toast" && (
               <div className="fixed top-4 right-4 z-[9999]">
                 <Notification
                   visible
@@ -236,7 +345,7 @@ export default function AdminNewsPage() {
                 />
               </div>
             )}
-            {notification.visible && notification.style === 'inline' && (
+            {notification.visible && notification.style === "inline" && (
               <Notification
                 visible
                 type={notification.type}
@@ -267,6 +376,10 @@ export default function AdminNewsPage() {
               handleOpenPermissionsModal={handleOpenPermissionsModal}
               getCategoryColor={getCategoryColor}
               isLoading={isLoading}
+              deleteNews={(item) => {
+                setSelectedNewsToDelete(item);
+                setIsDeleteModalOpen(true);
+              }}
             />
 
             {/* Paginación */}
@@ -276,8 +389,10 @@ export default function AdminNewsPage() {
               indexOfFirstItem={indexOfFirst}
               indexOfLastItem={indexOfLast}
               filteredNewsLength={filteredNews.length}
-              prevPage={() => setCurrentPage(p => Math.max(p - 1, 1))}
-              nextPage={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+              prevPage={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              nextPage={() =>
+                setCurrentPage((p) => Math.min(p + 1, totalPages))
+              }
             />
 
             {/* Modales */}
@@ -289,18 +404,30 @@ export default function AdminNewsPage() {
               handleCloseModal={handleCloseModal}
               handleSaveNews={handleSaveNews}
             />
+
             <ConfirmModal
               isOpen={isConfirmModalOpen}
               currentNews={currentNews}
               confirmAction={confirmAction}
               handleCloseConfirmModal={handleCloseConfirmModal}
             />
+
             <PermissionsModal
               isOpen={isPermissionsModalOpen}
               newsId={currentNewsForPermissions}
               initialPermissions={newsPermissions[currentNewsForPermissions]}
               handleCloseModal={handleClosePermissionsModal}
               handleSavePermissions={handleSavePermissions}
+            />
+
+            <DeleteConfirmModal
+              isOpen={isDeleteModalOpen}
+              onCancel={() => {
+                setIsDeleteModalOpen(false);
+                setSelectedNewsToDelete(null);
+              }}
+              onConfirm={DeleteNews}
+              isDeleting={isDeleting}
             />
           </div>
         </main>

@@ -11,7 +11,8 @@ export default function NewsGrid({
   handleOpenPermissionsModal,
   getCategoryColor,
   isLoading,
-  searchTerm // Nueva prop para pasar a EmptyState
+  searchTerm,
+  deleteNews
 }) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -116,6 +117,7 @@ export default function NewsGrid({
           handleConfirmStatusToggle={handleConfirmStatusToggle}
           handleOpenPermissionsModal={handleOpenPermissionsModal}
           getCategoryColor={getCategoryColor}
+          onDelete={deleteNews}
         />
       ))}
     </div>

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { X, Upload, Link as LinkIcon, AlertCircle } from 'lucide-react';
-import { useTheme } from '@/context/ThemeContext';
+import { useState, useEffect } from "react";
+import { X, Upload, Link as LinkIcon, AlertCircle } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function NewsModal({
   isOpen,
@@ -10,118 +10,155 @@ export default function NewsModal({
   formData,
   handleFormChange,
   handleCloseModal,
-  handleSaveNews
+  handleSaveNews,
 }) {
   const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  
+  const isDark = theme === "dark";
+
   const [previewImage, setPreviewImage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [modalNotification, setModalNotification] = useState({
     visible: false,
-    type: 'error',
-    message: ''
+    type: "error",
+    message: "",
   });
+  const [fieldErrors, setFieldErrors] = useState({});
 
-  // Nuevas categorías de noticias
   const newsCategories = [
-    { value: 'COMMUNICATION', label: 'Comunicados' },
-    { value: 'MAINTENANCE_EXTERNAL', label: 'Ventana de mantenimiento externas' },
-    { value: 'GENERAL_NEWS', label: 'Noticias' },
-    { value: 'LEGAL_NEWS', label: 'Noticias normativas y fiscales' },
-    { value: 'BLOG', label: 'Blog' },
-    { value: 'PRODUCTS_SERVICES', label: 'Productos y servicios Advan' },
-    { value: 'SUCCESS_STORY', label: 'Casos de éxito - Productos o servicios Advan' },
-    { value: 'PROMOTIONAL', label: 'Promocional' },
-    { value: 'CLOUD_PROMO', label: 'Nube - Promocional' },
-    { value: 'UPCOMING_EVENTS', label: 'Eventos próximos' }
+    { value: "COMMUNICATION", label: "Comunicados" },
+    {
+      value: "MAINTENANCE_EXTERNAL",
+      label: "Ventana de mantenimiento externas",
+    },
+    { value: "GENERAL_NEWS", label: "Noticias" },
+    { value: "LEGAL_NEWS", label: "Noticias normativas y fiscales" },
+    { value: "BLOG", label: "Blog" },
+    { value: "PRODUCTS_SERVICES", label: "Productos y servicios Advan" },
+    {
+      value: "SUCCESS_STORY",
+      label: "Casos de éxito - Productos o servicios Advan",
+    },
+    { value: "PROMOTIONAL", label: "Promocional" },
+    { value: "CLOUD_PROMO", label: "Nube - Promocional" },
+    { value: "UPCOMING_EVENTS", label: "Eventos próximos" },
   ];
 
-  // Reset notification & preview on close
   useEffect(() => {
     if (!isOpen) {
-      setModalNotification({ visible: false, type: 'error', message: '' });
+      setModalNotification({ visible: false, type: "error", message: "" });
       setPreviewImage(null);
     }
   }, [isOpen]);
 
-  // Lock body scroll when modal open
   useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isOpen]);
 
   if (!isOpen) return null;
-  const isView = modalType === 'view';
+  const isView = modalType === "view";
 
-  // Image compression helper
-  const compressImage = (file, { maxWidth = 800, maxHeight = 600, quality = 0.7 } = {}) =>
-    new Promise(resolve => {
+  const compressImage = (
+    file,
+    { maxWidth = 800, maxHeight = 600, quality = 0.7 } = {}
+  ) =>
+    new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onload = e => {
+      reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
           let { width, height } = img;
           if (width > maxWidth) {
-            height = Math.round(height * maxWidth / width);
+            height = Math.round((height * maxWidth) / width);
             width = maxWidth;
           }
           if (height > maxHeight) {
-            width = Math.round(width * maxHeight / height);
+            width = Math.round((width * maxHeight) / height);
             height = maxHeight;
           }
-          const canvas = document.createElement('canvas');
+          const canvas = document.createElement("canvas");
           canvas.width = width;
           canvas.height = height;
-          const ctx = canvas.getContext('2d');
+          const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, width, height);
-          canvas.toBlob(blob => {
-            resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-          }, 'image/jpeg', quality);
+          canvas.toBlob(
+            (blob) => {
+              resolve(new File([blob], file.name, { type: "image/jpeg" }));
+            },
+            "image/jpeg",
+            quality
+          );
         };
         img.src = e.target.result;
       };
       reader.readAsDataURL(file);
     });
 
-  // Handle file input change
-  const handleImageChange = async e => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const compressed = await compressImage(file, { maxWidth: 800, maxHeight: 600, quality: 0.7 });
+    const compressed = await compressImage(file, {
+      maxWidth: 800,
+      maxHeight: 600,
+      quality: 0.7,
+    });
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64 = reader.result;
       setPreviewImage(base64);
       handleFormChange({
-        target: { name: 'imageUrl', value: base64, type: 'text' }
+        target: { name: "imageUrl", value: base64, type: "text" },
       });
     };
     reader.readAsDataURL(compressed);
   };
 
-  // Validate fields and submit
   const validateAndSubmit = async () => {
+    const errors = {};
+
     if (!formData.title.trim()) {
-      setModalNotification({ visible: true, type: 'error', message: 'Por favor ingresa el título' });
-      return;
+      errors.title = "Por favor ingresa el título";
     }
     if (!formData.dateExpiration) {
-      setModalNotification({ visible: true, type: 'error', message: 'Selecciona la fecha de expiración' });
-      return;
+      errors.dateExpiration = "Selecciona la fecha de expiración";
     }
     if (!formData.newsLink.trim()) {
-      setModalNotification({ visible: true, type: 'error', message: 'Ingresa el enlace de la noticia' });
-      return;
+      errors.newsLink = "Ingresa el enlace de la noticia";
     }
+
+    setFieldErrors(errors);
+
+    if (Object.keys(errors).length > 0) return;
+
     setIsSaving(true);
     try {
       await handleSaveNews();
     } catch {
-      setModalNotification({ visible: true, type: 'error', message: 'Error al guardar la noticia' });
+      setModalNotification({
+        visible: true,
+        type: "error",
+        message: "Error al guardar la noticia",
+      });
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value, type } = e.target;
+
+    // Limpia el error si el valor es válido
+    setFieldErrors((prev) => {
+      const updatedErrors = { ...prev };
+      if (value.trim() !== "" || (type === "date" && value)) {
+        delete updatedErrors[name];
+      }
+      return updatedErrors;
+    });
+
+    handleFormChange(e); // Sigue llamando a tu función original
   };
 
   return (
@@ -132,14 +169,14 @@ export default function NewsModal({
           rounded-xl shadow-xl w-full max-w-2xl overflow-hidden
           transition-all duration-300 animate-fadeIn my-4 relative
         `}
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="px-4 sm:px-6 py-4 flex justify-between items-center bg-primary">
           <h2 className="text-lg sm:text-xl font-medium text-white">
-            {modalType === 'add' && 'Crear Nueva Noticia'}
-            {modalType === 'edit' && 'Editar Noticia'}
-            {modalType === 'view' && 'Detalles de la Noticia'}
+            {modalType === "add" && "Crear Nueva Noticia"}
+            {modalType === "edit" && "Editar Noticia"}
+            {modalType === "view" && "Detalles de la Noticia"}
           </h2>
           <button
             onClick={handleCloseModal}
@@ -150,23 +187,37 @@ export default function NewsModal({
         </div>
 
         {/* Body */}
-        <div className="px-4 sm:px-6 py-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+        <div
+          className="px-4 sm:px-6 py-6 overflow-y-auto"
+          style={{ maxHeight: "calc(100vh - 180px)" }}
+        >
           {modalNotification.visible && (
             <div
               className={`
                 w-full border-l-4 p-4 mb-5 flex items-center justify-between animate-fadeIn
-                ${isDark
-                  ? 'border-red-500 bg-red-900 bg-opacity-30 text-red-300'
-                  : 'border-red-300 bg-red-50 text-red-700'}
+                ${
+                  isDark
+                    ? "border-red-500 bg-red-900 bg-opacity-30 text-red-300"
+                    : "border-red-300 bg-red-50 text-red-700"
+                }
               `}
             >
               <div className="flex items-center gap-2">
-                <AlertCircle className={isDark ? 'text-red-400' : 'text-red-500'} size={20} />
+                <AlertCircle
+                  className={isDark ? "text-red-400" : "text-red-500"}
+                  size={20}
+                />
                 <span>{modalNotification.message}</span>
               </div>
               <button
-                onClick={() => setModalNotification(v => ({ ...v, visible: false }))}
-                className={isDark ? 'text-red-300 hover:text-white' : 'text-red-700 hover:text-gray-900'}
+                onClick={() =>
+                  setModalNotification((v) => ({ ...v, visible: false }))
+                }
+                className={
+                  isDark
+                    ? "text-red-300 hover:text-white"
+                    : "text-red-700 hover:text-gray-900"
+                }
               >
                 <X size={16} />
               </button>
@@ -183,15 +234,20 @@ export default function NewsModal({
                 type="text"
                 name="title"
                 value={formData.title}
-                onChange={handleFormChange}
+                onChange={handleInputChange}
                 readOnly={isView}
                 className={`
                   w-full px-4 py-3 rounded-lg text-p focus:outline-none focus:ring-2 focus:ring-primary
                   bg-gray-100 text-gray-900 placeholder-gray-500 border border-gray-200
                   dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:border-gray-600
-                  ${isView ? 'cursor-not-allowed opacity-60' : ''}
+                  ${isView ? "cursor-not-allowed opacity-60" : ""}
                 `}
               />
+              {fieldErrors.title && (
+                <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                  <AlertCircle size={14} /> {fieldErrors.title}
+                </p>
+              )}
             </div>
 
             {/* Categoría */}
@@ -208,10 +264,10 @@ export default function NewsModal({
                   w-full px-4 py-3 rounded-lg text-p focus:outline-none focus:ring-2 focus:ring-primary
                   bg-gray-100 text-gray-900 placeholder-gray-500 border border-gray-200
                   dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:border-gray-600
-                  ${isView ? 'cursor-not-allowed opacity-60' : ''}
+                  ${isView ? "cursor-not-allowed opacity-60" : ""}
                 `}
               >
-                {newsCategories.map(category => (
+                {newsCategories.map((category) => (
                   <option key={category.value} value={category.value}>
                     {category.label}
                   </option>
@@ -221,15 +277,15 @@ export default function NewsModal({
 
             {/* Fecha de Expiración */}
             <>
-                <style>
-                  {`
+              <style>
+                {`
                     html.dark input[type="date"]::-webkit-calendar-picker-indicator {
                       filter: brightness(0) invert(1);
                       opacity: 0.8;
                     }
                   `}
-                </style>
-            
+              </style>
+
               <div>
                 <label className="block mb-1 font-medium text-gray-800 dark:text-white">
                   Fecha de Expiración
@@ -239,18 +295,25 @@ export default function NewsModal({
                   name="dateExpiration"
                   value={
                     formData.dateExpiration
-                      ? new Date(formData.dateExpiration).toISOString().split('T')[0]
-                      : ''
+                      ? new Date(formData.dateExpiration)
+                          .toISOString()
+                          .split("T")[0]
+                      : ""
                   }
-                  onChange={handleFormChange}
+                  onChange={handleInputChange}
                   readOnly={isView}
                   className={`
                     w-full px-4 py-3 rounded-lg text-p focus:outline-none focus:ring-2 focus:ring-primary
                     bg-gray-100 text-gray-900 placeholder-gray-500 border border-gray-200
                     dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:border-gray-600
-                    ${isView ? 'cursor-not-allowed opacity-60' : ''}
+                    ${isView ? "cursor-not-allowed opacity-60" : ""}
                   `}
                 />
+                {fieldErrors.dateExpiration && (
+                  <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                    <AlertCircle size={14} /> {fieldErrors.dateExpiration}
+                  </p>
+                )}
               </div>
             </>
 
@@ -273,7 +336,12 @@ export default function NewsModal({
                     <span className="mt-2 text-p-small text-primary">
                       Haz clic para subir una imagen
                     </span>
-                    <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageChange}
+                    />
                   </label>
                   {(previewImage || formData.imageUrl) && (
                     <img
@@ -290,7 +358,11 @@ export default function NewsModal({
                   className="max-h-40 rounded-lg object-contain mx-auto"
                 />
               ) : (
-                <p className={`text-p italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                <p
+                  className={`text-p italic ${
+                    isDark ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
                   No hay imagen disponible
                 </p>
               )}
@@ -308,19 +380,29 @@ export default function NewsModal({
                 type="url"
                 name="newsLink"
                 placeholder="https://example.com/noticias/mi-noticia"
-                value={formData.newsLink || ''}
-                onChange={handleFormChange}
+                value={formData.newsLink || ""}
+                onChange={handleInputChange}
                 readOnly={isView}
                 className={`
                   w-full px-4 py-3 rounded-lg text-p focus:outline-none focus:ring-2 focus:ring-primary-blue
                   bg-gray-100 text-gray-900 placeholder-gray-500 border border-gray-200
                   dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:border-gray-600
-                  ${isView ? 'cursor-not-allowed opacity-60' : ''}
+                  ${isView ? "cursor-not-allowed opacity-60" : ""}
                 `}
               />
+              {fieldErrors.newsLink && (
+                <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                  <AlertCircle size={14} /> {fieldErrors.newsLink}
+                </p>
+              )}
               {!isView && (
-                <p className={`mt-1 text-p-small ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Ingresa la URL completa donde se puede leer la noticia completa.
+                <p
+                  className={`mt-1 text-p-small ${
+                    isDark ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  Ingresa la URL completa donde se puede leer la noticia
+                  completa.
                 </p>
               )}
               {isView && formData.newsLink && (
@@ -339,10 +421,12 @@ export default function NewsModal({
         </div>
 
         {/* Footer */}
-        <div className={`
+        <div
+          className={`
           px-4 sm:px-6 py-4 flex justify-end gap-3 border-t
           bg-gray-100 border-gray-200 dark:bg-gray-700 dark:border-gray-600
-        `}>
+        `}
+        >
           <button
             onClick={handleCloseModal}
             className={`
@@ -351,7 +435,7 @@ export default function NewsModal({
               dark:text-semantic.red dark:bg-gray-700 dark:border-semantic.red dark:hover:bg-gray-600
             `}
           >
-            {isView ? 'Cerrar' : 'Cancelar'}
+            {isView ? "Cerrar" : "Cancelar"}
           </button>
           {!isView && (
             <button
@@ -360,12 +444,18 @@ export default function NewsModal({
               className={`
                 px-4 py-2 text-h3 text-white rounded-full transition-all duration-200 shadow-sm transform hover:-translate-y-0.5 hover:shadow-md
                 bg-primary dark:bg-primary-
-                ${isSaving
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'hover:bg-primary dark:hover:bg-primary'}
+                ${
+                  isSaving
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-primary dark:hover:bg-primary"
+                }
               `}
             >
-              {isSaving ? 'Guardando...' : modalType === 'add' ? 'Crear' : 'Guardar'}
+              {isSaving
+                ? "Guardando..."
+                : modalType === "add"
+                ? "Crear"
+                : "Guardar"}
             </button>
           )}
         </div>

@@ -1,84 +1,80 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import clsx from 'clsx';
-import { Video, Search, PlusCircle, Trash2, Grid, List, Edit, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
-import Navbar from '@/components/Navbar';
-import Sidebar from '@/components/Sidebar';
-import { usePrimaryColor } from '@/context/primaryColor';
-import { useTheme } from '@/context/ThemeContext';
-import Toast from '@/components/Toast';
-
-// Componentes que debes crear
-import VideoFormModal from '@/components/VideoFormModal';
-import VideoGrid from '@/components/VideoGrid';
-import VideoConfirmDeleteModal from '@/components/VideoConfirmDeleteModal';
+import { useState, useEffect } from "react";
+import axios from "axios";
+import clsx from "clsx";
+import {
+  Video,
+  Search,
+  PlusCircle,
+  Trash2,
+  Grid,
+  List,
+  Edit,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import Navbar from "@/components/Navbar";
+import Sidebar from "@/components/Sidebar";
+import { usePrimaryColor } from "@/context/primaryColor";
+import { useTheme } from "@/context/ThemeContext";
+import Toast from "@/components/Toast";
+import VideoFormModal from "@/components/VideoFormModal";
+import VideoGrid from "@/components/VideoGrid";
+import VideoConfirmDeleteModal from "@/components/VideoConfirmDeleteModal";
 
 export default function AdminVideosPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { primaryColor } = usePrimaryColor();
   const { theme } = useTheme();
-  const isDark = theme === 'dark';
-
-  // Estados principales
   const [videos, setVideos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalType, setModalType] = useState('add');
+  const [modalType, setModalType] = useState("add");
   const [currentVideo, setCurrentVideo] = useState(null);
-
-  // Estados de búsqueda y filtros
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [totalVideos, setTotalVideos] = useState(0);
+  const [viewMode, setViewMode] = useState("table");
 
-  // Vista actual (tabla o grilla)
-  const [viewMode, setViewMode] = useState('table');
-
-  // Estado para notificaciones
   const [toast, setToast] = useState({
     visible: false,
-    message: '',
-    type: 'success'
+    message: "",
+    type: "success",
   });
 
-  // Estado para el modal de confirmación de eliminación
   const [confirmDeleteModalOpen, setConfirmDeleteModalOpen] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState(null);
 
-  // Función para cargar videos
   const fetchVideos = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('/api/videos', {
+      const response = await axios.get("/api/videos", {
         params: {
           page,
           pageSize,
           title: search || null,
-          status: statusFilter !== 'all' ? statusFilter : null,
-        }
+          status: statusFilter !== "all" ? statusFilter : null,
+        },
       });
 
-      // Acceder correctamente a los datos en la respuesta
       const responseData = response.data;
       setVideos(responseData.data || []);
       setTotalVideos(responseData.total || 0);
     } catch (error) {
-      console.error('Error al cargar videos:', error);
       setToast({
         visible: true,
-        message: 'Error al cargar los videos',
-        type: 'error'
+        message: "Error al cargar los videos",
+        type: "error",
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Cargar videos al montar el componente y cuando cambien los filtros
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchVideos();
@@ -89,7 +85,7 @@ export default function AdminVideosPage() {
 
   // Limpiar búsqueda
   const clearSearch = () => {
-    setSearch('');
+    setSearch("");
     setPage(1);
   };
 
@@ -103,38 +99,38 @@ export default function AdminVideosPage() {
   const handleCloseModal = () => {
     setModalOpen(false);
     setCurrentVideo(null);
-    setModalType('add');
+    setModalType("add");
   };
 
   // Guardar video
   const handleSaveVideo = async (data) => {
     try {
-      if (modalType === 'edit' && currentVideo) {
-        await axios.put('/api/videos', {
+      if (modalType === "edit" && currentVideo) {
+        await axios.put("/api/videos", {
           idVideo: currentVideo.idVideo,
-          ...data
+          ...data,
         });
         setToast({
           visible: true,
-          message: 'Video actualizado exitosamente',
-          type: 'success'
+          message: "Video actualizado exitosamente",
+          type: "success",
         });
       } else {
-        await axios.post('/api/videos', data);
+        await axios.post("/api/videos", data);
         setToast({
           visible: true,
-          message: 'Video creado exitosamente',
-          type: 'success'
+          message: "Video creado exitosamente",
+          type: "success",
         });
       }
       handleCloseModal();
       fetchVideos();
     } catch (error) {
-      console.error('Error al guardar video:', error);
+      console.error("Error al guardar video:", error);
       setToast({
         visible: true,
-        message: 'Error al guardar el video',
-        type: 'error'
+        message: "Error al guardar el video",
+        type: "error",
       });
     }
   };
@@ -142,21 +138,21 @@ export default function AdminVideosPage() {
   // Eliminar video
   const handleDeleteVideo = async (idVideo) => {
     try {
-      await axios.delete('/api/videos', {
-        params: { idVideo }
+      await axios.delete("/api/videos", {
+        params: { idVideo },
       });
       setToast({
         visible: true,
-        message: 'Video eliminado exitosamente',
-        type: 'success'
+        message: "Video eliminado exitosamente",
+        type: "success",
       });
       fetchVideos();
     } catch (error) {
-      console.error('Error al eliminar video:', error);
+      console.error("Error al eliminar video:", error);
       setToast({
         visible: true,
-        message: 'Error al eliminar el video',
-        type: 'error'
+        message: "Error al eliminar el video",
+        type: "error",
       });
     }
   };
@@ -175,7 +171,7 @@ export default function AdminVideosPage() {
 
   // Cerrar toast
   const handleCloseToast = () => {
-    setToast(prev => ({ ...prev, visible: false }));
+    setToast((prev) => ({ ...prev, visible: false }));
   };
 
   // Componente de estado vacío
@@ -183,14 +179,18 @@ export default function AdminVideosPage() {
     <div className="text-center py-20">
       <Video className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
       <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
-        {search ? `No se encontraron videos que coincidan con "${search}"` : 'No hay videos registrados'}
+        {search
+          ? `No se encontraron videos que coincidan con "${search}"`
+          : "No hay videos registrados"}
       </h3>
       <p className="text-gray-500 dark:text-gray-500 mb-4">
-        {search ? 'Intenta con otros términos de búsqueda' : 'Comienza agregando un nuevo video'}
+        {search
+          ? "Intenta con otros términos de búsqueda"
+          : "Comienza agregando un nuevo video"}
       </p>
       {!search && (
         <button
-          onClick={() => handleOpenModal('add')}
+          onClick={() => handleOpenModal("add")}
           style={{ backgroundColor: primaryColor }}
           className="inline-flex items-center gap-2 text-white px-4 py-2 rounded-md"
         >
@@ -222,6 +222,19 @@ export default function AdminVideosPage() {
     </tr>
   );
 
+  function formatMexicanDate(dateStringUTC) {
+    const utc = new Date(dateStringUTC + "Z");
+    return utc.toLocaleString("es-MX", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "America/Mexico_City",
+    });
+  }
+
   return (
     <div className="flex font-poppins">
       {/* Sidebar - Fixed on desktop */}
@@ -235,13 +248,19 @@ export default function AdminVideosPage() {
           <div className="relative z-50 w-60 h-full bg-white dark:bg-[#1C1C24] shadow-lg">
             <Sidebar onClose={() => setSidebarOpen(false)} />
           </div>
-          <div className="fixed inset-0 bg-black/30" onClick={() => setSidebarOpen(false)} />
+          <div
+            className="fixed inset-0 bg-black/30"
+            onClick={() => setSidebarOpen(false)}
+          />
         </div>
       )}
 
       <div className="flex-1 w-full md:pl-60">
         {/* Navbar*/}
-        <Navbar className="sticky top-0 z-30" onMenuClick={() => setSidebarOpen(true)} />
+        <Navbar
+          className="sticky top-0 z-30"
+          onMenuClick={() => setSidebarOpen(true)}
+        />
 
         {/* Main content */}
         <main className="min-h-screen bg-[#F2F6FD] dark:bg-[#13131a] pt-14 pb-14 px-4 md:px-8 xl:px-10 w-full">
@@ -263,7 +282,7 @@ export default function AdminVideosPage() {
                 <button
                   className="flex items-center gap-2 text-sm font-medium text-white px-4 py-2 rounded-md"
                   style={{ backgroundColor: primaryColor }}
-                  onClick={() => handleOpenModal('add')}
+                  onClick={() => handleOpenModal("add")}
                 >
                   <PlusCircle className="w-4 h-4" />
                   Nuevo video
@@ -314,10 +333,10 @@ export default function AdminVideosPage() {
                 {/* Botones de vista */}
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setViewMode('table')}
+                    onClick={() => setViewMode("table")}
                     className={clsx(
                       "p-2 rounded-md transition-colors",
-                      viewMode === 'table'
+                      viewMode === "table"
                         ? "bg-primary text-white"
                         : "bg-gray-100 dark:bg-[#2C2C38] text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#3C3C48]"
                     )}
@@ -325,10 +344,10 @@ export default function AdminVideosPage() {
                     <List className="w-5 h-5" />
                   </button>
                   <button
-                    onClick={() => setViewMode('grid')}
+                    onClick={() => setViewMode("grid")}
                     className={clsx(
                       "p-2 rounded-md transition-colors",
-                      viewMode === 'grid'
+                      viewMode === "grid"
                         ? "bg-primary text-white"
                         : "bg-gray-100 dark:bg-[#2C2C38] text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#3C3C48]"
                     )}
@@ -340,13 +359,21 @@ export default function AdminVideosPage() {
             </div>
 
             {/* Contenido principal */}
-            {viewMode === 'table' ? (
+            {viewMode === "table" ? (
               <div className="rounded-lg border border-gray-200 dark:border-[#2C2C38] shadow-sm bg-white dark:bg-[#1C1C24] overflow-x-auto">
                 <table className="w-full text-sm text-left">
                   <thead className="bg-[#F9FAFB] dark:bg-[#2C2C38] text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">
                     <tr>
-                      {['Título', 'URL', 'Estado', 'Fecha de subida', 'Acciones'].map((label, i) => (
-                        <th key={i} className="px-6 py-4 whitespace-nowrap">{label}</th>
+                      {[
+                        "Título",
+                        "URL",
+                        "Estado",
+                        "Fecha de subida",
+                        "Acciones",
+                      ].map((label, i) => (
+                        <th key={i} className="px-6 py-4 whitespace-nowrap">
+                          {label}
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -364,9 +391,14 @@ export default function AdminVideosPage() {
                         </td>
                       </tr>
                     ) : (
-                      videos.map(video => (
-                        <tr key={video.idVideo} className="hover:bg-gray-50 dark:hover:bg-[#262636] transition">
-                          <td className="px-6 py-4 font-medium">{video.title}</td>
+                      videos.map((video) => (
+                        <tr
+                          key={video.idVideo}
+                          className="hover:bg-gray-50 dark:hover:bg-[#262636] transition"
+                        >
+                          <td className="px-6 py-4 font-medium">
+                            {video.title}
+                          </td>
                           <td className="px-6 py-4">
                             <a
                               href={video.url}
@@ -378,46 +410,48 @@ export default function AdminVideosPage() {
                             </a>
                           </td>
                           <td className="px-6 py-4">
-                            <span className={clsx(
-                              'px-2 py-1 rounded-full text-xs font-medium',
-                              video.status === 'ACTIVE'
-                                ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-white'
-                                : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-white'
-                            )}>
-                              {video.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
+                            <span
+                              className={clsx(
+                                "px-2 py-1 rounded-full text-xs font-medium",
+                                video.status === "ACTIVE"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-white"
+                                  : "bg-red-100 text-red-800 dark:bg-red-800 dark:text-white"
+                              )}
+                            >
+                              {video.status === "ACTIVE"
+                                ? "Activo"
+                                : "Inactivo"}
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            {new Date(video.uploadDate).toLocaleDateString('es-ES', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                            {formatMexicanDate(video.uploadDate)}
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex gap-2">
                               <button
-                                onClick={() => handleOpenModal('view', video)}
+                                onClick={() => handleOpenModal("view", video)}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-800 transition"
                               >
                                 <Eye className="w-3.5 h-3.5" />
                                 <span className="text-xs font-medium">Ver</span>
                               </button>
                               <button
-                                onClick={() => handleOpenModal('edit', video)}
+                                onClick={() => handleOpenModal("edit", video)}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-800 transition"
                               >
                                 <Edit className="w-3.5 h-3.5" />
-                                <span className="text-xs font-medium">Editar</span>
+                                <span className="text-xs font-medium">
+                                  Editar
+                                </span>
                               </button>
                               <button
                                 onClick={() => handleOpenDeleteConfirm(video)}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-800 transition"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
-                                <span className="text-xs font-medium">Eliminar</span>
+                                <span className="text-xs font-medium">
+                                  Eliminar
+                                </span>
                               </button>
                             </div>
                           </td>
@@ -431,15 +465,20 @@ export default function AdminVideosPage() {
                 <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t border-gray-200 dark:border-[#2C2C38] gap-4">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     {totalVideos > 0 ? (
-                      <>Mostrando {Math.min((page - 1) * pageSize + 1, totalVideos)} - {Math.min(page * pageSize, totalVideos)} de {totalVideos}</>
+                      <>
+                        Mostrando{" "}
+                        {Math.min((page - 1) * pageSize + 1, totalVideos)} -{" "}
+                        {Math.min(page * pageSize, totalVideos)} de{" "}
+                        {totalVideos}
+                      </>
                     ) : (
-                      'No hay resultados'
+                      "No hay resultados"
                     )}
                   </span>
                   <div className="flex gap-2">
                     <button
                       disabled={page === 1 || isLoading || totalVideos === 0}
-                      onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+                      onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                       className={clsx(
                         "inline-flex items-center px-3 py-1.5 rounded text-sm text-gray-700 dark:text-gray-200",
                         "transition focus:outline-none",
@@ -452,12 +491,18 @@ export default function AdminVideosPage() {
                       Anterior
                     </button>
                     <button
-                      disabled={page * pageSize >= totalVideos || isLoading || totalVideos === 0}
-                      onClick={() => setPage(prev => prev + 1)}
+                      disabled={
+                        page * pageSize >= totalVideos ||
+                        isLoading ||
+                        totalVideos === 0
+                      }
+                      onClick={() => setPage((prev) => prev + 1)}
                       className={clsx(
                         "inline-flex items-center px-3 py-1.5 rounded text-sm text-gray-700 dark:text-gray-200",
                         "transition focus:outline-none",
-                        page * pageSize >= totalVideos || isLoading || totalVideos === 0
+                        page * pageSize >= totalVideos ||
+                          isLoading ||
+                          totalVideos === 0
                           ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-[#2C2C38]"
                           : "bg-gray-100 hover:bg-gray-200 dark:bg-[#2C2C38] dark:hover:bg-[#3C3C48]"
                       )}
@@ -480,15 +525,16 @@ export default function AdminVideosPage() {
             )}
 
             {/* Paginación para vista de grilla */}
-            {viewMode === 'grid' && totalVideos > 0 && (
+            {viewMode === "grid" && totalVideos > 0 && (
               <div className="flex flex-col sm:flex-row justify-between items-center pt-6 gap-4">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Mostrando {Math.min((page - 1) * pageSize + 1, totalVideos)} - {Math.min(page * pageSize, totalVideos)} de {totalVideos}
+                  Mostrando {Math.min((page - 1) * pageSize + 1, totalVideos)} -{" "}
+                  {Math.min(page * pageSize, totalVideos)} de {totalVideos}
                 </span>
                 <div className="flex gap-2">
                   <button
                     disabled={page === 1 || isLoading}
-                    onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+                    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                     className={clsx(
                       "inline-flex items-center px-3 py-1.5 rounded text-sm text-gray-700 dark:text-gray-200",
                       "transition focus:outline-none",
@@ -502,7 +548,7 @@ export default function AdminVideosPage() {
                   </button>
                   <button
                     disabled={page * pageSize >= totalVideos || isLoading}
-                    onClick={() => setPage(prev => prev + 1)}
+                    onClick={() => setPage((prev) => prev + 1)}
                     className={clsx(
                       "inline-flex items-center px-3 py-1.5 rounded text-sm text-gray-700 dark:text-gray-200",
                       "transition focus:outline-none",
