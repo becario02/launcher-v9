@@ -1,44 +1,46 @@
 import React from 'react';
-import { AtSign, X } from 'lucide-react';
+import { Mail, X } from 'lucide-react';
 import PropTypes from 'prop-types';
 
-const MensajeExitoRecuperarContraseña = ({ onClose, onContinue }) => {
+const MensajeExitoRecuperarContraseña = ({ onClose }) => {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-lg w-full max-w-lg relative">
-        <button 
-          onClick={onClose}
-          className="absolute top-3 right-4 text-gray-400 hover:text-gray-600"
-        >
-          <X className="h-6 w-6" />
-        </button>
-        
-        <div className="flex flex-col items-center">
-          
-          <div className="w-full flex flex-col items-center pt-8 pb-6">
-            <div className="bg-sky-600 rounded-full p-4 mb-4">
-              <AtSign className="w-8 h-8 text-white" />
-            </div>
-            
-            <h2 className="text-sky-600 text-2xl font-medium">
-              ¡Recibimos tu solicitud!
-            </h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-[#1C1C24] rounded-2xl p-6 w-full max-w-md mx-auto">
+        {/* Header del modal */}
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            ¡Solicitud enviada!
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Contenido del modal */}
+        <div className="text-center mb-6">
+          {/* Icono de éxito */}
+          <div className="w-16 h-16 mx-auto mb-4 bg-green-500 rounded-full flex items-center justify-center">
+            <Mail className="w-8 h-8 text-white" />
           </div>
           
-          
-          <div className="w-full bg-gray-100 rounded-b-3xl py-6 px-8 flex flex-col items-center">
-            <p className="text-gray-600 text-center text-base mb-6">
-              Revisa tu correo electrónico y sigue las instrucciones 
-              para restablecer tu contraseña.
-            </p>
-            
-            <button
-              onClick={onClose}
-              className="w-32 bg-sky-600 text-white rounded-full py-2.5 px-6 hover:bg-sky-700 transition-colors"
-            >
-              Aceptar
-            </button>
-          </div>
+          {/* Mensaje */}
+          <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+            Hemos enviado un enlace de recuperación a tu correo electrónico. 
+            Revisa tu bandeja de entrada y sigue las instrucciones para restablecer tu contraseña.
+          </p>
+        </div>
+
+        {/* Botón de acción */}
+        <div className="flex justify-center">
+          <button
+            onClick={onClose}
+            className="px-8 py-2 text-white bg-[#0080ff] rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            Entendido
+          </button>
         </div>
       </div>
     </div>
@@ -47,7 +49,6 @@ const MensajeExitoRecuperarContraseña = ({ onClose, onContinue }) => {
 
 MensajeExitoRecuperarContraseña.propTypes = {
   onClose: PropTypes.func.isRequired,
-  onContinue: PropTypes.func.isRequired,
 };
 
 export default MensajeExitoRecuperarContraseña;

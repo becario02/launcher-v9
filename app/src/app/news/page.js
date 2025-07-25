@@ -26,6 +26,52 @@ export default function NewsPage() {
 
   const userId = Cookies.get('idUser') || '1';
 
+  // Helper functions - MOVED BEFORE USAGE
+  const formatCategoryName = (newsType) => {
+    const categoryNames = {
+      'COMMUNICATION': 'Comunicados',
+      'MAINTENANCE_EXTERNAL': 'Ventana de mantenimiento externas',
+      'GENERAL_NEWS': 'General',
+      'LEGAL_NEWS': 'Noticias normativas y fiscales',
+      'BLOG': 'Blog',
+      'PRODUCTS_SERVICES': 'Productos y servicios Advan',
+      'SUCCESS_STORY': 'Casos de éxito',
+      'PROMOTIONAL': 'Promocional',
+      'CLOUD_PROMO': 'Nube - Promocional',
+      'UPCOMING_EVENTS': 'Eventos próximos'
+    };
+    return categoryNames[newsType] || newsType.replace(/_/g, ' ').toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  const getOriginalNewsType = (formattedName) => {
+    const reverseMapping = {
+      'Comunicados': 'COMMUNICATION',
+      'Ventana de mantenimiento externas': 'MAINTENANCE_EXTERNAL',
+      'General': 'GENERAL_NEWS',
+      'Noticias normativas y fiscales': 'LEGAL_NEWS',
+      'Blog': 'BLOG',
+      'Productos y servicios Advan': 'PRODUCTS_SERVICES',
+      'Casos de éxito': 'SUCCESS_STORY',
+      'Promocional': 'PROMOTIONAL',
+      'Nube - Promocional': 'CLOUD_PROMO',
+      'Eventos próximos': 'UPCOMING_EVENTS'
+    };
+    return reverseMapping[formattedName] || formattedName;
+  };
+
+  const formatNewsTime = (timestamp) => {
+    if (!timestamp) return '';
+    try {
+      const date = new Date(timestamp);
+      return formatDistance(date, new Date(), { addSuffix: true, locale: es });
+    } catch {
+      return '';
+    }
+  };
+
   const fetchNews = async () => {
     try {
       setLoading(true);
@@ -87,6 +133,7 @@ export default function NewsPage() {
     fetchNews();
   }, [userId]);
 
+  // Filtered news - NOW WORKS CORRECTLY
   const filteredNews = news.filter(item => {
     if (selectedFilters.includes("Todos")) return true;
     return selectedFilters.some(filter => {
@@ -109,51 +156,6 @@ export default function NewsPage() {
         }
       });
     }
-  };
-
-  const formatNewsTime = (timestamp) => {
-    if (!timestamp) return '';
-    try {
-      const date = new Date(timestamp);
-      return formatDistance(date, new Date(), { addSuffix: true, locale: es });
-    } catch {
-      return '';
-    }
-  };
-
-  const formatCategoryName = (newsType) => {
-    const categoryNames = {
-      'COMMUNICATION': 'Comunicados',
-      'MAINTENANCE_EXTERNAL': 'Ventana de mantenimiento externas',
-      'GENERAL_NEWS': 'General',
-      'LEGAL_NEWS': 'Noticias normativas y fiscales',
-      'BLOG': 'Blog',
-      'PRODUCTS_SERVICES': 'Productos y servicios Advan',
-      'SUCCESS_STORY': 'Casos de éxito - Productos o servicios Advan',
-      'PROMOTIONAL': 'Promocional',
-      'CLOUD_PROMO': 'Nube - Promocional',
-      'UPCOMING_EVENTS': 'Eventos próximos'
-    };
-    return categoryNames[newsType] || newsType.replace(/_/g, ' ').toLowerCase()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
-  const getOriginalNewsType = (formattedName) => {
-    const reverseMapping = {
-      'Comunicados': 'COMMUNICATION',
-      'Ventana de mantenimiento externas': 'MAINTENANCE_EXTERNAL',
-      'General': 'GENERAL_NEWS',
-      'Noticias normativas y fiscales': 'LEGAL_NEWS',
-      'Blog': 'BLOG',
-      'Productos y servicios Advan': 'PRODUCTS_SERVICES',
-      'Casos de éxito - Productos o servicios Advan': 'SUCCESS_STORY',
-      'Promocional': 'PROMOTIONAL',
-      'Nube - Promocional': 'CLOUD_PROMO',
-      'Eventos próximos': 'UPCOMING_EVENTS'
-    };
-    return reverseMapping[formattedName] || formattedName;
   };
 
   const handleNewsClick = (newsItem) => {
@@ -204,8 +206,8 @@ export default function NewsPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="flex flex-col md:flex-row gap-10">
-                <div className="w-full md:hidden lg:block md:w-60 pt-2">
+              <div className="flex flex-col lg:flex-row gap-10">
+                <div className="w-full lg:w-60 pt-2">
                   <h3 className="text-[14px] leading-[21px] font-medium font-poppins text-[#000000] dark:text-[#e2e2ea] mb-4">
                     Etiquetas
                   </h3>

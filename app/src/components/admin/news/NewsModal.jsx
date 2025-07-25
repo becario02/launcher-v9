@@ -108,11 +108,33 @@ export default function NewsModal({
     reader.onloadend = () => {
       const base64 = reader.result;
       setPreviewImage(base64);
+      
+      setFieldErrors((prev) => {
+        const updated = { ...prev };
+        delete updated.imageUrl;
+        return updated;
+      });
+
       handleFormChange({
         target: { name: "imageUrl", value: base64, type: "text" },
       });
     };
     reader.readAsDataURL(compressed);
+  };
+
+  // URL validation helper
+  const isValidUrl = (url) => {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.protocol === "http:" || urlObj.protocol === "https:";
+    } catch {
+      return false;
+    }
+  };
+
+  const isValidExpirationDate = (dateString) => {
+    const today = new Date().toISOString().split("T")[0];
+    return dateString >= today;
   };
 
   const validateAndSubmit = async () => {
@@ -121,15 +143,26 @@ export default function NewsModal({
     if (!formData.title.trim()) {
       errors.title = "Por favor ingresa el título";
     }
+
     if (!formData.dateExpiration) {
       errors.dateExpiration = "Selecciona la fecha de expiración";
+    } else if (!isValidExpirationDate(formData.dateExpiration)) {
+      errors.dateExpiration =
+        "La fecha de expiración debe ser hoy o una fecha futura";
     }
+
     if (!formData.newsLink.trim()) {
       errors.newsLink = "Ingresa el enlace de la noticia";
+    } else if (!isValidUrl(formData.newsLink.trim())) {
+      errors.newsLink =
+        "Ingresa una URL válida (debe comenzar con http:// o https://)";
+    }
+
+    if (!formData.imageUrl && !previewImage) {
+      errors.imageUrl = "Por favor selecciona una imagen";
     }
 
     setFieldErrors(errors);
-
     if (Object.keys(errors).length > 0) return;
 
     setIsSaving(true);
@@ -293,6 +326,7 @@ export default function NewsModal({
                 <input
                   type="date"
                   name="dateExpiration"
+                  min={new Date().toISOString().split("T")[0]}
                   value={
                     formData.dateExpiration
                       ? new Date(formData.dateExpiration)
@@ -309,6 +343,15 @@ export default function NewsModal({
                     ${isView ? "cursor-not-allowed opacity-60" : ""}
                   `}
                 />
+                {!isView && (
+                  <p
+                    className={`mt-1 text-p-small ${
+                      isDark ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    La fecha debe ser hoy o una fecha futura.
+                  </p>
+                )}
                 {fieldErrors.dateExpiration && (
                   <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
                     <AlertCircle size={14} /> {fieldErrors.dateExpiration}
@@ -317,10 +360,10 @@ export default function NewsModal({
               </div>
             </>
 
-            {/* Imagen */}
+            {/* Imagen - UPDATED: Added required indicator */}
             <div>
               <label className="block mb-1 font-medium text-gray-800 dark:text-white">
-                Imagen
+                Imagen <span className="text-red-500">*</span>
               </label>
               {!isView ? (
                 <div className="flex flex-col space-y-2">
@@ -343,6 +386,12 @@ export default function NewsModal({
                       onChange={handleImageChange}
                     />
                   </label>
+                  {fieldErrors.imageUrl && (
+                    <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                      <AlertCircle size={14} /> {fieldErrors.imageUrl}
+                    </p>
+                  )}
+
                   {(previewImage || formData.imageUrl) && (
                     <img
                       src={previewImage || formData.imageUrl}

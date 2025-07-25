@@ -26,7 +26,6 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [modalStates, setModalStates] = useState({
     error: false,
-    contraseña: false,
     recuperarForm: false,
     exito: false,
   });
@@ -47,6 +46,31 @@ export default function LoginForm() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Limpiar error cuando el usuario empiece a escribir
+    if (error) setError("");
+  };
+
+  // ✅ NUEVA FUNCIÓN: Validar campos requeridos
+  const validateFields = () => {
+    const { username, password } = formData;
+    
+    // Verificar si ambos campos están vacíos
+    if (!username.trim() && !password.trim()) {
+      return "Por favor ingresa tu usuario y contraseña";
+    }
+    
+    // Verificar si solo falta el usuario
+    if (!username.trim()) {
+      return "El campo usuario es requerido";
+    }
+    
+    // Verificar si solo falta la contraseña
+    if (!password.trim()) {
+      return "El campo contraseña es requerido";
+    }
+    
+    // Todos los campos están completos
+    return null;
   };
 
   const saveSession = (userData) => {
@@ -84,6 +108,14 @@ export default function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    // ✅ VALIDACIÓN ANTES DE ENVIAR AL SERVIDOR
+    const validationError = validateFields();
+    if (validationError) {
+      setError(validationError);
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await axios.post(
@@ -303,7 +335,7 @@ export default function LoginForm() {
             <button
               type="button"
               onClick={() =>
-                setModalStates((prev) => ({ ...prev, contraseña: true }))
+                setModalStates((prev) => ({ ...prev, recuperarForm: true }))
               }
               className="text-sm text-gray-600 hover:text-gray-800"
             >
@@ -318,7 +350,7 @@ export default function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-black text-white py-3 rounded-md hover:bg-gray-800 disabled:bg-gray-400"
+            className="w-full bg-[#0080ff] text-white py-3 rounded-md hover:bg-blue-600 disabled:bg-gray-400"
           >
             {loading ? "Ingresando..." : "Ingresar"}
           </button>
@@ -327,18 +359,6 @@ export default function LoginForm() {
 
       {modalStates.error && (
         <ErrorIniciarSesion onClose={() => handleModalClose("error")} />
-      )}
-      {modalStates.contraseña && (
-        <MensajeOlvidasteContraseña
-          onClose={() => handleModalClose("contraseña")}
-          onContinue={() =>
-            setModalStates((prev) => ({
-              ...prev,
-              contraseña: false,
-              recuperarForm: true,
-            }))
-          }
-        />
       )}
       {modalStates.recuperarForm && (
         <FormRecuperarContraseña

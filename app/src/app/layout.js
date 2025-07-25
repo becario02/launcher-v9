@@ -10,6 +10,7 @@ import { ModuleProvider } from "@/context/ModuleContext";
 import CompanySelectModal from "@/components/companyConection/CompanySelectModal";
 import ChatContainer from '@/components/chat/ChatContainer';
 import SyncStatus from "@/components/modules/SyncStatus";
+import BrowserValidator from "@/components/BrowserValidator";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -37,24 +38,26 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased`}>
-        <ThemeProvider>
-          <PrimaryColorProvider>
-            <AuthProvider>
-              <CompanyProvider>
-                <ModuleProvider>
-                  <NotificationProvider>
-                    <TabsProvider>
-                      {children}
-                      <SyncStatus />
-                    </TabsProvider>
-                    <CompanySelectModal />
-                    <ChatContainer />
-                  </NotificationProvider>
-                </ModuleProvider>
-              </CompanyProvider>
-            </AuthProvider>
-          </PrimaryColorProvider>
-        </ThemeProvider>
+        <BrowserValidator>
+          <ThemeProvider>
+            <PrimaryColorProvider>
+              <AuthProvider>
+                <CompanyProvider>
+                  <ModuleProvider>
+                    <NotificationProvider>
+                      <TabsProvider>
+                        {children}
+                        <SyncStatus />
+                      </TabsProvider>
+                      <CompanySelectModal />
+                      <ChatContainer />
+                    </NotificationProvider>
+                  </ModuleProvider>
+                </CompanyProvider>
+              </AuthProvider>
+            </PrimaryColorProvider>
+          </ThemeProvider>
+        </BrowserValidator>
       </body>
     </html>
   );

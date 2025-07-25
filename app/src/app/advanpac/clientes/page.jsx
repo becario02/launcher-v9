@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
-import { UserCheck, Search, ChevronLeft, ChevronRight, XCircle, Building, Plus } from 'lucide-react';
+import { UserCheck, Search, ChevronLeft, ChevronRight, XCircle, Building, Plus, Package } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import { usePrimaryColor } from '@/context/primaryColor';
@@ -10,6 +10,7 @@ import { useTheme } from '@/context/ThemeContext';
 import Toast from '@/components/Toast';
 import StatusConfirmModal from '@/components/advanpac/clientes/StatusConfirmModal';
 import AddClientModal from '@/components/advanpac/clientes/AddClientModal';
+import AddCustomerStampsModal from '@/components/advanpac/clientes/AddCustomerStampsModal';
 
 export default function AdvanPacClientesPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -49,6 +50,12 @@ export default function AdvanPacClientesPage() {
 
   // Estado para modal de agregar cliente
   const [addClientModalOpen, setAddClientModalOpen] = useState(false);
+
+  // Estado para modal de agregar timbres
+  const [addStampsModal, setAddStampsModal] = useState({
+    isOpen: false,
+    cliente: null
+  });
 
   // Cargar clientes al montar el componente
   useEffect(() => {
@@ -294,6 +301,41 @@ export default function AdvanPacClientesPage() {
     }
   };
 
+  // Función para abrir modal de agregar timbres
+  const handleOpenAddStampsModal = (cliente) => {
+    setAddStampsModal({
+      isOpen: true,
+      cliente: cliente
+    });
+  };
+
+  // Función para cerrar modal de agregar timbres
+  const handleCloseAddStampsModal = () => {
+    setAddStampsModal({
+      isOpen: false,
+      cliente: null
+    });
+  };
+
+  // Función para manejar submit del modal de timbres
+  const handleAddStampsSubmit = (result) => {
+    if (result.success) {
+      setToast({
+        visible: true,
+        message: result.message,
+        type: 'success'
+      });
+      
+      // No necesitamos recargar la lista, pero podríamos agregar lógica futura aquí
+    } else {
+      setToast({
+        visible: true,
+        message: result.message || 'Error al agregar timbres',
+        type: 'error'
+      });
+    }
+  };
+
   // Paginación
   const startIndex = (pagination.page - 1) * pagination.pageSize;
   const endIndex = Math.min(startIndex + pagination.pageSize, pagination.totalItems);
@@ -329,6 +371,9 @@ export default function AdvanPacClientesPage() {
       </td>
       <td className="px-6 py-4">
         <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
       </td>
     </tr>
   );
@@ -426,7 +471,7 @@ export default function AdvanPacClientesPage() {
               <table className="w-full text-sm text-left">
                 <thead className="bg-[#F9FAFB] dark:bg-[#2C2C38] text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">
                   <tr>
-                    {['Identificador Empresa', 'Nombre', 'Estado'].map((label, i) => (
+                    {['Identificador Empresa', 'Nombre', 'Estado', 'Timbres'].map((label, i) => (
                       <th key={i} className="px-6 py-4 whitespace-nowrap">{label}</th>
                     ))}
                   </tr>
@@ -440,7 +485,7 @@ export default function AdvanPacClientesPage() {
                     </>
                   ) : currentClientes.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="px-6 py-4">
+                      <td colSpan={4} className="px-6 py-4">
                         <EmptyState />
                       </td>
                     </tr>
@@ -522,6 +567,17 @@ export default function AdvanPacClientesPage() {
                               </span>
                             </div>
                           </td>
+                          <td className="px-6 py-4">
+                            <button
+                              onClick={() => handleOpenAddStampsModal(cliente)}
+                              disabled={isLoading || !cliente.hasAdvanPacData}
+                              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 hover:bg-gray-200 dark:bg-[#2C2C38] dark:hover:bg-[#3C3C48] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              title={!cliente.hasAdvanPacData ? "Cliente no sincronizado con AdvanPAC" : "Agregar timbres al cliente"}
+                            >
+                              <Package className="w-4 h-4" />
+                              Agregar Timbres
+                            </button>
+                          </td>
                         </tr>
                       );
                     })
@@ -594,6 +650,14 @@ export default function AdvanPacClientesPage() {
           isOpen={addClientModalOpen}
           onClose={handleCloseAddClientModal}
           onSubmit={handleAddClientSubmit}
+        />
+
+        {/* Modal de agregar timbres */}
+        <AddCustomerStampsModal
+          isOpen={addStampsModal.isOpen}
+          cliente={addStampsModal.cliente}
+          onClose={handleCloseAddStampsModal}
+          onSubmit={handleAddStampsSubmit}
         />
       </div>
     </div>
