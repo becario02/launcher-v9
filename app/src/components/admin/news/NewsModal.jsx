@@ -109,7 +109,13 @@ export default function NewsModal({
     }
   };
 
-  // Validate fields and submit - FIXED: Added image and URL validation
+  // Date validation helper
+  const isValidExpirationDate = (dateString) => {
+    const today = new Date().toISOString().split('T')[0]; // Get today in YYYY-MM-DD format
+    return dateString >= today;
+  };
+
+  // Validate fields and submit - FIXED: Added image, URL and date validation
   const validateAndSubmit = async () => {
     if (!formData.title.trim()) {
       setModalNotification({ visible: true, type: 'error', message: 'Por favor ingresa el título' });
@@ -117,6 +123,11 @@ export default function NewsModal({
     }
     if (!formData.dateExpiration) {
       setModalNotification({ visible: true, type: 'error', message: 'Selecciona la fecha de expiración' });
+      return;
+    }
+    // NEW: Date validation
+    if (!isValidExpirationDate(formData.dateExpiration)) {
+      setModalNotification({ visible: true, type: 'error', message: 'La fecha de expiración debe ser hoy o una fecha futura' });
       return;
     }
     if (!formData.newsLink.trim()) {
@@ -257,6 +268,7 @@ export default function NewsModal({
                 <input
                   type="date"
                   name="dateExpiration"
+                  min={new Date().toISOString().split('T')[0]}
                   value={
                     formData.dateExpiration
                       ? new Date(formData.dateExpiration).toISOString().split('T')[0]
@@ -271,6 +283,11 @@ export default function NewsModal({
                     ${isView ? 'cursor-not-allowed opacity-60' : ''}
                   `}
                 />
+                {!isView && (
+                  <p className={`mt-1 text-p-small ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    La fecha debe ser hoy o una fecha futura.
+                  </p>
+                )}
               </div>
             </>
 
