@@ -250,8 +250,14 @@ const MaintenanceCostTypeIndicator = ({ filteredData = null }) => {
         {/* Right side - Donut chart */}
         <div className="flex items-center justify-center">
           {processedData.chartData.length === 0 ? (
-            <div className="w-full h-64 flex items-center justify-center text-gray-500 dark:text-gray-400">
-              Sin datos para mostrar
+            // Skeleton for chart
+            <div className="w-full h-64 flex items-center justify-center">
+              <div className="relative">
+                <div className="w-48 h-48 rounded-full border-8 border-gray-200 dark:border-gray-700 animate-pulse"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="w-full h-64">

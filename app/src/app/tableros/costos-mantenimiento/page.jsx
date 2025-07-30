@@ -5,6 +5,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Calculator, TrendingUp, BarChart3, PieChart, Settings } from 'lucide-react';
 import { usePrimaryColor } from '@/context/primaryColor';
 import MaintenanceCostTypeIndicator from '@/components/tableros/costos-mantenimiento/MaintenanceCostTypeIndicator';
+import WorkshopTypeCostIndicator from '@/components/tableros/costos-mantenimiento/WorkshopTypeCostIndicator';
+import MonthlyCostTrendIndicator from '@/components/tableros/costos-mantenimiento/MonthlyCostTrendIndicator';
 import DateFilter from '@/components/tableros/costos-mantenimiento/DateFilter';
 import SettingsModal from '@/components/tableros/flotillas/SettingsModal';
 import { useDashboardReload } from '@/hooks/useDashboardReload';
@@ -17,8 +19,10 @@ const CostosMantenimientoPage = () => {
   // Date filter states
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [allData, setAllData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
+  const [allMaintenanceData, setAllMaintenanceData] = useState([]);
+  const [allWorkshopData, setAllWorkshopData] = useState([]);
+  const [filteredMaintenanceData, setFilteredMaintenanceData] = useState([]);
+  const [filteredWorkshopData, setFilteredWorkshopData] = useState([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [dataError, setDataError] = useState(null);
   
@@ -48,30 +52,43 @@ const CostosMantenimientoPage = () => {
       setDataError(null);
       clearTokenError();
 
-      const result = await tokenizedRequest('/mserpservice/api/tableros/costos-tipo-mantto', {
-        method: 'GET'
-      });
+      // Fetch both endpoints in parallel
+      const [maintenanceResult, workshopResult] = await Promise.all([
+        tokenizedRequest('/mserpservice/api/tableros/costos-tipo-mantto', { method: 'GET' }),
+        tokenizedRequest('/mserpservice/api/tableros/costos-tipo-taller', { method: 'GET' })
+      ]);
       
-      if (result.statusCode === '200' && result.data) {
-        // Parse dates and store all data
-        const dataWithDates = result.data.map(item => ({
+      // Process maintenance data
+      if (maintenanceResult.statusCode === '200' && maintenanceResult.data) {
+        const maintenanceDataWithDates = maintenanceResult.data.map(item => ({
           ...item,
           fechaParsed: new Date(item.fecha)
         }));
-        
-        setAllData(dataWithDates);
-        setLastUpdate(new Date());
-        
-        // Clear intervalChangeTime when new data is fetched
-        setIntervalChangeTime(null);
-        
-        console.log('All maintenance cost data loaded successfully');
+        setAllMaintenanceData(maintenanceDataWithDates);
       } else {
-        throw new Error(result.message || 'Invalid response format');
+        console.warn('Failed to load maintenance data:', maintenanceResult.message);
+      }
+
+      // Process workshop data
+      if (workshopResult.statusCode === '200' && workshopResult.data) {
+        const workshopDataWithDates = workshopResult.data.map(item => ({
+          ...item,
+          fechaParsed: new Date(item.fecha)
+        }));
+        setAllWorkshopData(workshopDataWithDates);
+      } else {
+        console.warn('Failed to load workshop data:', workshopResult.message);
       }
       
+      setLastUpdate(new Date());
+      
+      // Clear intervalChangeTime when new data is fetched
+      setIntervalChangeTime(null);
+      
+      console.log('All maintenance and workshop cost data loaded successfully');
+      
     } catch (err) {
-      console.error('Error fetching all maintenance cost data:', err);
+      console.error('Error fetching all cost data:', err);
       const errorMessage = tokenError || err.message;
       setDataError(errorMessage);
     } finally {
@@ -81,30 +98,55 @@ const CostosMantenimientoPage = () => {
 
   // Filter data based on date range
   const applyDateFilter = () => {
-    if (!allData.length) {
-      setFilteredData([]);
-      return;
+    // Filter maintenance data
+    if (!allMaintenanceData.length) {
+      setFilteredMaintenanceData([]);
+    } else {
+      let filteredMaintenance = allMaintenanceData;
+
+      if (startDate || endDate) {
+        filteredMaintenance = allMaintenanceData.filter(item => {
+          const itemDate = item.fechaParsed;
+          
+          if (startDate && endDate) {
+            return itemDate >= startDate && itemDate <= endDate;
+          } else if (startDate) {
+            return itemDate >= startDate;
+          } else if (endDate) {
+            return itemDate <= endDate;
+          }
+          
+          return true;
+        });
+      }
+
+      setFilteredMaintenanceData(filteredMaintenance);
     }
 
-    let filtered = allData;
+    // Filter workshop data
+    if (!allWorkshopData.length) {
+      setFilteredWorkshopData([]);
+    } else {
+      let filteredWorkshop = allWorkshopData;
 
-    if (startDate || endDate) {
-      filtered = allData.filter(item => {
-        const itemDate = item.fechaParsed;
-        
-        if (startDate && endDate) {
-          return itemDate >= startDate && itemDate <= endDate;
-        } else if (startDate) {
-          return itemDate >= startDate;
-        } else if (endDate) {
-          return itemDate <= endDate;
-        }
-        
-        return true;
-      });
+      if (startDate || endDate) {
+        filteredWorkshop = allWorkshopData.filter(item => {
+          const itemDate = item.fechaParsed;
+          
+          if (startDate && endDate) {
+            return itemDate >= startDate && itemDate <= endDate;
+          } else if (startDate) {
+            return itemDate >= startDate;
+          } else if (endDate) {
+            return itemDate <= endDate;
+          }
+          
+          return true;
+        });
+      }
+
+      setFilteredWorkshopData(filteredWorkshop);
     }
-
-    setFilteredData(filtered);
   };
 
   // Setup auto-refresh interval
@@ -146,7 +188,7 @@ const CostosMantenimientoPage = () => {
     };
     
     // Only initialize once when dashboard ID is available and we haven't loaded data yet
-    if (currentDashboardId && !allData.length) {
+    if (currentDashboardId && !allMaintenanceData.length && !allWorkshopData.length) {
       initializeData();
     }
   }, [currentDashboardId]);
@@ -154,16 +196,16 @@ const CostosMantenimientoPage = () => {
   // Setup auto-refresh when updateInterval changes (but not on initial load)
   useEffect(() => {
     // Don't setup auto-refresh if we don't have data yet or if it's the initial default value
-    if (!allData.length || updateInterval === 30) return;
+    if ((!allMaintenanceData.length && !allWorkshopData.length) || updateInterval === 30) return;
     
     const cleanup = setupAutoRefresh();
     return cleanup;
-  }, [setupAutoRefresh, allData.length]);
+  }, [setupAutoRefresh, allMaintenanceData.length, allWorkshopData.length]);
 
   // Apply filters when data or date range changes
   useEffect(() => {
     applyDateFilter();
-  }, [allData, startDate, endDate]);
+  }, [allMaintenanceData, allWorkshopData, startDate, endDate]);
 
   // Handle settings modal
   const handleSettingsClick = () => {
@@ -259,42 +301,22 @@ const CostosMantenimientoPage = () => {
         {/* Indicator 1: Cost by Type */}
         <div className="xl:col-span-1">
           <MaintenanceCostTypeIndicator 
-            filteredData={filteredData}
+            filteredData={filteredMaintenanceData}
           />
         </div>
 
-        {/* Placeholder for Indicator 2: Internal vs External Costs */}
+        {/* Indicator 2: Internal vs External Costs */}
         <div className="xl:col-span-1">
-          <div className="bg-white dark:bg-[#1C1C24] rounded-lg border border-gray-200 dark:border-[#2C2C38] p-6 h-full">
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <PieChart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  Costos Internos vs Externos
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Próximamente disponible
-                </p>
-              </div>
-            </div>
-          </div>
+          <WorkshopTypeCostIndicator 
+            filteredData={filteredWorkshopData}
+          />
         </div>
 
-        {/* Placeholder for Indicator 3: Monthly Cost Trend */}
+        {/* Indicator 3: Monthly Cost Trend */}
         <div className="xl:col-span-1">
-          <div className="bg-white dark:bg-[#1C1C24] rounded-lg border border-gray-200 dark:border-[#2C2C38] p-6 h-full">
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  Costo Mensual por Tipo
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Próximamente disponible
-                </p>
-              </div>
-            </div>
-          </div>
+          <MonthlyCostTrendIndicator 
+            filteredData={filteredMaintenanceData}
+          />
         </div>
 
         {/* Placeholder for Indicator 4: Cost Breakdown by Components */}
