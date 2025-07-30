@@ -10,6 +10,9 @@ export const useDashboardReload = () => {
   
   const pathname = usePathname();
 
+  // Default reload time in minutes
+  const DEFAULT_RELOAD_TIME = 30;
+
   // Get current dashboard ID based on URL
   const getCurrentDashboardId = useCallback(async () => {
     try {
@@ -60,24 +63,46 @@ export const useDashboardReload = () => {
 
       const idDashboard = dashboardId || currentDashboardId;
       if (!idDashboard) {
-        throw new Error('Dashboard ID not available');
+        console.warn('Dashboard ID not available, using default reload time');
+        return DEFAULT_RELOAD_TIME;
       }
 
       const response = await fetch(`/api/dashboards/reload-time?idDashboard=${idDashboard}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch reload time');
+        console.warn('Failed to fetch reload time, using default:', response.status);
+        return DEFAULT_RELOAD_TIME;
       }
 
       const result = await response.json();
       if (result.statusCode !== '200') {
-        throw new Error(result.message || 'Failed to get reload time');
+        // Check if it's specifically a "not found" error
+        if (result.message && result.message.includes('No se encontró configuración')) {
+          console.warn('No reload configuration found for dashboard, using default reload time');
+          return DEFAULT_RELOAD_TIME;
+        }
+        console.warn('Error getting reload time, using default:', result.message);
+        return DEFAULT_RELOAD_TIME;
       }
 
-      return result.data.reloadTime;
+      // Validate that we have valid reload time data
+      if (!result.data || typeof result.data.reloadTime !== 'number') {
+        console.warn('Invalid reload time data, using default');
+        return DEFAULT_RELOAD_TIME;
+      }
+
+      const reloadTime = result.data.reloadTime;
+      
+      // Ensure reload time is within reasonable bounds (1 minute to 24 hours)
+      if (reloadTime < 1 || reloadTime > 1440) {
+        console.warn('Reload time out of bounds, using default:', reloadTime);
+        return DEFAULT_RELOAD_TIME;
+      }
+
+      return reloadTime;
     } catch (err) {
-      console.error('Error fetching reload time:', err);
-      setError(err.message);
-      throw err;
+      console.error('Error fetching reload time, using default:', err);
+      setError(null); // Don't set error for this, just use default
+      return DEFAULT_RELOAD_TIME;
     } finally {
       setIsLoading(false);
     }
@@ -92,6 +117,11 @@ export const useDashboardReload = () => {
       const idDashboard = dashboardId || currentDashboardId;
       if (!idDashboard) {
         throw new Error('Dashboard ID not available');
+      }
+
+      // Validate reload time
+      if (newReloadTime < 1 || newReloadTime > 1440) {
+        throw new Error('Reload time must be between 1 and 1440 minutes');
       }
 
       const response = await fetch('/api/dashboards/reload-time', {
@@ -142,6 +172,7 @@ export const useDashboardReload = () => {
     getCurrentDashboardId,
     getReloadTime,
     updateReloadTime,
-    clearError
+    clearError,
+    DEFAULT_RELOAD_TIME
   };
 };
