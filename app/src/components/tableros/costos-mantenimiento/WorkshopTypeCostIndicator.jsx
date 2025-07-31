@@ -19,10 +19,14 @@ const WorkshopTypeCostIndicator = ({ filteredData = null }) => {
 
   const { tokenizedRequest, isProcessingTokens, tokenError, clearTokenError } = useTokenManager();
 
-  // Colors for preventivo and correctivo only
+  // Colors for all maintenance types
   const maintenanceColors = {
-    'PREVENTIVO': '#9CA3AF', // Gray
-    'CORRECTIVO': '#06B6D4'  // Blue
+    'PREVENTIVO': '#22C55E', // Green
+    'CORRECTIVO': '#F97316', // Orange
+    'RUTA': '#3B82F6',       // Blue
+    'MIXTO': '#8B5CF6',      // Purple
+    'EXPRESS': '#EF4444',    // Red
+    'OTRO': '#6B7280'        // Gray
   };
 
   // Colors for section backgrounds
@@ -40,75 +44,52 @@ const WorkshopTypeCostIndicator = ({ filteredData = null }) => {
       grandTotal: 0
     };
 
-    // Process data and separate MIXTO values
-    const result = {
-      internal: { PREVENTIVO: 0, CORRECTIVO: 0 },
-      external: { PREVENTIVO: 0, CORRECTIVO: 0 }
-    };
-
-    rawData.forEach(item => {
-      const type = (item.tipoMantto || '').trim().toUpperCase();
-      const internal = parseFloat(item.totalInterno || 0);
-      const external = parseFloat(item.totalExterno || 0);
-
-      if (type === 'PREVENTIVO') {
-        result.internal.PREVENTIVO += internal;
-        result.external.PREVENTIVO += external;
-      } else if (type === 'CORRECTIVO') {
-        result.internal.CORRECTIVO += internal;
-        result.external.CORRECTIVO += external;
-      } else if (type === 'MIXTO') {
-        // Split MIXTO 50/50 between PREVENTIVO and CORRECTIVO
-        result.internal.PREVENTIVO += internal * 0.5;
-        result.internal.CORRECTIVO += internal * 0.5;
-        result.external.PREVENTIVO += external * 0.5;
-        result.external.CORRECTIVO += external * 0.5;
+    // Group by maintenance type and sum internal/external totals
+    const grouped = rawData.reduce((acc, item) => {
+      const type = (item.tipoMantto || 'OTRO').trim().toUpperCase();
+      if (!acc[type]) {
+        acc[type] = {
+          internal: 0,
+          external: 0
+        };
       }
-      // Ignore all other types (RUTA, EXPRESS, OTRO, etc.)
-    });
+      acc[type].internal += parseFloat(item.totalInterno || 0);
+      acc[type].external += parseFloat(item.totalExterno || 0);
+      return acc;
+    }, {});
 
     // Calculate totals
-    const totalInternal = result.internal.PREVENTIVO + result.internal.CORRECTIVO;
-    const totalExternal = result.external.PREVENTIVO + result.external.CORRECTIVO;
+    let totalInternal = 0;
+    let totalExternal = 0;
+
+    Object.values(grouped).forEach(values => {
+      totalInternal += values.internal;
+      totalExternal += values.external;
+    });
+
     const grandTotal = totalInternal + totalExternal;
 
-    // Create internal cards (only PREVENTIVO and CORRECTIVO)
-    const internalCards = [];
-    if (result.internal.PREVENTIVO > 0) {
-      internalCards.push({
-        type: 'PREVENTIVO',
-        value: result.internal.PREVENTIVO,
-        percentage: totalInternal > 0 ? Math.round((result.internal.PREVENTIVO / totalInternal) * 100) : 0,
-        color: maintenanceColors.PREVENTIVO
-      });
-    }
-    if (result.internal.CORRECTIVO > 0) {
-      internalCards.push({
-        type: 'CORRECTIVO',
-        value: result.internal.CORRECTIVO,
-        percentage: totalInternal > 0 ? Math.round((result.internal.CORRECTIVO / totalInternal) * 100) : 0,
-        color: maintenanceColors.CORRECTIVO
-      });
-    }
+    // Create internal cards data (all types with internal costs > 0)
+    const internalCards = Object.entries(grouped)
+      .filter(([_, values]) => values.internal > 0)
+      .sort(([, a], [, b]) => b.internal - a.internal)
+      .map(([type, values]) => ({
+        type,
+        value: values.internal,
+        percentage: totalInternal > 0 ? Math.round((values.internal / totalInternal) * 100) : 0,
+        color: maintenanceColors[type] || '#6B7280'
+      }));
 
-    // Create external cards (only PREVENTIVO and CORRECTIVO)
-    const externalCards = [];
-    if (result.external.PREVENTIVO > 0) {
-      externalCards.push({
-        type: 'PREVENTIVO',
-        value: result.external.PREVENTIVO,
-        percentage: totalExternal > 0 ? Math.round((result.external.PREVENTIVO / totalExternal) * 100) : 0,
-        color: maintenanceColors.PREVENTIVO
-      });
-    }
-    if (result.external.CORRECTIVO > 0) {
-      externalCards.push({
-        type: 'CORRECTIVO',
-        value: result.external.CORRECTIVO,
-        percentage: totalExternal > 0 ? Math.round((result.external.CORRECTIVO / totalExternal) * 100) : 0,
-        color: maintenanceColors.CORRECTIVO
-      });
-    }
+    // Create external cards data (all types with external costs > 0)
+    const externalCards = Object.entries(grouped)
+      .filter(([_, values]) => values.external > 0)
+      .sort(([, a], [, b]) => b.external - a.external)
+      .map(([type, values]) => ({
+        type,
+        value: values.external,
+        percentage: totalExternal > 0 ? Math.round((values.external / totalExternal) * 100) : 0,
+        color: maintenanceColors[type] || '#6B7280'
+      }));
 
     return {
       internalCards,
@@ -259,18 +240,14 @@ const WorkshopTypeCostIndicator = ({ filteredData = null }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left side - Internal and External cards */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Internal Section */}
-          <div className="p-4 rounded-lg" style={{ backgroundColor: `${sectionColors.internal}20` }}>
+          <div className="p-4 border border-gray-200 dark:border-[#2C2C38] rounded-lg bg-gray-50 dark:bg-[#13131a]/50">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
-                <div 
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: sectionColors.internal }}
-                ></div>
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
                   Interno
                 </span>
               </div>
@@ -279,7 +256,7 @@ const WorkshopTypeCostIndicator = ({ filteredData = null }) => {
               </span>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1">
               {processedData.internalCards.length === 0 ? (
                 // Skeleton for internal cards
                 <>
@@ -295,7 +272,7 @@ const WorkshopTypeCostIndicator = ({ filteredData = null }) => {
                 </>
               ) : (
                 processedData.internalCards.map((card) => (
-                  <div key={`internal-${card.type}`} className="flex items-center justify-between p-2 bg-white/50 dark:bg-gray-800/50 rounded">
+                  <div key={`internal-${card.type}`} className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <div 
                         className="w-2 h-2 rounded-full"
@@ -315,14 +292,10 @@ const WorkshopTypeCostIndicator = ({ filteredData = null }) => {
           </div>
 
           {/* External Section */}
-          <div className="p-4 rounded-lg" style={{ backgroundColor: `${sectionColors.external}20` }}>
+          <div className="p-4 border border-gray-200 dark:border-[#2C2C38] rounded-lg bg-gray-50 dark:bg-[#13131a]/50">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
-                <div 
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: sectionColors.external }}
-                ></div>
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
                   Externo
                 </span>
               </div>
@@ -331,7 +304,7 @@ const WorkshopTypeCostIndicator = ({ filteredData = null }) => {
               </span>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1">
               {processedData.externalCards.length === 0 ? (
                 // Skeleton for external cards
                 <>
@@ -347,7 +320,7 @@ const WorkshopTypeCostIndicator = ({ filteredData = null }) => {
                 </>
               ) : (
                 processedData.externalCards.map((card) => (
-                  <div key={`external-${card.type}`} className="flex items-center justify-between p-2 bg-white/50 dark:bg-gray-800/50 rounded">
+                  <div key={`external-${card.type}`} className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <div 
                         className="w-2 h-2 rounded-full"
@@ -380,10 +353,10 @@ const WorkshopTypeCostIndicator = ({ filteredData = null }) => {
               </div>
             </div>
           ) : (
-            <div className="w-full h-64 relative">
+            <div className="w-full h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  {/* Outer ring - External costs (PREVENTIVO blue, CORRECTIVO gray) */}
+                  {/* Outer ring - External costs */}
                   {processedData.externalCards.length > 0 && (
                     <Pie
                       data={processedData.externalCards}
@@ -401,7 +374,7 @@ const WorkshopTypeCostIndicator = ({ filteredData = null }) => {
                     </Pie>
                   )}
                   
-                  {/* Inner ring - Internal costs (PREVENTIVO blue, CORRECTIVO gray) */}
+                  {/* Inner ring - Internal costs */}
                   {processedData.internalCards.length > 0 && (
                     <Pie
                       data={processedData.internalCards}
@@ -422,20 +395,6 @@ const WorkshopTypeCostIndicator = ({ filteredData = null }) => {
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
-              
-              {/* Legend overlay */}
-              <div className="absolute bottom-2 right-2 bg-white dark:bg-gray-800 rounded-lg p-2 shadow-lg border border-gray-200 dark:border-gray-600">
-                <div className="space-y-1 text-xs">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: maintenanceColors.PREVENTIVO }}></div>
-                    <span className="text-gray-700 dark:text-gray-300">Preventivo</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: maintenanceColors.CORRECTIVO }}></div>
-                    <span className="text-gray-700 dark:text-gray-300">Correctivo</span>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
         </div>

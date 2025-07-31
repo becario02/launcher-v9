@@ -7,6 +7,7 @@ import { usePrimaryColor } from '@/context/primaryColor';
 import MaintenanceCostTypeIndicator from '@/components/tableros/costos-mantenimiento/MaintenanceCostTypeIndicator';
 import WorkshopTypeCostIndicator from '@/components/tableros/costos-mantenimiento/WorkshopTypeCostIndicator';
 import MonthlyCostTrendIndicator from '@/components/tableros/costos-mantenimiento/MonthlyCostTrendIndicator';
+import CostCategoryBreakdownIndicator from '@/components/tableros/costos-mantenimiento/CostCategoryBreakdownIndicator';
 import DateFilter from '@/components/tableros/costos-mantenimiento/DateFilter';
 import SettingsModal from '@/components/tableros/flotillas/SettingsModal';
 import { useDashboardReload } from '@/hooks/useDashboardReload';
@@ -21,8 +22,10 @@ const CostosMantenimientoPage = () => {
   const [endDate, setEndDate] = useState(null);
   const [allMaintenanceData, setAllMaintenanceData] = useState([]);
   const [allWorkshopData, setAllWorkshopData] = useState([]);
+  const [allCategoryData, setAllCategoryData] = useState([]);
   const [filteredMaintenanceData, setFilteredMaintenanceData] = useState([]);
   const [filteredWorkshopData, setFilteredWorkshopData] = useState([]);
+  const [filteredCategoryData, setFilteredCategoryData] = useState([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [dataError, setDataError] = useState(null);
   
@@ -52,10 +55,11 @@ const CostosMantenimientoPage = () => {
       setDataError(null);
       clearTokenError();
 
-      // Fetch both endpoints in parallel
-      const [maintenanceResult, workshopResult] = await Promise.all([
+      // Fetch all endpoints in parallel
+      const [maintenanceResult, workshopResult, categoryResult] = await Promise.all([
         tokenizedRequest('/mserpservice/api/tableros/costos-tipo-mantto', { method: 'GET' }),
-        tokenizedRequest('/mserpservice/api/tableros/costos-tipo-taller', { method: 'GET' })
+        tokenizedRequest('/mserpservice/api/tableros/costos-tipo-taller', { method: 'GET' }),
+        tokenizedRequest('/mserpservice/api/tableros/costos-mobra-insumos-otros', { method: 'GET' })
       ]);
       
       // Process maintenance data
@@ -79,13 +83,24 @@ const CostosMantenimientoPage = () => {
       } else {
         console.warn('Failed to load workshop data:', workshopResult.message);
       }
+
+      // Process category data
+      if (categoryResult.statusCode === '200' && categoryResult.data) {
+        const categoryDataWithDates = categoryResult.data.map(item => ({
+          ...item,
+          fechaParsed: new Date(item.fecha)
+        }));
+        setAllCategoryData(categoryDataWithDates);
+      } else {
+        console.warn('Failed to load category data:', categoryResult.message);
+      }
       
       setLastUpdate(new Date());
       
       // Clear intervalChangeTime when new data is fetched
       setIntervalChangeTime(null);
       
-      console.log('All maintenance and workshop cost data loaded successfully');
+      console.log('All maintenance, workshop and category cost data loaded successfully');
       
     } catch (err) {
       console.error('Error fetching all cost data:', err);
@@ -147,6 +162,31 @@ const CostosMantenimientoPage = () => {
 
       setFilteredWorkshopData(filteredWorkshop);
     }
+
+    // Filter category data
+    if (!allCategoryData.length) {
+      setFilteredCategoryData([]);
+    } else {
+      let filteredCategory = allCategoryData;
+
+      if (startDate || endDate) {
+        filteredCategory = allCategoryData.filter(item => {
+          const itemDate = item.fechaParsed;
+          
+          if (startDate && endDate) {
+            return itemDate >= startDate && itemDate <= endDate;
+          } else if (startDate) {
+            return itemDate >= startDate;
+          } else if (endDate) {
+            return itemDate <= endDate;
+          }
+          
+          return true;
+        });
+      }
+
+      setFilteredCategoryData(filteredCategory);
+    }
   };
 
   // Setup auto-refresh interval
@@ -188,7 +228,7 @@ const CostosMantenimientoPage = () => {
     };
     
     // Only initialize once when dashboard ID is available and we haven't loaded data yet
-    if (currentDashboardId && !allMaintenanceData.length && !allWorkshopData.length) {
+    if (currentDashboardId && !allMaintenanceData.length && !allWorkshopData.length && !allCategoryData.length) {
       initializeData();
     }
   }, [currentDashboardId]);
@@ -196,16 +236,16 @@ const CostosMantenimientoPage = () => {
   // Setup auto-refresh when updateInterval changes (but not on initial load)
   useEffect(() => {
     // Don't setup auto-refresh if we don't have data yet or if it's the initial default value
-    if ((!allMaintenanceData.length && !allWorkshopData.length) || updateInterval === 30) return;
+    if ((!allMaintenanceData.length && !allWorkshopData.length && !allCategoryData.length) || updateInterval === 30) return;
     
     const cleanup = setupAutoRefresh();
     return cleanup;
-  }, [setupAutoRefresh, allMaintenanceData.length, allWorkshopData.length]);
+  }, [setupAutoRefresh, allMaintenanceData.length, allWorkshopData.length, allCategoryData.length]);
 
   // Apply filters when data or date range changes
   useEffect(() => {
     applyDateFilter();
-  }, [allMaintenanceData, allWorkshopData, startDate, endDate]);
+  }, [allMaintenanceData, allWorkshopData, allCategoryData, startDate, endDate]);
 
   // Handle settings modal
   const handleSettingsClick = () => {
@@ -319,21 +359,11 @@ const CostosMantenimientoPage = () => {
           />
         </div>
 
-        {/* Placeholder for Indicator 4: Cost Breakdown by Components */}
+        {/* Indicator 4: Cost Breakdown by Components */}
         <div className="xl:col-span-1">
-          <div className="bg-white dark:bg-[#1C1C24] rounded-lg border border-gray-200 dark:border-[#2C2C38] p-6 h-full">
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  Desglose por Componentes
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Próximamente disponible
-                </p>
-              </div>
-            </div>
-          </div>
+          <CostCategoryBreakdownIndicator 
+            filteredData={filteredCategoryData}
+          />
         </div>
       </div>
 
