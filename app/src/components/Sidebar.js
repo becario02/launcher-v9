@@ -15,8 +15,6 @@ import {
   Shield,
   Settings,
   Bell,
-  Import,
-  FileText,
   Gift,
   HelpCircle,
   FileText as DocumentIcon,
@@ -42,7 +40,7 @@ import IconAuxiliares from "@/components/icons/sidebar/IconAuxiliares";
 const DefaultIcon = Menu;
 
 // Function to determine active item based on route
-function getActiveItemFromPath(pathname) {
+function getActiveItemFromPath(pathname, customOptions = []) {
   if (pathname === '/' || pathname === '') {
     return 'Dashboard';
   } else if (pathname.includes('/admin/news') || pathname.includes('/news')) {
@@ -57,10 +55,6 @@ function getActiveItemFromPath(pathname) {
     return 'AdminDocumentos';
   } else if (pathname.includes('/admin/notifications')) {
     return 'AdminNotifications';
-  } else if (pathname.includes('/admin/integradores')) {
-    return 'AdminIntegradores';
-  } else if (pathname.includes('/admin/addendas')) {
-    return 'AdminAddendas';
   } else if (pathname.includes('/admin/promociones')) {
     return 'AdminPromociones';
   } else if (pathname.includes('/advanpac/pacs')) {
@@ -81,7 +75,23 @@ function getActiveItemFromPath(pathname) {
   } else if (pathname.startsWith('/custom/')) {
     return pathname;
   }
-  return 'Dashboard';
+  
+  // Check if pathname matches any custom option URL
+  const matchingCustomOption = customOptions.find(option => 
+    pathname.includes(option.url)
+  );
+  
+  if (matchingCustomOption) {
+    return `custom_${matchingCustomOption.id}`;
+  }
+  
+  return null; // Return null instead of 'Dashboard' for unknown routes
+}
+
+// Helper function to format internal URL
+function formatInternalUrl(url) {
+  if (url.startsWith('/')) return url;
+  return `/${url}`;
 }
 
 const SidebarItem = ({ icon: Icon, text, active = false, onClick, indent = false }) => (
@@ -100,7 +110,7 @@ const SidebarItem = ({ icon: Icon, text, active = false, onClick, indent = false
     ) : (
       <Icon size={16} className={active ? 'text-white' : 'text-gray-500 dark:text-gray-400'} />
     )}
-    {text}
+    <span className="flex-1 text-left">{text}</span>
   </button>
 );
 
@@ -173,7 +183,8 @@ export default function Sidebar({ onClose }) {
   const { user, isAdmin, isAdvan } = useAuth();
   const [customParents, setCustomParents] = useState([]);
   const [dashboards, setDashboards] = useState([]);
-  const [activeItem, setActiveItem] = useState(() => getActiveItemFromPath(pathname));
+  const [customOptions, setCustomOptions] = useState([]);
+  const [activeItem, setActiveItem] = useState(() => getActiveItemFromPath(pathname, []));
   const [launcherVersion, setLauncherVersion] = useState(() => {
     if (typeof window !== 'undefined') {
       const cached = localStorage.getItem('launcherVersion');
@@ -197,7 +208,7 @@ export default function Sidebar({ onClose }) {
   // Check if user has access to AdvanPAC (ADMINADVAN or USERADVAN)
   const hasAdvanPacAccess = isAdminAdvan || isUserAdvan;
 
-  // Fetch user dashboards - Updated to use new endpoint
+  // Fetch user dashboards
   const fetchUserDashboards = useCallback(async () => {
     const userId = Cookies.get('idUser');
     
@@ -211,7 +222,6 @@ export default function Sidebar({ onClose }) {
       const data = await response.json();
       
       if (data.statusCode === "200") {
-        // data.data can be an array or null/empty
         setDashboards(data.data || []);
       } else {
         console.error('Error fetching dashboards:', data.message);
@@ -221,7 +231,34 @@ export default function Sidebar({ onClose }) {
       console.error('Error fetching user dashboards:', error);
       setDashboards([]);
     }
-  }, []); // Removed selectedCompany dependency since endpoint doesn't need it
+  }, []);
+
+  // Fetch custom options
+  const fetchCustomOptions = useCallback(async () => {
+    const userId = Cookies.get('idUser');
+    
+    if (!userId) {
+      console.log('Missing userId for custom options fetch');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/custom-options/user/${userId}`);
+      const data = await response.json();
+      
+      if (data.statusCode === "200") {
+        // Filter only available options
+        const availableOptions = (data.data || []).filter(option => option.available);
+        setCustomOptions(availableOptions);
+      } else {
+        console.error('Error fetching custom options:', data.message);
+        setCustomOptions([]);
+      }
+    } catch (error) {
+      console.error('Error fetching custom options:', error);
+      setCustomOptions([]);
+    }
+  }, []);
 
   // Fetch launcher version
   const fetchLauncherVersion = useCallback(async () => {
@@ -270,17 +307,69 @@ export default function Sidebar({ onClose }) {
     }
   }, []);
 
+  // Function to get user's IP address
+  const getUserIP = useCallback(async () => {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip;
+    } catch (error) {
+      console.error('Error getting IP:', error);
+      return 'unknown';
+    }
+  }, []);
+
+  // Function to track menu access
+  const trackMenuAccess = useCallback(async (customOption) => {
+    const userId = Cookies.get('idUser');
+    
+    if (!userId) {
+      console.log('Missing userId for tracking');
+      return;
+    }
+
+    try {
+      const userIP = await getUserIP();
+      
+      const trackingData = {
+        idUser: parseInt(userId),
+        idMenu: 0, // Default value as shown in the example
+        idCustomOption: customOption.id,
+        ipName: userIP
+      };
+
+      const response = await fetch('/api/menu-tracking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(trackingData)
+      });
+
+      const result = await response.json();
+      
+      if (result.statusCode === "200") {
+        console.log('Menu access tracked successfully');
+      } else {
+        console.error('Error tracking menu access:', result.message);
+      }
+    } catch (error) {
+      console.error('Error tracking menu access:', error);
+    }
+  }, [getUserIP]);
+
   // Load data on component mount
   useEffect(() => {
     fetchLauncherVersion();
-    fetchUserDashboards(); // Now fetches regardless of company selection
-  }, [fetchLauncherVersion, fetchUserDashboards]);
+    fetchUserDashboards();
+    fetchCustomOptions();
+  }, [fetchLauncherVersion, fetchUserDashboards, fetchCustomOptions]);
 
-  // Update active item when pathname changes
+  // Update active item when pathname or customOptions change
   useEffect(() => {
-    const newActiveItem = getActiveItemFromPath(pathname);
+    const newActiveItem = getActiveItemFromPath(pathname, customOptions);
     setActiveItem(newActiveItem);
-  }, [pathname]);
+  }, [pathname, customOptions]);
 
   // Navigate function
   const navigateTo = useCallback((route, itemName) => {
@@ -294,6 +383,18 @@ export default function Sidebar({ onClose }) {
     if (onClose) onClose();
   }, [pathname, router, onClose]);
 
+  // Handle custom option click
+  const handleCustomOptionClick = useCallback((option) => {
+    // Navigate immediately for instant visual feedback
+    const internalUrl = formatInternalUrl(option.url);
+    navigateTo(internalUrl, `custom_${option.id}`);
+    
+    // Track menu access in background (fire and forget)
+    trackMenuAccess(option);
+    
+    if (onClose) onClose();
+  }, [navigateTo, onClose, trackMenuAccess]);
+
   // Check if dashboard-related items are active
   const isDashboardActive = dashboards.some(dashboard => {
     const dashboardName = dashboard.boardname;
@@ -302,8 +403,14 @@ export default function Sidebar({ onClose }) {
 
   const isDivisionActive = ['NUCLEARES', 'FINANCIAL', 'AUXILIARES'].includes(activeItem);
   const isHelpCenterActive = ['AdminVideos', 'AdminDocumentos'].includes(activeItem);
-  const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminDocumentos', 'AdminMenus', 'AdminNotifications', 'AdminIntegradores', 'AdminAddendas', 'AdminPromociones'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
+  const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminDocumentos', 'AdminMenus', 'AdminNotifications', 'AdminPromociones'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
   const isAdvanPacActive = ['AdvanPacPacs', 'AdvanPacClientes'].includes(activeItem);
+
+  // Check if any custom option is active
+  const isCustomOptionActive = customOptions.some(option => 
+    activeItem === `custom_${option.id}` || 
+    (pathname && pathname.includes(option.url))
+  );
 
   function formatServer(server) {
     if (!server) return '';
@@ -463,24 +570,6 @@ export default function Sidebar({ onClose }) {
             )}
             {isAdvan && (
               <SidebarItem
-                icon={Import}
-                text="Integrador"
-                indent
-                active={activeItem === 'AdminIntegradores'}
-                onClick={() => navigateTo('/admin/integradores', 'AdminIntegradores')}
-              />
-            )}
-            {isAdvan && (
-              <SidebarItem
-                icon={FileText}
-                text="Addendas"
-                indent
-                active={activeItem === 'AdminAddendas'}
-                onClick={() => navigateTo('/admin/addendas', 'AdminAddendas')}
-              />
-            )}
-            {isAdvan && (
-              <SidebarItem
                 icon={Gift}
                 text="Promociones"
                 indent
@@ -532,6 +621,27 @@ export default function Sidebar({ onClose }) {
                 indent
                 active={activeItem === dashboard.boardname}
                 onClick={() => navigateTo(`/${dashboard.url}`, dashboard.boardname)}
+              />
+            ))}
+          </ExpandableItem>
+        )}
+
+        {/* Custom Options Section */}
+        {customOptions.length > 0 && (
+          <ExpandableItem
+            icon={Settings}
+            text="Opciones"
+            defaultOpen={false}
+            isChildActive={isCustomOptionActive}
+          >
+            {customOptions.map(option => (
+              <SidebarItem
+                key={option.id}
+                icon={DefaultIcon}
+                text={option.text}
+                indent
+                active={activeItem === `custom_${option.id}`}
+                onClick={() => handleCustomOptionClick(option)}
               />
             ))}
           </ExpandableItem>

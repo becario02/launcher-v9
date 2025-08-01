@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useTheme } from '@/context/ThemeContext';
+import { decryptAES } from '@/utils/aesDecrypt';
 
 export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
   const USERNAME = process.env.NEXT_PUBLIC_MSERPSERVICE_USERNAME;
@@ -61,6 +62,37 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
 
   const [dragActive, setDragActive] = useState(false);
 
+  // Función helper para obtener configuración de empresa
+  const getCompanyConfig = () => {
+    try {
+      const selectedCompany = localStorage.getItem('selectedCompany');
+      if (!selectedCompany) {
+        throw new Error('No se encontró selectedCompany en localStorage');
+      }
+
+      const companyData = JSON.parse(selectedCompany);
+      
+      if (!companyData.urlErp) {
+        throw new Error('No se encontró urlErp en selectedCompany');
+      }
+
+      // Usar desencriptación AES en lugar de base64
+      const encryptedPassword = companyData.passwordErpDb;
+      const decodedPassword = decryptAES(encryptedPassword);
+
+      return {
+        urlErp: companyData.urlErp,
+        serverErpDb: companyData.serverErpDb,
+        nameErpDb: companyData.nameErpDb,
+        userErpDb: companyData.userErpDb,
+        passwordErpDb: decodedPassword
+      };
+    } catch (error) {
+      console.error('Error getting company config:', error);
+      throw error;
+    }
+  };
+
   // Cargar integradores al abrir el modal
   useEffect(() => {
     if (isOpen) {
@@ -105,30 +137,17 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
   const loginAndFetchClientes = async () => {
     setLoadingClientes(true);
     try {
-      // Obtener la URL del ERP desde localStorage
-      const selectedCompany = localStorage.getItem('selectedCompany');
-      if (!selectedCompany) {
-        console.error('No se encontró selectedCompany en localStorage');
-        return;
-      }
-
-      const companyData = JSON.parse(selectedCompany);
-      const urlErp = companyData.urlErp;
-      
-      if (!urlErp) {
-        console.error('No se encontró urlErp en selectedCompany');
-        return;
-      }
+      const companyConfig = getCompanyConfig();
 
       // Primero hacer login
-      const loginResponse = await fetch(`${urlErp}/mserpservice/api/auth/login`, {
+      const loginResponse = await fetch(`${companyConfig.urlErp}/mserpservice/api/auth/login`, {
         method: 'POST',
         headers: {
           'accept': '*/*',
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          username:  USERNAME,
+          username: USERNAME,
           password: PASSWORD
         })
       });
@@ -137,20 +156,18 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
         const loginResult = await loginResponse.json();
         const token = loginResult.accessToken;
         setAccessToken(token);
-        const base64Password = companyData.passwordErpDb;
-        const decodedPassword = atob(base64Password);
         
         // Luego obtener clientes con el token y headers de DB
-        const clientesResponse = await fetch(`${urlErp}/mserpservice/api/v1/getCustomers`, {
+        const clientesResponse = await fetch(`${companyConfig.urlErp}/mserpservice/api/v1/getCustomers`, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
             'Authorization': `Bearer ${token}`,
             'Accept-Language': 'es-MX',
-            'Server-Erp-Db': companyData.serverErpDb,
-            'Name-Erp-Db': companyData.nameErpDb,
-            'User-Erp-Db': companyData.userErpDb,
-            'Password-Erp-Db': decodedPassword
+            'Server-Erp-Db': companyConfig.serverErpDb,
+            'Name-Erp-Db': companyConfig.nameErpDb,
+            'User-Erp-Db': companyConfig.userErpDb,
+            'Password-Erp-Db': companyConfig.passwordErpDb
           }
         });
 
@@ -240,31 +257,18 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
     
     setLoadingConvenios(true);
     try {
-      // Obtener la URL del ERP desde localStorage
-      const selectedCompany = localStorage.getItem('selectedCompany');
-      if (!selectedCompany) {
-        console.error('No se encontró selectedCompany en localStorage');
-        return;
-      }
+      const companyConfig = getCompanyConfig();
 
-      const companyData = JSON.parse(selectedCompany);
-      const urlErp = companyData.urlErp;
-      
-      if (!urlErp) {
-        console.error('No se encontró urlErp en selectedCompany');
-        return;
-      }
-
-      const response = await fetch(`${urlErp}/mserpservice/api/v1/getConvenios/${clienteNombre}`, {
+      const response = await fetch(`${companyConfig.urlErp}/mserpservice/api/v1/getConvenios/${clienteNombre}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
           'Accept-Language': 'es-MX',
-          'Server-Erp-Db': companyData.serverErpDb,
-          'Name-Erp-Db': companyData.nameErpDb,
-          'User-Erp-Db': companyData.userErpDb,
-          'Password-Erp-Db': companyData.passwordErpDb
+          'Server-Erp-Db': companyConfig.serverErpDb,
+          'Name-Erp-Db': companyConfig.nameErpDb,
+          'User-Erp-Db': companyConfig.userErpDb,
+          'Password-Erp-Db': companyConfig.passwordErpDb
         }
       });
 
@@ -300,32 +304,19 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
     setLoadingDestinatarios(true);
 
     try {
-      // Obtener la URL del ERP desde localStorage
-      const selectedCompany = localStorage.getItem('selectedCompany');
-      if (!selectedCompany) {
-        console.error('No se encontró selectedCompany en localStorage');
-        return;
-      }
-
-      const companyData = JSON.parse(selectedCompany);
-      const urlErp = companyData.urlErp;
-      
-      if (!urlErp) {
-        console.error('No se encontró urlErp en selectedCompany');
-        return;
-      }
+      const companyConfig = getCompanyConfig();
 
       // Cargar remitentes (domTipo = 1)
-      const remitentesResponse = await fetch(`${urlErp}/mserpservice/api/v1/getRemitentesDestin/1`, {
+      const remitentesResponse = await fetch(`${companyConfig.urlErp}/mserpservice/api/v1/getRemitentesDestin/1`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
           'Accept-Language': 'es-MX',
-          'Server-Erp-Db': companyData.serverErpDb,
-          'Name-Erp-Db': companyData.nameErpDb,
-          'User-Erp-Db': companyData.userErpDb,
-          'Password-Erp-Db': companyData.passwordErpDb
+          'Server-Erp-Db': companyConfig.serverErpDb,
+          'Name-Erp-Db': companyConfig.nameErpDb,
+          'User-Erp-Db': companyConfig.userErpDb,
+          'Password-Erp-Db': companyConfig.passwordErpDb
         }
       });
 
@@ -343,16 +334,16 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
       }
 
       // Cargar destinatarios (domTipo = 2)
-      const destinatariosResponse = await fetch(`${urlErp}/mserpservice/api/v1/getRemitentesDestin/2`, {
+      const destinatariosResponse = await fetch(`${companyConfig.urlErp}/mserpservice/api/v1/getRemitentesDestin/2`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
           'Accept-Language': 'es-MX',
-          'Server-Erp-Db': companyData.serverErpDb,
-          'Name-Erp-Db': companyData.nameErpDb,
-          'User-Erp-Db': companyData.userErpDb,
-          'Password-Erp-Db': companyData.passwordErpDb
+          'Server-Erp-Db': companyConfig.serverErpDb,
+          'Name-Erp-Db': companyConfig.nameErpDb,
+          'User-Erp-Db': companyConfig.userErpDb,
+          'Password-Erp-Db': companyConfig.passwordErpDb
         }
       });
 
@@ -382,31 +373,18 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
 
     setLoadingTerminales(true);
     try {
-      // Obtener la URL del ERP desde localStorage
-      const selectedCompany = localStorage.getItem('selectedCompany');
-      if (!selectedCompany) {
-        console.error('No se encontró selectedCompany en localStorage');
-        return;
-      }
+      const companyConfig = getCompanyConfig();
 
-      const companyData = JSON.parse(selectedCompany);
-      const urlErp = companyData.urlErp;
-      
-      if (!urlErp) {
-        console.error('No se encontró urlErp en selectedCompany');
-        return;
-      }
-
-      const response = await fetch(`${urlErp}/mserpservice/api/terminales/all`, {
+      const response = await fetch(`${companyConfig.urlErp}/mserpservice/api/terminales/all`, {
         method: 'GET',
         headers: {
           'Accept': '*/*',
           'Authorization': `Bearer ${accessToken}`,
           'Accept-Language': 'es-MX',
-          'Server-Erp-Db': companyData.serverErpDb,
-          'Name-Erp-Db': companyData.nameErpDb,
-          'User-Erp-Db': companyData.userErpDb,
-          'Password-Erp-Db': companyData.passwordErpDb
+          'Server-Erp-Db': companyConfig.serverErpDb,
+          'Name-Erp-Db': companyConfig.nameErpDb,
+          'User-Erp-Db': companyConfig.userErpDb,
+          'Password-Erp-Db': companyConfig.passwordErpDb
         }
       });
 
@@ -541,18 +519,7 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
     setSubmitSuccess(false);
 
     try {
-      // Obtener la URL del ERP desde localStorage
-      const selectedCompany = localStorage.getItem('selectedCompany');
-      if (!selectedCompany) {
-        throw new Error('No se encontró selectedCompany en localStorage');
-      }
-
-      const companyData = JSON.parse(selectedCompany);
-      const urlErp = companyData.urlErp;
-      
-      if (!urlErp) {
-        throw new Error('No se encontró urlErp en selectedCompany');
-      }
+      const companyConfig = getCompanyConfig();
 
       // Crear FormData para el upload
       const uploadData = new FormData();
@@ -568,7 +535,7 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
       uploadData.append('IdRuta', formData.ruta);
       uploadData.append('IdDestinatario', formData.destinatario);
       uploadData.append('IdCustomerIntegrator', formData.compania);
-      uploadData.append('UrlErp', urlErp);
+      uploadData.append('UrlErp', companyConfig.urlErp);
       uploadData.append('File', formData.archivo);
       uploadData.append('IdConvenio', formData.convenio);
       uploadData.append('IdCliente', formData.cliente);
@@ -666,7 +633,7 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
           </button>
         </div>
 
-        {        /* Mensaje de resultado */}
+        {/* Mensaje de resultado */}
         {submitMessage && (
           <div className={`mx-6 mt-4 p-4 rounded-lg border ${
             submitSuccess 
