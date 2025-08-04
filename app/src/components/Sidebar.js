@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -204,6 +204,9 @@ export default function Sidebar({ onClose }) {
     return '---';
   });
   
+  // Ref para controlar las llamadas duplicadas
+  const trackingInProgress = useRef(new Set());
+  
   const profileName = Cookies.get('profileName');
   const isUserAdvan = profileName?.includes('USERADVAN');
   const isAdminAdvan = profileName?.includes('ADMINADVAN');
@@ -322,7 +325,7 @@ export default function Sidebar({ onClose }) {
     }
   }, []);
 
-  // Function to track menu access
+  // Function to track menu access with duplicate protection
   const trackMenuAccess = useCallback(async (customOption) => {
     const userId = Cookies.get('idUser');
     
@@ -330,6 +333,17 @@ export default function Sidebar({ onClose }) {
       console.log('Missing userId for tracking');
       return;
     }
+
+    // Crear una clave única para este tracking
+    const trackingKey = `${userId}-custom-${customOption.id}`;
+    
+    // Si ya está en progreso, ignorar
+    if (trackingInProgress.current.has(trackingKey)) {
+      return;
+    }
+
+    // Marcar como en progreso
+    trackingInProgress.current.add(trackingKey);
 
     try {
       const userIP = await getUserIP();
@@ -349,15 +363,20 @@ export default function Sidebar({ onClose }) {
         body: JSON.stringify(trackingData)
       });
 
-      const result = await response.json();
-      
-      if (result.statusCode === "200") {
-        console.log('Menu access tracked successfully');
-      } else {
-        console.error('Error tracking menu access:', result.message);
+      if (!response.ok) {
+        console.error('Error sending menu tracking:', response.statusText);
       }
+      // Silent operation - no success message shown
+
+      // Remover de la lista después de un breve delay
+      setTimeout(() => {
+        trackingInProgress.current.delete(trackingKey);
+      }, 1000); // 1 segundo de cooldown
+
     } catch (error) {
       console.error('Error tracking menu access:', error);
+      // En caso de error, también remover de la lista
+      trackingInProgress.current.delete(trackingKey);
     }
   }, [getUserIP]);
 
@@ -386,17 +405,24 @@ export default function Sidebar({ onClose }) {
     if (onClose) onClose();
   }, [pathname, router, onClose]);
 
-  // Handle custom option click
+  // Handle custom option click with tracking protection
   const handleCustomOptionClick = useCallback((option) => {
-    // Navigate immediately for instant visual feedback
     const internalUrl = formatInternalUrl(option.url);
+    
+    // SI YA ESTAMOS EN LA RUTA, NO HACER TRACKING NI NAVEGACIÓN
+    if (pathname === internalUrl) {
+      if (onClose) onClose();
+      return;
+    }
+
+    // Navigate immediately for instant visual feedback
     navigateTo(internalUrl, `custom_${option.id}`);
     
-    // Track menu access in background (fire and forget)
+    // Track menu access in background (fire and forget) CON PROTECCIÓN
     trackMenuAccess(option);
     
     if (onClose) onClose();
-  }, [navigateTo, onClose, trackMenuAccess]);
+  }, [pathname, navigateTo, onClose, trackMenuAccess]);
 
   // Check if dashboard-related items are active
   const isDashboardActive = dashboards.some(dashboard => {
