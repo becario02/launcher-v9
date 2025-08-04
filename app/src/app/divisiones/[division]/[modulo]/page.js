@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import Notification from "@/components/Notification";
 import SubMenu from "@/components/SubMenu";
 import InstanceModal from "@/components/InstanceModal";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { Flag, Search, Eye, X, Plus, Award, Layers } from "lucide-react";
 import { useModulePage } from "@/hooks/useModulePage";
 import { useCompany } from "@/context/CompanyContext";
@@ -95,16 +95,31 @@ export default function ModulePage() {
     }
   }, []);
 
+  // Ref para controlar las llamadas duplicadas
+  const trackingInProgress = useRef(new Set());
+
   // Function to send menu tracking to endpoint
   const sendMenuTracking = useCallback(async (idMenu) => {
     try {
       const userId = Cookies.get('idUser');
-      const userIP = await getUserIP();
-
+      
       if (!userId) {
         console.error('User ID not found in cookies');
         return;
       }
+
+      // Crear una clave única para este tracking
+      const trackingKey = `${userId}-${idMenu}`;
+      
+      // Si ya está en progreso, ignorar
+      if (trackingInProgress.current.has(trackingKey)) {
+        return;
+      }
+
+      // Marcar como en progreso
+      trackingInProgress.current.add(trackingKey);
+
+      const userIP = await getUserIP();
 
       const response = await fetch('/api/menu-tracking', {
         method: 'POST',
@@ -122,9 +137,18 @@ export default function ModulePage() {
       if (!response.ok) {
         console.error('Error sending menu tracking:', response.statusText);
       }
-      // Silent operation - no success message shown
+
+      // Remover de la lista después de un breve delay
+      setTimeout(() => {
+        trackingInProgress.current.delete(trackingKey);
+      }, 1000); // 1 segundo de cooldown
+
     } catch (error) {
       console.error('Error sending menu tracking:', error);
+      // En caso de error, también remover de la lista
+      const userId = Cookies.get('idUser');
+      const trackingKey = `${userId}-${idMenu}`;
+      trackingInProgress.current.delete(trackingKey);
     }
   }, [getUserIP]);
 

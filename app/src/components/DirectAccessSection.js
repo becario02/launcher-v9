@@ -16,7 +16,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Trash2, GripVertical, ChevronDown, ChevronUp } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCompany } from "@/context/CompanyContext";
 import Notification from "./Notification";
@@ -131,16 +131,31 @@ const DirectAccessSection = () => {
     }
   }, []);
 
+  // Ref para controlar las llamadas duplicadas
+  const trackingInProgress = useRef(new Set());
+
   // Function to send menu tracking to endpoint
   const sendMenuTracking = useCallback(async (idMenu) => {
     try {
       const userId = Cookies.get('idUser');
-      const userIP = await getUserIP();
-
+      
       if (!userId) {
         console.error('User ID not found in cookies');
         return;
       }
+
+      // Crear una clave única para este tracking
+      const trackingKey = `${userId}-${idMenu}`;
+      
+      // Si ya está en progreso, ignorar
+      if (trackingInProgress.current.has(trackingKey)) {
+        return;
+      }
+
+      // Marcar como en progreso
+      trackingInProgress.current.add(trackingKey);
+
+      const userIP = await getUserIP();
 
       const response = await fetch('/api/menu-tracking', {
         method: 'POST',
@@ -158,9 +173,18 @@ const DirectAccessSection = () => {
       if (!response.ok) {
         console.error('Error sending menu tracking:', response.statusText);
       }
-      // Silent operation - no success message shown
+
+      // Remover de la lista después de un breve delay
+      setTimeout(() => {
+        trackingInProgress.current.delete(trackingKey);
+      }, 1000); // 1 segundo de cooldown
+
     } catch (error) {
       console.error('Error sending menu tracking:', error);
+      // En caso de error, también remover de la lista
+      const userId = Cookies.get('idUser');
+      const trackingKey = `${userId}-${idMenu}`;
+      trackingInProgress.current.delete(trackingKey);
     }
   }, [getUserIP]);
 
@@ -182,7 +206,7 @@ const DirectAccessSection = () => {
           subcategory: access.moduleName || "Sin Módulo",
           name: access.textOption || "Sin Nombre",
           idName: access.idName || "Sin ID",
-          idMenu: access.idMenu || null,
+          idMenu: access.idMenu || null, // AGREGAR idMenu PARA EL TRACKING
         }));
 
         setItems(mappedData);
