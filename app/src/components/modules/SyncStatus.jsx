@@ -1,10 +1,9 @@
-// components/SyncStatus.jsx - Versión mejorada con notificaciones de resultado
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { Info, AlertTriangle } from 'lucide-react';
-import { useCompany } from '@/context/CompanyContext';
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { Info, AlertTriangle } from "lucide-react";
+import { useCompany } from "@/context/CompanyContext";
 
 const SyncStatus = () => {
   const { syncingModules, selectedCompany, syncError } = useCompany();
@@ -17,32 +16,30 @@ const SyncStatus = () => {
     // Detectar cuando termina la sincronización
     if (wasSyncing && !syncingModules) {
       const notificationId = Date.now();
-      
+
       if (syncError) {
-        // Mostrar error
         addNotification({
           id: notificationId,
-          type: 'error',
+          type: "error",
           message: `Error al sincronizar módulos: ${syncError}`,
-          duration: 5000
+          duration: 30000,
         });
       } else {
-        // Mostrar éxito
         addNotification({
           id: notificationId,
-          type: 'success',
+          type: "success",
           message: `Módulos de ${selectedCompany?.name} sincronizados correctamente`,
-          duration: 3000
+          duration: 4000,
         });
       }
     }
-    
+
     setWasSyncing(syncingModules);
   }, [syncingModules, syncError, selectedCompany, wasSyncing]);
 
   const addNotification = (notification) => {
-    setNotifications(prev => [...prev, notification]);
-    
+    setNotifications((prev) => [...prev, notification]);
+
     // Auto-remover después del duration
     setTimeout(() => {
       removeNotification(notification.id);
@@ -50,27 +47,27 @@ const SyncStatus = () => {
   };
 
   const removeNotification = (id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
   // Colores por tipo
   const getColors = (type) => {
     const colorMap = {
       success: {
-        border: '#0a9101',
-        bg: '#edffec',
-        text: '#0a9101',
+        border: "#0a9101",
+        bg: "#edffec",
+        text: "#0a9101",
       },
       error: {
-        border: 'red',
-        bg: '#ffecec',
-        text: 'red',
+        border: "red",
+        bg: "#ffecec",
+        text: "red",
       },
       info: {
-        border: '#007bff',
-        bg: '#e7f3ff',
-        text: '#007bff',
-      }
+        border: "#007bff",
+        bg: "#e7f3ff",
+        text: "#007bff",
+      },
     };
     return colorMap[type] || colorMap.info;
   };
@@ -78,8 +75,8 @@ const SyncStatus = () => {
   // Iconos por tipo
   const getIcon = (type) => {
     const colors = getColors(type);
-    
-    if (type === 'success') {
+
+    if (type === "success") {
       return (
         <svg
           width="20"
@@ -112,7 +109,7 @@ const SyncStatus = () => {
           />
         </svg>
       );
-    } else if (type === 'error') {
+    } else if (type === "error") {
       return (
         <svg
           width="20"
@@ -150,9 +147,8 @@ const SyncStatus = () => {
     }
   };
 
-  // Icono de sincronización
   const SyncIcon = () => {
-    const colors = getColors('info');
+    const colors = getColors("info");
     return (
       <svg
         width="20"
@@ -175,30 +171,28 @@ const SyncStatus = () => {
 
   return createPortal(
     <div className="fixed top-[100px] right-5 z-[2147483647] space-y-3">
-      {/* Toast de sincronización en progreso */}
       {syncingModules && (
         <div
           className="flex items-center gap-3 p-4 rounded-[10px] shadow-md transition-all duration-300 opacity-100 translate-x-0"
           style={{
-            border: `1px solid ${getColors('info').border}`,
-            backgroundColor: getColors('info').bg,
-            color: getColors('info').text,
+            border: `1px solid ${getColors("info").border}`,
+            backgroundColor: getColors("info").bg,
+            color: getColors("info").text,
           }}
         >
           <SyncIcon />
           <h4
             style={{
-              fontFamily: 'Poppins',
-              fontSize: '12px',
+              fontFamily: "Poppins",
+              fontSize: "12px",
               fontWeight: 500,
             }}
           >
-            Sincronizando módulos de {selectedCompany?.name || 'la empresa'}...
+            Sincronizando módulos de {selectedCompany?.name || "la empresa"}...
           </h4>
         </div>
       )}
 
-      {/* Toasts de notificaciones de resultado */}
       {notifications.map((notification) => {
         const colors = getColors(notification.type);
         return (
@@ -214,9 +208,12 @@ const SyncStatus = () => {
             {getIcon(notification.type)}
             <h4
               style={{
-                fontFamily: 'Poppins',
-                fontSize: '12px',
+                fontFamily: "Poppins",
+                fontSize: "12px",
                 fontWeight: 500,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                maxWidth: "500px", 
               }}
             >
               {notification.message}
@@ -225,7 +222,7 @@ const SyncStatus = () => {
         );
       })}
     </div>,
-    typeof window !== 'undefined' ? document.body : null
+    typeof window !== "undefined" ? document.body : null
   );
 };
 

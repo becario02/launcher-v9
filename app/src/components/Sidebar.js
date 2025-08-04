@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Copy,
   Newspaper,
+  Network,
   Menu,
   Users,
   Video,
@@ -49,6 +50,8 @@ function getActiveItemFromPath(pathname, customOptions = []) {
     return 'AdminMenus';
   } else if (pathname.includes('/admin/users')) {
     return 'AdminUsers';
+  } else if (pathname.includes('/admin/conexioneserp')) {
+    return 'conexioneserp';
   } else if (pathname.includes('/admin/videos')) {
     return 'AdminVideos';
   } else if (pathname.includes('/admin/documents')) {
@@ -403,7 +406,7 @@ export default function Sidebar({ onClose }) {
 
   const isDivisionActive = ['NUCLEARES', 'FINANCIAL', 'AUXILIARES'].includes(activeItem);
   const isHelpCenterActive = ['AdminVideos', 'AdminDocumentos'].includes(activeItem);
-  const isAdminActive = ['AdminUsers', 'AdminVideos', 'AdminDocumentos', 'AdminMenus', 'AdminNotifications', 'AdminPromociones'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
+  const isAdminActive = ['AdminUsers', 'conexioneserp', 'AdminVideos', 'AdminDocumentos', 'AdminMenus', 'AdminNotifications', 'AdminPromociones'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
   const isAdvanPacActive = ['AdvanPacPacs', 'AdvanPacClientes'].includes(activeItem);
 
   // Check if any custom option is active
@@ -531,6 +534,14 @@ export default function Sidebar({ onClose }) {
               indent
               active={activeItem === 'AdminUsers'}
               onClick={() => navigateTo('/admin/users', 'AdminUsers')}
+            />
+
+            <SidebarItem
+              icon={Network}
+              text="Conexiones ERP"
+              indent
+              active={activeItem === 'conexionesERP'}
+              onClick={() => navigateTo('/admin/conexioneserp', 'conexioneserp')}
             />
 
             {/* Centro de Ayuda sub-dropdown */}

@@ -102,10 +102,8 @@ export function CompanyProvider({ children }) {
           }
         }
       } catch (error) {
-        console.error('Error parsing userData:', error);
       }
     } else {
-      console.log('No userData found in localStorage');
     }
     
     setLoading(false);
@@ -113,7 +111,6 @@ export function CompanyProvider({ children }) {
   }, [handleSyncModules, hasInitialized, saveCompanyData]);
 
   const selectCompany = useCallback((company) => {
-    console.log('Selecting company:', company.name);
     setSelectedCompany(company);
     setShowCompanyModal(false);
     setPreselectedCompany(null);
@@ -121,7 +118,6 @@ export function CompanyProvider({ children }) {
   }, [saveCompanyData]);
 
   const connectAndSync = useCallback((company) => {
-    console.log('Connecting and syncing company:', company.name);
     setSelectedCompany(company);
     setShowCompanyModal(false);
     setPreselectedCompany(null);
@@ -140,7 +136,6 @@ export function CompanyProvider({ children }) {
     if (selectedCompany) {
       handleSyncModules(selectedCompany);
     } else {
-      console.log('No company selected for manual sync');
     }
   }, [selectedCompany, handleSyncModules]);
 
