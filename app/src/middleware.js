@@ -8,7 +8,8 @@ export async function middleware(request) {
   const adminRoutes = [
     '/admin/news', 
     '/admin/menus', 
-    '/admin/users', 
+    '/admin/users',
+    '/admin/conexioneserp',
     '/admin/videos',
     '/admin/notifications',
     '/admin/integradores',

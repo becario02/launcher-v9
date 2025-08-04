@@ -861,10 +861,8 @@ export function useModulePage() {
         JSON.stringify(globalUpdated)
       );
 
-      // 🔒 Guardar en instancias locales con sesión
-      saveInstanceWithSession(nextId, data, true); // ← se pasa `true` para `active`
+      saveInstanceWithSession(nextId, data, true);
 
-      // Guardar sesión global
       localStorage.setItem(
         "sessionData",
         JSON.stringify({
