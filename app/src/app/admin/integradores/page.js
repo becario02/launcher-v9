@@ -8,6 +8,7 @@ import Sidebar from '@/components/Sidebar';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useTheme } from '@/context/ThemeContext';
 import Toast from '@/components/Toast';
+import Cookies from "js-cookie";
 
 // Importar los modales
 import IntegratorFormModal from '@/components/IntegratorFormModal';
@@ -44,6 +45,15 @@ export default function AdminIntegradoresPage() {
     message: '',
     type: 'success'
   });
+
+  // Obtener el tipo de usuario desde las cookies
+  const profileName = Cookies.get('profileName');
+  
+  // Determinar el tipo de usuario
+  const isUserCustomer = profileName?.includes('USERCUSTOMER');
+  const isAdminCustomer = profileName?.includes('ADMINCUSTOMER');
+  const isUserAdvan = profileName?.includes('USERADVAN');
+  const isAdminAdvan = profileName?.includes('ADMINADVAN');
 
   // Cargar integradores al montar el componente
   useEffect(() => {
@@ -367,23 +377,30 @@ export default function AdminIntegradoresPage() {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    className="flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-100 px-4 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-100 dark:bg-emerald-900/30 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 transition-colors"
-                    onClick={handleCreateIntegrator}
-                    disabled={isLoading}
-                  >
-                    <Plus className="w-4 h-4" />
-                    Crear Integrador
-                  </button>
-                  <button
-                    className="flex items-center gap-2 text-sm font-medium text-white px-4 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: primaryColor }}
-                    onClick={handleCargar}
-                    disabled={isLoading}
-                  >
-                    <Upload className="w-4 h-4" />
-                    Cargar Archivo
-                  </button>
+                  {/* Botón "Crear Integrador" - Solo visible para ADMINADVAN y USERADVAN */}
+                  {(isAdminAdvan || isUserAdvan) && (
+                    <button
+                      className="flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-100 px-4 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-100 dark:bg-emerald-900/30 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 transition-colors"
+                      onClick={handleCreateIntegrator}
+                      disabled={isLoading}
+                    >
+                      <Plus className="w-4 h-4" />
+                      Crear Integrador
+                    </button>
+                  )}
+                  
+                  {/* Botón "Cargar Archivo" - Solo visible para USERCUSTOMER */}
+                  {isUserCustomer && (
+                    <button
+                      className="flex items-center gap-2 text-sm font-medium text-white px-4 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ backgroundColor: primaryColor }}
+                      onClick={handleCargar}
+                      disabled={isLoading}
+                    >
+                      <Upload className="w-4 h-4" />
+                      Cargar Archivo
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -465,72 +482,108 @@ export default function AdminIntegradoresPage() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center">
-                              <div className="relative">
-                                <button
-                                  onClick={() => handleStatusChange(
-                                    integrador.idIntegrator, 
-                                    integrador.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
-                                  )}
-                                  className={clsx(
-                                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800",
-                                    integrador.status === 'ACTIVE'
-                                      ? "focus:ring-primary"
-                                      : "bg-gray-300 dark:bg-gray-600 focus:ring-gray-300",
-                                    isUpdating && "opacity-70"
-                                  )}
-                                  style={integrador.status === 'ACTIVE' ? { backgroundColor: primaryColor } : {}}
-                                  disabled={isLoading || isUpdating}
-                                >
-                                  <span
-                                    className={clsx(
-                                      "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                                      integrador.status === 'ACTIVE' ? "translate-x-6" : "translate-x-1"
+                              {/* Switch de estado - Solo para ADMINADVAN y USERADVAN */}
+                              {(isAdminAdvan || isUserAdvan) ? (
+                                <div className="relative">
+                                  <button
+                                    onClick={() => handleStatusChange(
+                                      integrador.idIntegrator, 
+                                      integrador.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
                                     )}
-                                  />
-                                </button>
-                                
-                                {/* Spinner de loading */}
-                                {isUpdating && (
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                                  </div>
-                                )}
-                              </div>
-                              
-                              <span className={clsx(
-                                "ml-3 text-sm font-medium transition-colors",
-                                integrador.status === 'ACTIVE' 
-                                  ? "" 
-                                  : "text-gray-500 dark:text-gray-400",
-                                isUpdating && "opacity-70"
+                                    className={clsx(
+                                      "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800",
+                                      integrador.status === 'ACTIVE'
+                                        ? "focus:ring-primary"
+                                        : "bg-gray-300 dark:bg-gray-600 focus:ring-gray-300",
+                                      isUpdating && "opacity-70"
+                                    )}
+                                    style={integrador.status === 'ACTIVE' ? { backgroundColor: primaryColor } : {}}
+                                    disabled={isLoading || isUpdating}
+                                  >
+                                    <span
+                                      className={clsx(
+                                        "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                                        integrador.status === 'ACTIVE' ? "translate-x-6" : "translate-x-1"
+                                      )}
+                                    />
+                                  </button>
+                                  
+                                  {/* Spinner de loading */}
+                                  {isUpdating && (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                /* Badge de solo lectura para otros usuarios */
+                                <div className="flex items-center">
+                                  <span className={clsx(
+                                    "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+                                    integrador.status === 'ACTIVE'
+                                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                      : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                                  )}>
+                                    {integrador.status === 'ACTIVE' ? (
+                                      <>
+                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                        Activo
+                                      </>
+                                    ) : (
+                                      <>
+                                        <XCircle className="w-3 h-3 mr-1" />
+                                        Inactivo
+                                      </>
+                                    )}
+                                  </span>
+                                </div>
                               )}
-                              style={integrador.status === 'ACTIVE' ? { color: primaryColor } : {}}>
-                                {isUpdating 
-                                  ? 'Actualizando...'
-                                  : integrador.status === 'ACTIVE' 
-                                    ? 'Activo' 
-                                    : 'Inactivo'
-                                }
-                              </span>
+                              
+                              {/* Texto del estado para usuarios con switch */}
+                              {(isAdminAdvan || isUserAdvan) && (
+                                <span className={clsx(
+                                  "ml-3 text-sm font-medium transition-colors",
+                                  integrador.status === 'ACTIVE' 
+                                    ? "" 
+                                    : "text-gray-500 dark:text-gray-400",
+                                  isUpdating && "opacity-70"
+                                )}
+                                style={integrador.status === 'ACTIVE' ? { color: primaryColor } : {}}>
+                                  {isUpdating 
+                                    ? 'Actualizando...'
+                                    : integrador.status === 'ACTIVE' 
+                                      ? 'Activo' 
+                                      : 'Inactivo'
+                                  }
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex gap-2">
-                              <button
-                                onClick={() => handleEditIntegrator(integrador)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                                title="Editar integrador"
-                              >
-                                <Edit className="w-3.5 h-3.5" />
-                                <span className="text-xs font-medium">Editar</span>
-                              </button>
-                              <button
-                                onClick={() => handleViewCompanies(integrador)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                              >
-                                <Building className="w-3.5 h-3.5" />
-                                <span className="text-xs font-medium">Compañías</span>
-                              </button>
+                              {/* Botón "Editar" - Solo visible para ADMINADVAN y USERADVAN */}
+                              {(isAdminAdvan || isUserAdvan) && (
+                                <button
+                                  onClick={() => handleEditIntegrator(integrador)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                  title="Editar integrador"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                  <span className="text-xs font-medium">Editar</span>
+                                </button>
+                              )}
+                              
+                              {/* Botón "Compañías" - Solo visible para ADMINADVAN y USERADVAN */}
+                              {(isAdminAdvan || isUserAdvan) && (
+                                <button
+                                  onClick={() => handleViewCompanies(integrador)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                                >
+                                  <Building className="w-3.5 h-3.5" />
+                                  <span className="text-xs font-medium">Compañías</span>
+                                </button>
+                              )}
+                              
                               <button
                                 onClick={() => handleViewFiles(integrador)}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-800 transition-colors"
@@ -589,35 +642,43 @@ export default function AdminIntegradoresPage() {
           </div>
         </main>
 
-        {/* Modal del Integrador */}
-        <IntegratorFormModal
-          isOpen={modalOpen}
-          onClose={handleCloseModal}
-          onSubmit={handleSubmitIntegrator}
-        />
+        {/* Modal del Integrador - Solo se muestra si isUserCustomer es true */}
+        {isUserCustomer && (
+          <IntegratorFormModal
+            isOpen={modalOpen}
+            onClose={handleCloseModal}
+            onSubmit={handleSubmitIntegrator}
+          />
+        )}
 
-        {/* Modal de Compañías del Integrador */}
-        <IntegratorCompaniesModal
-          isOpen={companiesModalOpen}
-          onClose={handleCloseCompaniesModal}
-          integrator={selectedIntegrator}
-          onSuccess={handleCompaniesSuccess}
-        />
+        {/* Modal de Compañías del Integrador - Solo se muestra si el usuario es ADMINADVAN o USERADVAN */}
+        {(isAdminAdvan || isUserAdvan) && (
+          <IntegratorCompaniesModal
+            isOpen={companiesModalOpen}
+            onClose={handleCloseCompaniesModal}
+            integrator={selectedIntegrator}
+            onSuccess={handleCompaniesSuccess}
+          />
+        )}
 
-        {/* Modal de Editar Integrador */}
-        <EditIntegratorModal
-          isOpen={editModalOpen}
-          onClose={handleCloseEditModal}
-          integrator={selectedIntegrator}
-          onSuccess={handleEditSuccess}
-        />
+        {/* Modal de Editar Integrador - Solo se muestra si el usuario es ADMINADVAN o USERADVAN */}
+        {(isAdminAdvan || isUserAdvan) && (
+          <EditIntegratorModal
+            isOpen={editModalOpen}
+            onClose={handleCloseEditModal}
+            integrator={selectedIntegrator}
+            onSuccess={handleEditSuccess}
+          />
+        )}
 
-        {/* Modal de Crear Integrador */}
-        <CreateIntegratorModal
-          isOpen={createModalOpen}
-          onClose={handleCloseCreateModal}
-          onSuccess={handleCreateSuccess}
-        />
+        {/* Modal de Crear Integrador - Solo se muestra si el usuario es ADMINADVAN o USERADVAN */}
+        {(isAdminAdvan || isUserAdvan) && (
+          <CreateIntegratorModal
+            isOpen={createModalOpen}
+            onClose={handleCloseCreateModal}
+            onSuccess={handleCreateSuccess}
+          />
+        )}
 
         {/* Toast */}
         {toast.visible && (
