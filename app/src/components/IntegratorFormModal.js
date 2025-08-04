@@ -523,10 +523,10 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
 
       // Crear FormData para el upload
       const uploadData = new FormData();
-      
+
       // Convertir fecha a formato ISO
       const fechaISO = new Date(formData.fechaOS).toISOString();
-      
+
       // Agregar todos los campos al FormData
       uploadData.append('FechaOS', fechaISO);
       uploadData.append('IdRemitente', formData.remitente);
@@ -540,6 +540,12 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
       uploadData.append('IdConvenio', formData.convenio);
       uploadData.append('IdCliente', formData.cliente);
 
+      // Agregar credenciales de la base de datos
+      uploadData.append('DbIp', companyConfig.serverErpDb);
+      uploadData.append('DbName', companyConfig.nameErpDb);
+      uploadData.append('DbUser', companyConfig.userErpDb);
+      uploadData.append('DbPassword', companyConfig.passwordErpDb);
+
       // Enviar al endpoint
       const response = await fetch('/api/integrator/upload', {
         method: 'POST',
@@ -547,7 +553,7 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
           'accept': '*/*',
           'Authorization': `Bearer ${accessToken}`
         },
-        body: uploadData // FormData con el archivo
+        body: uploadData // FormData con el archivo y credenciales
       });
 
       const result = await response.json();
@@ -555,7 +561,7 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
       if (response.ok && result.statusCode === "200") {
         setSubmitSuccess(true);
         setSubmitMessage(`¡Éxito! ${result.message}. Folio generado: ${result.data.folio}`);
-        
+
         // Llamar al callback del padre si existe
         if (onSubmit) {
           onSubmit({
@@ -1011,14 +1017,14 @@ export default function IntegratorFormModal({ isOpen, onClose, onSubmit }) {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || !formData.archivo}
+              disabled={isSubmitting || !formData.archivo || submitSuccess}
               className="px-4 py-2 text-sm font-medium text-white rounded-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               style={{ backgroundColor: primaryColor }}
             >
               {isSubmitting && (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               )}
-              {isSubmitting ? 'Procesando Archivo...' : 'Procesar Archivo'}
+              {submitSuccess ? 'Archivo Procesado' : isSubmitting ? 'Procesando Archivo...' : 'Procesar Archivo'}
             </button>
           </div>
           </div>
