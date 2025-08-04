@@ -19,6 +19,7 @@ export default function SubMenu({
   searchTerm = "",
   currentSession,
   shortcuts = [],
+  onItemClick,
 }) {
   if (!items || items.length === 0) return null;
 
@@ -161,6 +162,11 @@ export default function SubMenu({
   };
 
   const handleItemClick = (item, e) => {
+    // ENVIAR TRACKING SILENCIOSO AL ENDPOINT CUANDO SE HACE CLIC
+    if (onItemClick) {
+      onItemClick(item);
+    }
+
     if (!hasPrivilege) {
       onCopyToClipboard?.({
         success: false,
@@ -339,6 +345,7 @@ export default function SubMenu({
                       hasMenuPermission={hasMenuPermission}
                       hasAnyChildPermission={hasAnyChildPermission}
                       searchTerm={searchTerm}
+                      onItemClick={onItemClick}
                     />
                   </div>
                 )}
@@ -452,6 +459,7 @@ export default function SubMenu({
                     hasAnyChildPermission={hasAnyChildPermission}
                     searchTerm={searchTerm}
                     currentSession={currentSession}
+                    onItemClick={onItemClick}
                   />
                 </div>
               )}

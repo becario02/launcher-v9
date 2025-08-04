@@ -6,10 +6,11 @@ import Navbar from "@/components/Navbar";
 import Notification from "@/components/Notification";
 import SubMenu from "@/components/SubMenu";
 import InstanceModal from "@/components/InstanceModal";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { Flag, Search, Eye, X, Plus, Award, Layers } from "lucide-react";
 import { useModulePage } from "@/hooks/useModulePage";
 import { useCompany } from "@/context/CompanyContext";
+import Cookies from "js-cookie";
 
 export default function ModulePage() {
   const { selectedCompany } = useCompany();
@@ -81,6 +82,57 @@ export default function ModulePage() {
       showNotification(notificationType, message, "toast", 5000);
     }
   };
+
+  // Function to get user's IP address
+  const getUserIP = useCallback(async () => {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip;
+    } catch (error) {
+      console.error('Error getting IP:', error);
+      return 'unknown';
+    }
+  }, []);
+
+  // Function to send menu tracking to endpoint
+  const sendMenuTracking = useCallback(async (idMenu) => {
+    try {
+      const userId = Cookies.get('idUser');
+      const userIP = await getUserIP();
+
+      if (!userId) {
+        console.error('User ID not found in cookies');
+        return;
+      }
+
+      const response = await fetch('/api/menu-tracking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          idUser: parseInt(userId),
+          idMenu: idMenu,
+          idCustomOption: 0,
+          ipName: userIP
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Error sending menu tracking:', response.statusText);
+      }
+      // Silent operation - no success message shown
+    } catch (error) {
+      console.error('Error sending menu tracking:', error);
+    }
+  }, [getUserIP]);
+
+  // NUEVA FUNCIÓN PARA MANEJAR CLICS EN ITEMS
+  const handleItemClick = useCallback((item) => {
+    // Send tracking data silently to endpoint
+    sendMenuTracking(item.idMenu);
+  }, [sendMenuTracking]);
 
   const handleShortcutIntent = async () => {
     const intentRaw = localStorage.getItem("shortcutIntent");
@@ -164,8 +216,8 @@ export default function ModulePage() {
       return;
     }
 
-    setSelectedShortcut(parsedIntent); // debe estar en tu useModulePage()
-    setMatchingInstances(matching); // también
+    setSelectedShortcut(parsedIntent);
+    setMatchingInstances(matching);
     setShowInstancesModal(true);
   };
 
@@ -575,6 +627,8 @@ export default function ModulePage() {
                         acronym={acronym}
                         currentSession={getCurrentSession()}
                         shortcuts={shortcuts}
+                        // Prop para manejar los clics en los items
+                        onItemClick={handleItemClick}
                       />
                     )
                   )}

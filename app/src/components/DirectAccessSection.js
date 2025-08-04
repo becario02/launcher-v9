@@ -16,12 +16,13 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Trash2, GripVertical, ChevronDown, ChevronUp } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCompany } from "@/context/CompanyContext";
 import Notification from "./Notification";
 import { useRouter } from "next/navigation";
 import { useModulePage } from "@/hooks/useModulePage";
+import Cookies from "js-cookie";
 
 const translateModuleGroup = (moduleGroup) => {
   const translations = {
@@ -118,6 +119,51 @@ const DirectAccessSection = () => {
     style: "toast",
   });
 
+  // Function to get user's IP address
+  const getUserIP = useCallback(async () => {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip;
+    } catch (error) {
+      console.error('Error getting IP:', error);
+      return 'unknown';
+    }
+  }, []);
+
+  // Function to send menu tracking to endpoint
+  const sendMenuTracking = useCallback(async (idMenu) => {
+    try {
+      const userId = Cookies.get('idUser');
+      const userIP = await getUserIP();
+
+      if (!userId) {
+        console.error('User ID not found in cookies');
+        return;
+      }
+
+      const response = await fetch('/api/menu-tracking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          idUser: parseInt(userId),
+          idMenu: idMenu,
+          idCustomOption: 0,
+          ipName: userIP
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Error sending menu tracking:', response.statusText);
+      }
+      // Silent operation - no success message shown
+    } catch (error) {
+      console.error('Error sending menu tracking:', error);
+    }
+  }, [getUserIP]);
+
   useEffect(() => {
     const fetchAccesses = async () => {
       try {
@@ -136,6 +182,7 @@ const DirectAccessSection = () => {
           subcategory: access.moduleName || "Sin Módulo",
           name: access.textOption || "Sin Nombre",
           idName: access.idName || "Sin ID",
+          idMenu: access.idMenu || null,
         }));
 
         setItems(mappedData);
@@ -150,8 +197,13 @@ const DirectAccessSection = () => {
     }
   }, [selectedCompany]);
 
-  const handleShortcutClick = (item) => {
+  const handleShortcutClick = useCallback((item) => {
     if (wasDragging) return;
+
+    // ENVIAR TRACKING SILENCIOSO ANTES DE NAVEGAR
+    if (item.idMenu) {
+      sendMenuTracking(item.idMenu);
+    }
 
     const division = translateModuleGroup(item.category).toLowerCase();
     const moduleName = item.subcategory.toLowerCase();
@@ -175,7 +227,7 @@ const DirectAccessSection = () => {
     } else {
       handleShortcutIntent();
     }
-  };
+  }, [wasDragging, sendMenuTracking, acronym, router]);
 
   const handleDragStart = (event) => {
     setWasDragging(true);
