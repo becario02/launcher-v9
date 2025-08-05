@@ -12,12 +12,20 @@ export async function middleware(request) {
     '/admin/conexioneserp',
     '/admin/videos',
     '/admin/notifications',
-    '/admin/integradores',
+    // '/admin/integradores', ← REMOVIDO: Ahora es accesible para todos
     '/admin/addendas',
     '/admin/promociones'
   ];
   
+  // Rutas que son accesibles para todos los usuarios autenticados
+  const publicAuthenticatedRoutes = ['/admin/integradores'];
+  
   const isPublicRoute = publicRoutes.some(route => 
+    request.nextUrl.pathname === route || 
+    request.nextUrl.pathname.startsWith(`${route}/`)
+  );
+  
+  const isPublicAuthenticatedRoute = publicAuthenticatedRoutes.some(route => 
     request.nextUrl.pathname === route || 
     request.nextUrl.pathname.startsWith(`${route}/`)
   );
@@ -25,7 +33,7 @@ export async function middleware(request) {
   const isAdminRoute = adminRoutes.some(route => 
     request.nextUrl.pathname === route || 
     request.nextUrl.pathname.startsWith(`${route}/`)
-  ) || request.nextUrl.pathname.startsWith('/admin/');
+  ) || (request.nextUrl.pathname.startsWith('/admin/') && !isPublicAuthenticatedRoute);
   
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/tableros/');
   
