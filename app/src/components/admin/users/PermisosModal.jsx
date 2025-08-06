@@ -40,7 +40,7 @@ export default function PermissionsModal({
           perms[`custom_${opt.idCustomOption}`] = false;
         });
         dashboards.forEach(d => {
-          perms[`dashboard_${d.id}`] = false;
+          perms[`dashboard_${d.idManagementDashboard}`] = false;
         });
         initialPermissions[u.idUser] = perms;
       });
