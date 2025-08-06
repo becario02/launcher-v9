@@ -51,9 +51,7 @@ export async function middleware(request) {
   if (isAuthenticated && isAdminRoute) {
     const isUserCustomer = profileName?.includes("USERCUSTOMER");
     const allowedUserCustomerPaths = ["/admin/integradores"];
-    const isAllowedPath = allowedUserCustomerPaths.includes(
-      request.nextUrl.pathname
-    );
+    const isAllowedPath = allowedUserCustomerPaths.some((path) => request.nextUrl.pathname.startsWith(path));
 
     if (!isAdmin && !isAdvan && !(isUserCustomer && isAllowedPath)) {
       return NextResponse.redirect(new URL("/", request.url));

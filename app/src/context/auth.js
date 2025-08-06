@@ -55,7 +55,7 @@ export function AuthProvider({ children }) {
       const allowedUserCustomerPaths = ["/admin/integradores"];
 
       const isUserCustomer = profileName.includes("USERCUSTOMER");
-      const isAllowedPath = allowedUserCustomerPaths.includes(pathname);
+      const isAllowedPath = allowedUserCustomerPaths.some((path) => pathname.startsWith(path));
 
       if (
         !profileName.includes("ADMIN") &&
