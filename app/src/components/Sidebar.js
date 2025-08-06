@@ -22,7 +22,8 @@ import {
   BarChart3,
   Truck,
   Building2,
-  UserCheck
+  UserCheck,
+  Activity
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -50,8 +51,6 @@ function getActiveItemFromPath(pathname, customOptions = []) {
     return 'AdminMenus';
   } else if (pathname.includes('/admin/users')) {
     return 'AdminUsers';
-  } else if (pathname.includes('/admin/conexioneserp')) {
-    return 'conexioneserp';
   } else if (pathname.includes('/admin/videos')) {
     return 'AdminVideos';
   } else if (pathname.includes('/admin/documents')) {
@@ -60,6 +59,10 @@ function getActiveItemFromPath(pathname, customOptions = []) {
     return 'AdminNotifications';
   } else if (pathname.includes('/admin/promociones')) {
     return 'AdminPromociones';
+  } else if (pathname.includes('/admin/conexioneserp')) {
+    return 'conexioneserp';
+  } else if (pathname.includes('/admin/menu-tracking')) {
+    return 'AdminMenuTracking';
   } else if (pathname.includes('/advanpac/pacs')) {
     return 'AdvanPacPacs';
   } else if (pathname.includes('/advanpac/clientes')) {
@@ -432,7 +435,7 @@ export default function Sidebar({ onClose }) {
 
   const isDivisionActive = ['NUCLEARES', 'FINANCIAL', 'AUXILIARES'].includes(activeItem);
   const isHelpCenterActive = ['AdminVideos', 'AdminDocumentos'].includes(activeItem);
-  const isAdminActive = ['AdminUsers', 'conexioneserp', 'AdminVideos', 'AdminDocumentos', 'AdminMenus', 'AdminNotifications', 'AdminPromociones'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
+  const isAdminActive = ['AdminUsers', 'conexioneserp', 'AdminVideos', 'AdminDocumentos', 'AdminMenus', 'AdminNotifications', 'AdminPromociones', 'AdminMenuTracking'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
   const isAdvanPacActive = ['AdvanPacPacs', 'AdvanPacClientes'].includes(activeItem);
 
   // Check if any custom option is active
@@ -562,13 +565,13 @@ export default function Sidebar({ onClose }) {
               onClick={() => navigateTo('/admin/users', 'AdminUsers')}
             />
 
-            <SidebarItem
+            {/*<SidebarItem
               icon={Network}
               text="Conexiones ERP"
               indent
-              active={activeItem === 'conexionesERP'}
+              active={activeItem === 'conexioneserp'}
               onClick={() => navigateTo('/admin/conexioneserp', 'conexioneserp')}
-            />
+            />*/}
 
             {/* Centro de Ayuda sub-dropdown */}
             {isAdvan && (
@@ -594,6 +597,17 @@ export default function Sidebar({ onClose }) {
                   onClick={() => navigateTo('/admin/documents', 'AdminDocumentos')}
                 />
               </ExpandableItem>
+            )}
+
+            {/* Menu Tracking - Solo para ADMINADVAN y USERADVAN */}
+            {(isAdminAdvan || isUserAdvan) && (
+              <SidebarItem
+                icon={Activity}
+                text="Menu Tracking"
+                indent
+                active={activeItem === 'AdminMenuTracking'}
+                onClick={() => navigateTo('/admin/menu-tracking', 'AdminMenuTracking')}
+              />
             )}
 
             {isAdvan && (

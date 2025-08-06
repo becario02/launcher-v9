@@ -77,7 +77,7 @@ export async function middleware(request) {
         if (dashboardsData.statusCode === "200") {
           const userDashboards = dashboardsData.data || [];
 
-          const currentDashboardPath = request.nextUrl.pathname.substring(1); // Remove leading '/'
+          const currentDashboardPath = request.nextUrl.pathname.substring(1); 
 
           const hasAccess = userDashboards.some(
             (dashboard) => dashboard.url === currentDashboardPath
