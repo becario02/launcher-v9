@@ -1,16 +1,18 @@
-export default function Header({ totalConnections }) {
+import { Network } from 'lucide-react';
+
+export default function Header() {
   return (
-    <div className="flex items-center justify-between flex-wrap gap-2">
-      <div>
-        <p className="text-[16px] text-[#92929D] dark:text-gray-400">
-          Manage and assign ERP connections across your organization
-        </p>
+    <div className="flex items-start gap-3">
+      <div className="text-primary mt-1">
+        <Network size={24} />
       </div>
       <div>
-        <div className="flex items-center gap-2 border border-[#0080FF] text-[#0080FF] px-3 py-1 rounded-[6px] text-sm font-medium">
-          <span>🔗</span>
-          <span>{totalConnections} Total Connections</span>
-        </div>
+        <h1 className="text-xl font-semibold text-[#92929D] dark:text-gray-400">
+          Administrador de Conexiones ERP
+        </h1>
+        <p className="text-sm text-[#92929D] dark:text-gray-400">
+          Gestiona las conexiones ERP dentro de tu organización.
+        </p>
       </div>
     </div>
   );

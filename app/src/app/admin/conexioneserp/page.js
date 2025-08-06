@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import Notification from "@/components/Notification";
 import Header from "@/components/admin/conexionesErp/Header";
 import SearchAndFilter from "@/components/admin/conexionesErp/SearchAndFilter";
 import CompanyCards from "@/components/admin/conexionesErp/CompanyCards";
+import UserSlider from "@/components/admin/conexionesErp/UserConexiones";
 
 export default function ConexionesErp() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -19,118 +20,161 @@ export default function ConexionesErp() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCompany, setSelectedCompany] = useState("all");
-  const [openCompanies, setOpenCompanies] = useState([1, 2]);
+  const [openCompanies, setOpenCompanies] = useState([]);
+  const [companies, setCompanies] = useState([]);
+  const [vista, setVista] = useState("empresas");
+  const [users, setUsers] = useState([]);
 
-  const companies = [
-    {
-      id: 1,
-      name: "Acme Corporation",
-      totalConnections: 12,
-      availableConnections: [
-        {
-          id: 1,
-          name: "SAP Production",
-          type: "SAP",
-          status: "active",
-          lastSync: "2024-01-15",
-        },
-        {
-          id: 2,
-          name: "Oracle Financials",
-          type: "Oracle",
-          status: "active",
-          lastSync: "2024-01-14",
-        },
-        {
-          id: 3,
-          name: "Salesforce CRM",
-          type: "Salesforce",
-          status: "inactive",
-          lastSync: "2024-01-10",
-        },
-      ],
-      assignedConnections: [
-        {
-          id: 4,
-          name: "SAP HR",
-          type: "SAP",
-          assignedTo: "John Doe",
-          userId: 1,
-          lastSync: "2024-01-15",
-        },
-        {
-          id: 5,
-          name: "NetSuite ERP",
-          type: "NetSuite",
-          assignedTo: "Jane Smith",
-          userId: 2,
-          lastSync: "2024-01-14",
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: "TechStart Inc",
-      totalConnections: 8,
-      availableConnections: [
-        {
-          id: 6,
-          name: "QuickBooks Online",
-          type: "QuickBooks",
-          status: "active",
-          lastSync: "2024-01-13",
-        },
-        {
-          id: 7,
-          name: "Xero Accounting",
-          type: "Xero",
-          status: "active",
-          lastSync: "2024-01-12",
-        },
-      ],
-      assignedConnections: [
-        {
-          id: 8,
-          name: "HubSpot CRM",
-          type: "HubSpot",
-          assignedTo: "Mike Johnson",
-          userId: 3,
-          lastSync: "2024-01-11",
-        },
-      ],
-    },
-  ];
+  useEffect(() => {
+    const fetchConnections = async () => {
+      try {
+        const res = await fetch("/api/conexionesErp");
+        const json = await res.json();
 
-  const users = [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john@acme.com",
-      role: "Manager",
-      connectionsCount: 3,
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "jane@acme.com",
-      role: "Analyst",
-      connectionsCount: 2,
-    },
-    {
-      id: 3,
-      name: "Mike Johnson",
-      email: "mike@techstart.com",
-      role: "Developer",
-      connectionsCount: 1,
-    },
-    {
-      id: 4,
-      name: "Sarah Wilson",
-      email: "sarah@acme.com",
-      role: "Admin",
-      connectionsCount: 0,
-    },
-  ];
+        if (json.statusCode !== "200")
+          throw new Error(json.message || "Error al obtener datos");
+
+        const grouped = {};
+        json.data.forEach((conn) => {
+          const companyId = conn.idCompany;
+          if (!grouped[companyId]) {
+            grouped[companyId] = {
+              id: companyId,
+              name: conn.name,
+              companyIdentifier: conn.companyIdentifier,
+              totalConnections: 0,
+              availableConnections: [],
+              assignedConnections: [],
+            };
+          }
+
+          grouped[companyId].availableConnections.push({
+            id: conn.idUserCompanyConnection,
+            name: conn.nameErpDb,
+            server: conn.serverErpDb,
+            environment: conn.environment,
+          });
+
+          grouped[companyId].totalConnections++;
+        });
+
+        setCompanies(Object.values(grouped));
+        setOpenCompanies([]);
+      } catch (error) {
+        console.error("Error:", error);
+        setNotification({
+          visible: true,
+          type: "error",
+          message: "No se pudieron cargar las conexiones ERP.",
+          style: "toast",
+        });
+      }
+    };
+
+    fetchConnections();
+    fetchUsers(setUsers);
+  }, []);
+
+  const fetchUsers = async (setUsers) => {
+    try {
+      const res = await fetch("/api/conexionesErp/users");
+      const json = await res.json();
+      const grouped = json.data.reduce((acc, conn) => {
+        const existing = acc.find((u) => u.idUser === conn.idUser);
+        const connection = {
+          id: conn.idUserCompanyConnection,
+          db: conn.nameErpDb,
+          server: conn.serverErpDb,
+          env: conn.environment,
+          company: conn.name,
+        };
+
+        if (existing) {
+          existing.connections.push(connection);
+        } else {
+          acc.push({
+            idUser: conn.idUser,
+            fullname: conn.fullname,
+            email: conn.email,
+            connections: [connection],
+          });
+        }
+        return acc;
+      }, []);
+      setUsers(grouped);
+    } catch (error) {
+    }
+  };
+
+  const handleDeleteErpConnection = async (connToDelete, currentUserId) => {
+    if (!connToDelete) return;
+
+    try {
+      const res = await fetch("/api/conexionesErp/delete", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: connToDelete.id }),
+      });
+
+      const json = await res.json();
+
+      if (json.statusCode !== "200") {
+        throw new Error(json.message || "No se pudo eliminar la conexión.");
+      }
+
+      setUsers((prev) =>
+        prev.map((user) =>
+          user.idUser === currentUserId
+            ? {
+                ...user,
+                connections: user.connections.filter(
+                  (c) => c.id !== connToDelete.id
+                ),
+              }
+            : user
+        )
+      );
+
+      setNotification({
+        visible: true,
+        type: "success",
+        message: `Conexión ERP eliminada correctamente.`,
+        style: "toast",
+      });
+    } catch (error) {
+      setNotification({
+        visible: true,
+        type: "error",
+        message: "Error al eliminar la conexión ERP.",
+        style: "toast",
+      });
+    }
+  };
+
+  const handleAssignConnection = async (userId, connection) => {
+    try {
+      const response = await fetch("/api/conexionesErp/assign", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId, connectionId: connection.id }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success(`Conexión asignada exitosamente`);
+      } else {
+        toast.error(result.message || "Error al asignar la conexión");
+      }
+    } catch (err) {
+      console.error("Error al asignar conexión:", err);
+      toast.error("Error del servidor al asignar conexión");
+    }
+  };
 
   const filteredCompanies = companies.filter(
     (company) =>
@@ -150,12 +194,10 @@ export default function ConexionesErp() {
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar Desktop */}
       <div className="hidden md:block">
         <Sidebar />
       </div>
 
-      {/* Sidebar Mobile Overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 flex md:hidden">
           <div className="relative z-50 w-60 h-full bg-white dark:bg-[#1c1c24] shadow-lg">
@@ -168,13 +210,11 @@ export default function ConexionesErp() {
         </div>
       )}
 
-      {/* Main Content */}
       <div className="flex flex-col flex-1 md:ml-60">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
-        
+
         <main className="flex-1 overflow-auto bg-white dark:bg-[#1c1c24] pt-0 w-full text-gray-900 dark:text-white">
           <div className="max-w-7xl mx-auto px-4 lg:px-8 py-6 h-full min-w-0 w-full">
-            {/* Notificaciones */}
             {notification.visible && notification.style === "toast" && (
               <div className="fixed top-4 right-4 z-[9999]">
                 <Notification
@@ -196,27 +236,63 @@ export default function ConexionesErp() {
               />
             )}
 
-            {/* ERP UI Components */}
             <div className="space-y-6 h-full flex flex-col w-full min-w-0">
-              <div className="w-full min-w-0">
-                <Header totalConnections={totalConnections} />
+              <Header totalConnections={totalConnections} />
+
+              {/* 🔁 Botones para cambiar vista */}
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setVista("empresas")}
+                  className={`px-4 py-1 rounded-full text-sm border ${
+                    vista === "empresas"
+                      ? "bg-primary text-white border-primary"
+                      : "bg-transparent text-primary border-primary"
+                  }`}
+                >
+                  Ver por empresa
+                </button>
+                <button
+                  onClick={() => setVista("usuarios")}
+                  className={`px-4 py-1 rounded-full text-sm border ${
+                    vista === "usuarios"
+                      ? "bg-primary text-white border-primary"
+                      : "bg-transparent text-primary border-primary"
+                  }`}
+                >
+                  Ver por usuario
+                </button>
               </div>
-              <div className="w-full min-w-0">
-                <SearchAndFilter
-                  companies={companies}
-                  searchTerm={searchTerm}
-                  selectedCompany={selectedCompany}
-                  setSearchTerm={setSearchTerm}
-                  setSelectedCompany={setSelectedCompany}
-                />
-              </div>
-              <div className="flex-1 w-full min-w-0">
-                <CompanyCards
-                  companies={filteredCompanies}
-                  openCompanies={openCompanies}
-                  setOpenCompanies={setOpenCompanies}
-                />
-              </div>
+
+              {vista === "empresas" && (
+                <>
+                  <SearchAndFilter
+                    companies={companies}
+                    searchTerm={searchTerm}
+                    selectedCompany={selectedCompany}
+                    setSearchTerm={setSearchTerm}
+                    setSelectedCompany={setSelectedCompany}
+                  />
+                  <div className="flex-1 w-full min-w-0">
+                    <CompanyCards
+                      companies={filteredCompanies}
+                      openCompanies={openCompanies}
+                      setOpenCompanies={setOpenCompanies}
+                      users={users}
+                      handleAssign={handleAssignConnection}
+                    />
+                  </div>
+                </>
+              )}
+
+              {vista === "usuarios" && (
+                <div className="flex-1 w-full min-w-0">
+                  <UserSlider
+                    users={users}
+                    setUsers={setUsers}
+                    handleDelete={handleDeleteErpConnection}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </main>

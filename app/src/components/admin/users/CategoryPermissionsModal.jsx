@@ -42,7 +42,7 @@ export default function CategoryPermissionsModal({
             ? '/api/user-custom-option-by-user'
             : '/api/user-dashboard-by-user';
 
-        const response = await axios.post(url, { IdUser: userId });
+        const response = await fetch(url, { IdUser: userId });
         const data = response.data?.data?.permisos || [];
 
         const initial = {};

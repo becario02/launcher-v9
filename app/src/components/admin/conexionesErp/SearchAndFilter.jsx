@@ -36,7 +36,7 @@ export default function ConexionesFilters({
         <div className="relative flex-grow max-w-[300px] w-full">
           <input
             type="text"
-            placeholder="Buscar conexiones..."
+            placeholder="Buscar empresa..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-8 pr-8 py-2 border border-gray-200 rounded-full
