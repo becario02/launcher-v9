@@ -1,8 +1,50 @@
 import React, { useState } from 'react';
-import { Truck, Radio, Zap, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Radio, Zap, RefreshCw, ChevronLeft, ChevronRight, MapPin, Clock, User, Building } from 'lucide-react';
 import { usePrimaryColor } from '@/context/primaryColor';
 
-const VehicleTable = ({ vehiclesData, itemsPerPage, isLoading = false }) => {
+// Custom SVG Components
+const TractorIcon = ({ className = "h-8 w-8", color = "#3B82F6" }) => (
+  <svg 
+    className={className} 
+    viewBox="0 0 48 32" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Tractor cab */}
+    <rect x="2" y="8" width="20" height="16" rx="2" fill={color} stroke="#1E40AF" strokeWidth="1"/>
+    {/* Windshield */}
+    <rect x="4" y="10" width="16" height="8" rx="1" fill="#E5E7EB"/>
+    {/* Front wheel */}
+    <circle cx="8" cy="26" r="4" fill="#374151" stroke="#1F2937" strokeWidth="1"/>
+    <circle cx="8" cy="26" r="2" fill="#6B7280"/>
+    {/* Rear wheel */}
+    <circle cx="16" cy="26" r="4" fill="#374151" stroke="#1F2937" strokeWidth="1"/>
+    <circle cx="16" cy="26" r="2" fill="#6B7280"/>
+    {/* Fifth wheel coupling */}
+    <rect x="20" y="14" width="4" height="4" rx="1" fill="#6B7280"/>
+  </svg>
+);
+
+const TrailerIcon = ({ className = "h-6 w-8", color = "#6B7280" }) => (
+  <svg 
+    className={className} 
+    viewBox="0 0 32 20" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Trailer body */}
+    <rect x="2" y="4" width="24" height="12" rx="1" fill={color} stroke="#4B5563" strokeWidth="1"/>
+    {/* Trailer details */}
+    <rect x="4" y="6" width="20" height="8" rx="0.5" fill="#9CA3AF"/>
+    {/* Wheel */}
+    <circle cx="22" cy="18" r="3" fill="#374151" stroke="#1F2937" strokeWidth="1"/>
+    <circle cx="22" cy="18" r="1.5" fill="#6B7280"/>
+    {/* Connection point */}
+    <rect x="1" y="8" width="3" height="4" rx="0.5" fill="#4B5563"/>
+  </svg>
+);
+
+const VehicleTable = ({ vehiclesData, itemsPerPage, isLoading = false, resetPageTrigger }) => {
   const { primaryColor } = usePrimaryColor();
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -12,10 +54,25 @@ const VehicleTable = ({ vehiclesData, itemsPerPage, isLoading = false }) => {
   const endIndex = startIndex + itemsPerPage;
   const currentData = vehiclesData.slice(startIndex, endIndex);
 
-  // Reset to first page when data changes
+  // Reset to first page when filters change (triggered by resetPageTrigger prop)
+  React.useEffect(() => {
+    if (resetPageTrigger) {
+      setCurrentPage(1);
+    }
+  }, [resetPageTrigger]);
+
+  // Reset to first page when items per page changes
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [vehiclesData, itemsPerPage]);
+  }, [itemsPerPage]);
+
+  // Adjust current page if it's beyond the available pages
+  React.useEffect(() => {
+    const maxValidPage = Math.ceil(vehiclesData.length / itemsPerPage);
+    if (currentPage > maxValidPage && maxValidPage > 0) {
+      setCurrentPage(maxValidPage);
+    }
+  }, [vehiclesData.length, itemsPerPage, currentPage]);
 
   const getStatusColor = (status) => {
     switch (status.toUpperCase()) {
@@ -103,40 +160,31 @@ const VehicleTable = ({ vehiclesData, itemsPerPage, isLoading = false }) => {
   }
 
   return (
-    <div className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-lg overflow-hidden">
-      {/* Table Header */}
-      <div className="bg-gray-50 dark:bg-[#2C2C38] border-b border-gray-200 dark:border-[#3C3C48]">
-        <div className="grid grid-cols-12 gap-4 px-4 py-3 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-          <div className="col-span-2">Unidad</div>
-          <div className="col-span-2">Estado</div>
-          <div className="col-span-2">Ubicación</div>
-          <div className="col-span-1">Tiempo</div>
-          <div className="col-span-1">Terminales</div>
-          <div className="col-span-2">Operador</div>
-          <div className="col-span-1">Cliente</div>
-          <div className="col-span-1">Negocio</div>
-        </div>
-      </div>
-
-      {/* Table Body */}
-      <div className="divide-y divide-gray-200 dark:divide-[#2C2C38]">
+    <div className="space-y-4">
+      {/* Vehicle Cards */}
+      <div className="space-y-3">
         {currentData.map((vehicle, index) => (
           <div 
             key={`${vehicle.tractoNumEco}-${index}`}
-            className="grid grid-cols-12 gap-4 px-4 py-4 hover:bg-gray-50 dark:hover:bg-[#2C2C38] transition-colors"
+            className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-lg p-4 hover:shadow-md transition-shadow"
           >
-            {/* Unidad Column */}
-            <div className="col-span-2">
-              <div className="flex flex-col space-y-2">
-                {/* Tractor */}
-                <div className="flex items-center space-x-2">
-                  <div className="relative">
-                    <Truck className="h-5 w-5 text-blue-600" />
-                    <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs px-1 rounded text-[10px] leading-tight">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+              
+              {/* Left Section - Unit Info */}
+              <div className="lg:col-span-3">
+                <div className="flex items-center space-x-3">
+                  {/* Tractor with Number */}
+                  <div className="flex items-center space-x-2">
+                    <div className="relative">
+                      <TractorIcon className="h-10 w-12" color="#3B82F6" />
+                    </div>
+                    <div className="bg-blue-600 text-white px-2 py-1 rounded font-bold text-sm">
                       {vehicle.tractoNumEco}
-                    </span>
+                    </div>
                   </div>
-                  <div className="flex space-x-1">
+                  
+                  {/* Status Indicators */}
+                  <div className="flex items-center space-x-2">
                     <div title={`GPS: ${vehicle.semaforoAntena === 1 ? 'Activo' : vehicle.semaforoAntena === 0 ? 'Sin señal' : 'Sin información'}`}>
                       {getGpsStatusIcon(vehicle.semaforoAntena)}
                     </div>
@@ -146,114 +194,109 @@ const VehicleTable = ({ vehiclesData, itemsPerPage, isLoading = false }) => {
                   </div>
                 </div>
                 
-                {/* Remolques */}
-                <div className="flex flex-wrap gap-1">
+                {/* Remolques Row */}
+                <div className="flex items-center space-x-2 mt-2">
                   {vehicle.remNe1 && (
-                    <div className="flex items-center">
-                      <div className="relative">
-                        <div className="w-4 h-3 bg-gray-400 rounded-sm"></div>
-                        <span className="absolute inset-0 flex items-center justify-center text-white text-[8px] leading-none">
-                          {vehicle.remNe1}
-                        </span>
+                    <div className="flex items-center space-x-1">
+                      <TrailerIcon className="h-6 w-8" color="#10B981" />
+                      <div className="bg-green-600 text-white px-2 py-0.5 rounded text-xs font-bold">
+                        {vehicle.remNe1}
                       </div>
                     </div>
                   )}
                   {vehicle.remNe2 && (
-                    <div className="flex items-center">
-                      <div className="relative">
-                        <div className="w-4 h-3 bg-gray-400 rounded-sm"></div>
-                        <span className="absolute inset-0 flex items-center justify-center text-white text-[8px] leading-none">
-                          {vehicle.remNe2}
-                        </span>
+                    <div className="flex items-center space-x-1">
+                      <TrailerIcon className="h-6 w-8" color="#10B981" />
+                      <div className="bg-green-600 text-white px-2 py-0.5 rounded text-xs font-bold">
+                        {vehicle.remNe2}
                       </div>
+                    </div>
+                  )}
+                  {!vehicle.remNe1 && !vehicle.remNe2 && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Sin remolques
                     </div>
                   )}
                 </div>
               </div>
-            </div>
 
-            {/* Estado Column */}
-            <div className="col-span-2">
-              <div className="flex flex-col space-y-1">
-                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(vehicle.statusDescrip)}`}>
-                  {vehicle.statusDescrip}
-                </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {formatDuration(vehicle.diasStatus)}
-                </span>
+              {/* Status Section */}
+              <div className="lg:col-span-2">
+                <div className="space-y-1">
+                  <span className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(vehicle.statusDescrip)}`}>
+                    {vehicle.statusDescrip}
+                  </span>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    <Clock className="h-3 w-3 inline mr-1" />
+                    {formatDuration(vehicle.diasStatus)}
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Ubicación Column */}
-            <div className="col-span-2">
-              <div className="flex flex-col space-y-1">
-                <span className="text-sm text-gray-900 dark:text-white font-medium truncate" title={vehicle.posicion}>
-                  {vehicle.posicion || 'N/A'}
-                </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {formatDateTime(vehicle.fechaPosicion)}
-                </span>
-              </div>
-            </div>
-
-            {/* Tiempo Column */}
-            <div className="col-span-1">
-              <div className="text-sm text-gray-900 dark:text-white">
-                <div className="text-xs text-gray-500 dark:text-gray-400">
-                  {vehicle.fechaPosicion ? (
-                    <span title={formatDateTime(vehicle.fechaPosicion)}>
-                      {new Date(vehicle.fechaPosicion).toLocaleTimeString('es-MX', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+              {/* Location Section */}
+              <div className="lg:col-span-3">
+                <div className="space-y-1">
+                  <div className="flex items-start space-x-1">
+                    <MapPin className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-gray-900 dark:text-white font-medium leading-tight">
+                      {vehicle.posicion || 'Ubicación no disponible'}
                     </span>
-                  ) : 'N/A'}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 ml-5">
+                    {formatDateTime(vehicle.fechaPosicion)}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Terminales Column */}
-            <div className="col-span-1">
-              <div className="flex flex-col space-y-1">
-                <div className="flex items-center space-x-1">
-                  <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-1 py-0.5 rounded">
-                    {vehicle.terminalDespacho || 'N/A'}
-                  </span>
+              {/* Terminals Section */}
+              <div className="lg:col-span-2">
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-500">Origen:</span>
+                    <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-1 rounded font-bold">
+                      {vehicle.terminalDespacho || 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-500">Destino:</span>
+                    <span className="text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 px-2 py-1 rounded font-bold">
+                      {vehicle.terminalDestino || 'N/A'}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <span className="text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 px-1 py-0.5 rounded">
-                    {vehicle.terminalDestino || 'N/A'}
-                  </span>
+              </div>
+
+              {/* Right Section - Operator & Business */}
+              <div className="lg:col-span-2">
+                <div className="space-y-2">
+                  {/* Operator */}
+                  <div className="flex items-center space-x-1">
+                    <User className="h-3 w-3 text-gray-400" />
+                    <span className="text-sm text-gray-900 dark:text-white font-medium truncate">
+                      {vehicle.operadorNombre || 'Sin asignar'}
+                    </span>
+                  </div>
+                  
+                  {/* Client */}
+                  <div className="flex items-center space-x-1">
+                    <Building className="h-3 w-3 text-gray-400" />
+                    <span className="text-sm text-gray-700 dark:text-gray-300 truncate" title={vehicle.clienteNombre}>
+                      {vehicle.clienteNombre || 'Sin cliente'}
+                    </span>
+                  </div>
+                  
+                  {/* Business Line & Circuit */}
+                  <div className="flex space-x-1">
+                    <span className="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 px-2 py-1 rounded">
+                      {vehicle.negocioClave || 'N/A'}
+                    </span>
+                    <span className="text-xs bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 px-2 py-1 rounded">
+                      {vehicle.circuitoClave || 'N/A'}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Operador Column */}
-            <div className="col-span-2">
-              <div className="text-sm text-gray-900 dark:text-white">
-                <span className="font-medium">
-                  {vehicle.operadorNombre || 'Sin asignar'}
-                </span>
-              </div>
-            </div>
-
-            {/* Cliente Column */}
-            <div className="col-span-1">
-              <div className="text-sm text-gray-900 dark:text-white truncate" title={vehicle.clienteNombre}>
-                {vehicle.clienteNombre || 'N/A'}
-              </div>
-            </div>
-
-            {/* Negocio Column */}
-            <div className="col-span-1">
-              <div className="flex flex-col space-y-1">
-                <span className="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 px-1 py-0.5 rounded text-center">
-                  {vehicle.negocioClave || 'N/A'}
-                </span>
-                <span className="text-xs bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 px-1 py-0.5 rounded text-center">
-                  {vehicle.circuitoClave || 'N/A'}
-                </span>
-              </div>
             </div>
           </div>
         ))}
@@ -261,7 +304,7 @@ const VehicleTable = ({ vehiclesData, itemsPerPage, isLoading = false }) => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="bg-gray-50 dark:bg-[#2C2C38] px-4 py-3 border-t border-gray-200 dark:border-[#3C3C48]">
+        <div className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-lg px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-700 dark:text-gray-300">
               Mostrando {startIndex + 1} a {Math.min(endIndex, vehiclesData.length)} de {vehiclesData.length} vehículos
@@ -311,7 +354,7 @@ const VehicleTable = ({ vehiclesData, itemsPerPage, isLoading = false }) => {
 
       {/* Loading Overlay */}
       {isLoading && (
-        <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 flex items-center justify-center">
+        <div className="fixed inset-0 bg-white/80 dark:bg-gray-800/80 flex items-center justify-center z-50">
           <div className="text-center">
             <RefreshCw className="h-6 w-6 text-gray-400 animate-spin mx-auto mb-2" />
             <p className="text-sm text-gray-600 dark:text-gray-400">Actualizando datos...</p>

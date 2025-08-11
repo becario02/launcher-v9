@@ -20,7 +20,7 @@ const VehicleDashboardPage = () => {
     status: ''
   });
   const [itemsPerPage, setItemsPerPage] = useState(30);
-  const [updateInterval, setUpdateInterval] = useState(60);
+  const [updateInterval, setUpdateInterval] = useState(60); // Keep in seconds for this dashboard
   const [showSettings, setShowSettings] = useState(false);
   
   // API states
@@ -94,7 +94,7 @@ const VehicleDashboardPage = () => {
   };
 
   // Fetch vehicles data from API
-  const fetchVehiclesData = async () => {
+  const fetchVehiclesData = async (preservePage = false) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -103,6 +103,14 @@ const VehicleDashboardPage = () => {
       const result = await tokenizedRequest('/mserpservice/api/tableros/vehiculos', {
         method: 'GET'
       });
+      
+      // Log the complete API response for debugging
+      console.log('=== API Response ===');
+      console.log('Status Code:', result.statusCode);
+      console.log('Message:', result.message);
+      console.log('Data Length:', result.data ? result.data.length : 'No data');
+      console.log('Preserve Page:', preservePage);
+      console.log('==================');
       
       if (result.statusCode === '200' && result.data) {
         const transformedData = transformApiData(result.data);
@@ -113,7 +121,8 @@ const VehicleDashboardPage = () => {
         // Clear intervalChangeTime when new data is fetched
         setIntervalChangeTime(null);
         
-        console.log(`Vehicles data updated: ${transformedData.length} vehicles loaded`);
+        console.log(`✅ Vehicles data updated: ${transformedData.length} vehicles loaded`);
+        console.log('📊 Transformed Data Sample:', transformedData.slice(0, 2)); // Show first 2 records
       } else {
         throw new Error(result.message || 'Invalid response format');
       }
@@ -163,7 +172,7 @@ const VehicleDashboardPage = () => {
     // Set up new interval
     intervalRef.current = setInterval(() => {
       console.log(`Auto-refreshing vehicles data every ${updateInterval} seconds...`);
-      fetchVehiclesData();
+      fetchVehiclesData(true); // Pass true to preserve current page
     }, updateInterval * 1000);
 
     return () => {
@@ -193,6 +202,18 @@ const VehicleDashboardPage = () => {
     });
   }, [vehiclesData, searchTerm, filters]);
 
+  // Reset page when filters change (but not when data auto-refreshes)
+  const [previousFilterString, setPreviousFilterString] = useState('');
+  React.useEffect(() => {
+    const currentFilterString = JSON.stringify({ searchTerm, filters });
+    if (previousFilterString !== '' && previousFilterString !== currentFilterString) {
+      // Filters changed, reset to page 1
+      console.log('Filters changed, resetting to page 1');
+      // We'll pass this to the VehicleTable component
+    }
+    setPreviousFilterString(currentFilterString);
+  }, [searchTerm, filters, previousFilterString]);
+
   // Handle settings modal
   const handleSettingsClick = React.useCallback(() => {
     setShowSettings(true);
@@ -211,7 +232,7 @@ const VehicleDashboardPage = () => {
   const handleRetry = React.useCallback(() => {
     setError(null);
     clearTokenError();
-    fetchVehiclesData();
+    fetchVehiclesData(false); // Manual retry, can reset page
   }, [clearTokenError]);
 
   // Load initial data and configuration
@@ -220,14 +241,15 @@ const VehicleDashboardPage = () => {
       try {
         // First load reload time config if dashboard is available
         if (currentDashboardId) {
-          const reloadTime = await getReloadTime();
+          const reloadTimeMinutes = await getReloadTime();
           // Convert minutes to seconds for this dashboard
-          setUpdateInterval(reloadTime * 60);
-          console.log(`Reload time configuration loaded: ${reloadTime} minutes (${reloadTime * 60} seconds)`);
+          const reloadTimeSeconds = reloadTimeMinutes * 60;
+          setUpdateInterval(reloadTimeSeconds);
+          console.log(`Reload time configuration loaded: ${reloadTimeMinutes} minutes (${reloadTimeSeconds} seconds)`);
         }
         
         // Then fetch vehicles data once
-        await fetchVehiclesData();
+        await fetchVehiclesData(false); // Initial load, can reset page
       } catch (err) {
         console.error('Error during initialization:', err);
       }
@@ -241,12 +263,13 @@ const VehicleDashboardPage = () => {
 
   // Setup auto-refresh when updateInterval changes (but not on initial load)
   useEffect(() => {
-    // Don't setup auto-refresh if we don't have data yet or if it's the initial default value
-    if (vehiclesData.length === 0 || updateInterval === 60) return;
+    // Don't setup auto-refresh if we don't have data yet
+    if (vehiclesData.length === 0) return;
     
+    console.log(`Setting up auto-refresh every ${updateInterval} seconds...`);
     const cleanup = setupAutoRefresh();
     return cleanup;
-  }, [setupAutoRefresh, vehiclesData.length]);
+  }, [setupAutoRefresh, vehiclesData.length, updateInterval]); // Add updateInterval to dependencies
 
   // Show loading state
   if ((isLoading || isProcessingTokens) && vehiclesData.length === 0) {
@@ -330,6 +353,7 @@ const VehicleDashboardPage = () => {
           vehiclesData={filteredData}
           itemsPerPage={itemsPerPage}
           isLoading={isLoading || isProcessingTokens}
+          resetPageTrigger={JSON.stringify({ searchTerm, filters })} // Trigger page reset on filter changes
         />
       </div>
 
@@ -338,7 +362,11 @@ const VehicleDashboardPage = () => {
         isOpen={showSettings}
         onClose={handleSettingsClose}
         updateInterval={Math.round(updateInterval / 60)} // Convert seconds to minutes for modal
-        setUpdateInterval={(minutes) => setUpdateInterval(minutes * 60)} // Convert minutes to seconds
+        setUpdateInterval={(minutes) => {
+          const seconds = minutes * 60;
+          console.log(`Setting new update interval: ${minutes} minutes (${seconds} seconds)`);
+          setUpdateInterval(seconds);
+        }} // Convert minutes to seconds
         lastUpdate={lastUpdate}
         intervalChangeTime={intervalChangeTime}
         onIntervalChange={handleIntervalChange}
