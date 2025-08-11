@@ -11,25 +11,33 @@ const DiotCatalogoProveedores = () => {
 
   // States
   const [proveedores, setProveedores] = useState([]);
+  const [originalProveedores, setOriginalProveedores] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTipoOperacion, setFilterTipoOperacion] = useState('Todos');
   const [filterTipoProveedor, setFilterTipoProveedor] = useState('Todos');
   const [filterActividadIva, setFilterActividadIva] = useState('Todos');
-  const [editingRows, setEditingRows] = useState(new Set());
   const [savingRows, setSavingRows] = useState(new Set());
 
-  // Hardcoded data for selects (as requested)
-  const tiposOperacion = [
-    { id: 1, clave: '03', descripcion: 'Prestador de servicios profesional' },
-    { id: 2, clave: '06', descripcion: 'Arrendamiento' },
-    { id: 3, clave: '85', descripcion: 'Otros' },
-    { id: 4, clave: '08', descripcion: 'Importación por transferencia virtual' },
-    { id: 5, clave: '02', descripcion: 'Enajenación de bienes' },
-    { id: 6, clave: '07', descripcion: 'Importación de bienes o servicios' },
-    { id: 7, clave: '87', descripcion: 'Operaciones globales' }
-  ];
+  // Hardcoded data for selects
+  const tiposOperacion = {
+    nacional: [
+      { id: 1, clave: '03', descripcion: 'Prestador de servicios profesional' },
+      { id: 2, clave: '06', descripcion: 'Arrendamiento' },
+      { id: 3, clave: '85', descripcion: 'Otros' },
+      { id: 4, clave: '02', descripcion: 'Enajenación de bienes' },
+      { id: 6, clave: '08', descripcion: 'Importación por transferencia virtual' }
+    ],
+    extranjero: [
+      { id: 4, clave: '02', descripcion: 'Enajenación de bienes' },
+      { id: 1, clave: '03', descripcion: 'Prestador de servicios profesional' },
+      { id: 5, clave: '07', descripcion: 'Importación de bienes o servicios' }
+    ],
+    global: [
+      { id: 7, clave: '87', descripcion: 'Operaciones globales' }
+    ]
+  };
 
   const tiposProveedor = [
     { id: 1, clave: '04', descripcion: 'Nacional' },
@@ -44,6 +52,44 @@ const DiotCatalogoProveedores = () => {
     { id: 4, clave: '4', descripcion: 'Importación tangibles' },
     { id: 5, clave: '5', descripcion: 'Importación intangibles' }
   ];
+
+  // Helper functions
+  const getProviderType = (rfc) => {
+    if (!rfc) return 'nacional';
+    const upperRfc = rfc.toUpperCase();
+    if (upperRfc === 'XAXX010101000') return 'global';
+    if (upperRfc === 'XEXX010101000') return 'extranjero';
+    return 'nacional';
+  };
+
+  const getAvailableOperations = (rfc) => {
+    const providerType = getProviderType(rfc);
+    return tiposOperacion[providerType] || tiposOperacion.nacional;
+  };
+
+  const getAllTiposOperacion = () => {
+    return [
+      ...tiposOperacion.nacional,
+      ...tiposOperacion.extranjero,
+      ...tiposOperacion.global
+    ].filter((item, index, self) => 
+      index === self.findIndex(t => t.id === item.id)
+    );
+  };
+
+  // Check if a row has changes
+  const hasRowChanges = useCallback((clave) => {
+    const currentRow = proveedores.find(p => p.clave === clave);
+    const originalRow = originalProveedores.find(p => p.clave === clave);
+    
+    if (!currentRow || !originalRow) return false;
+    
+    return (
+      currentRow.tipoOperacion !== originalRow.tipoOperacion ||
+      currentRow.tipoProveedor !== originalRow.tipoProveedor ||
+      currentRow.actividadIva !== originalRow.actividadIva
+    );
+  }, [proveedores, originalProveedores]);
 
   // Transform API data
   const transformApiData = (apiData) => {
@@ -79,6 +125,7 @@ const DiotCatalogoProveedores = () => {
       if (result.statusCode === '200' && result.data) {
         const transformedData = transformApiData(result.data);
         setProveedores(transformedData);
+        setOriginalProveedores(JSON.parse(JSON.stringify(transformedData)));
         console.log(`Proveedores cargados: ${transformedData.length}`);
       } else {
         throw new Error(result.message || 'Error al cargar proveedores');
@@ -91,56 +138,27 @@ const DiotCatalogoProveedores = () => {
     }
   }, [tokenizedRequest, clearTokenError]);
 
-  // Load data on mount
-  useEffect(() => {
-    fetchProveedores();
-  }, [fetchProveedores]);
-
-  // Filter data
-  const filteredData = React.useMemo(() => {
-    return proveedores.filter(proveedor => {
-      const matchesSearch = 
-        proveedor.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        proveedor.rfc.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        proveedor.clave.toString().includes(searchTerm);
-
-      const matchesTipoOperacion = filterTipoOperacion === 'Todos' || 
-        proveedor.tipoOperacion === parseInt(filterTipoOperacion);
-
-      const matchesTipoProveedor = filterTipoProveedor === 'Todos' ||
-        proveedor.tipoProveedor === parseInt(filterTipoProveedor);
-
-      const matchesActividadIva = filterActividadIva === 'Todos' ||
-        proveedor.actividadIva === parseInt(filterActividadIva);
-
-      return matchesSearch && matchesTipoOperacion && matchesTipoProveedor && matchesActividadIva;
-    });
-  }, [proveedores, searchTerm, filterTipoOperacion, filterTipoProveedor, filterActividadIva]);
-
-  // Get description by ID
-  const getTipoOperacionDesc = (id) => {
-    const tipo = tiposOperacion.find(t => t.id === id);
-    return tipo ? `${tipo.clave} - ${tipo.descripcion}` : '';
-  };
-
-  const getTipoProveedorDesc = (id) => {
-    const tipo = tiposProveedor.find(t => t.id === id);
-    return tipo ? `${tipo.clave} - ${tipo.descripcion}` : '';
-  };
-
-  const getActividadIvaDesc = (id) => {
-    const actividad = actividadesIva.find(a => a.id === id);
-    return actividad ? actividad.descripcion : '';
-  };
-
   // Handle field change
   const handleFieldChange = (clave, field, value) => {
     setProveedores(prev => 
-      prev.map(p => 
-        p.clave === clave ? { ...p, [field]: value } : p
-      )
+      prev.map(p => {
+        if (p.clave === clave) {
+          let updatedProveedor = { ...p, [field]: value };
+          
+          if (field === 'tipoOperacion') {
+            const availableOps = getAvailableOperations(p.rfc);
+            const isValidOperation = availableOps.some(op => op.id === parseInt(value));
+            
+            if (!isValidOperation) {
+              updatedProveedor.tipoOperacion = availableOps[0]?.id || null;
+            }
+          }
+          
+          return updatedProveedor;
+        }
+        return p;
+      })
     );
-    setEditingRows(prev => new Set(prev).add(clave));
   };
 
   // Handle save
@@ -148,18 +166,59 @@ const DiotCatalogoProveedores = () => {
     setSavingRows(prev => new Set(prev).add(proveedor.clave));
     
     try {
-      // Simulate API call - replace with actual save logic
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setEditingRows(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(proveedor.clave);
-        return newSet;
+      // Prepare the payload for the API
+      const payload = {
+        ClienteClave: proveedor.clave,
+        PTipoProveedor: proveedor.tipoProveedor || null,
+        PTipoOperacion: proveedor.tipoOperacion || null,
+        PActoActividadIva: proveedor.actividadIva ? 
+          `${proveedor.actividadIva} - ${actividadesIva.find(a => a.id === proveedor.actividadIva)?.descripcion || ''}` : 
+          null
+      };
+
+      console.log('Enviando datos para actualizar:', payload);
+
+      const result = await tokenizedRequest('/mserpservice/api/diot/v1/updateVendor', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
       });
+
+      if (result.statusCode === '200') {
+        // Update original data to reflect saved state
+        setOriginalProveedores(prev => 
+          prev.map(p => 
+            p.clave === proveedor.clave 
+              ? { 
+                  ...p, 
+                  tipoOperacion: proveedor.tipoOperacion,
+                  tipoProveedor: proveedor.tipoProveedor,
+                  actividadIva: proveedor.actividadIva
+                }
+              : p
+          )
+        );
+        
+        console.log('Proveedor actualizado exitosamente:', result.message);
+        
+        // Show success message (optional - you can add a toast notification here)
+        // toast.success('Proveedor actualizado correctamente');
+        
+      } else {
+        throw new Error(result.message || 'Error al actualizar el proveedor');
+      }
       
-      console.log('Proveedor guardado:', proveedor);
     } catch (err) {
       console.error('Error saving proveedor:', err);
+      
+      // Show error message (optional - you can add a toast notification here)
+      // toast.error(`Error al guardar: ${err.message}`);
+      
+      // You could also set a local error state here to show in the UI
+      setError(`Error al actualizar proveedor ${proveedor.clave}: ${err.message}`);
+      
     } finally {
       setSavingRows(prev => {
         const newSet = new Set(prev);
@@ -169,12 +228,56 @@ const DiotCatalogoProveedores = () => {
     }
   };
 
+  // Filter data
+  const filteredData = React.useMemo(() => {
+    return proveedores.filter(proveedor => {
+      const matchesSearch = 
+        proveedor.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        proveedor.rfc.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        proveedor.clave.toString().includes(searchTerm);
+
+      let matchesTipoOperacion = false;
+      if (filterTipoOperacion === 'Todos') {
+        matchesTipoOperacion = true;
+      } else if (filterTipoOperacion === 'Vacio') {
+        matchesTipoOperacion = !proveedor.tipoOperacion || proveedor.tipoOperacion === null;
+      } else {
+        matchesTipoOperacion = proveedor.tipoOperacion === parseInt(filterTipoOperacion);
+      }
+
+      let matchesTipoProveedor = false;
+      if (filterTipoProveedor === 'Todos') {
+        matchesTipoProveedor = true;
+      } else if (filterTipoProveedor === 'Vacio') {
+        matchesTipoProveedor = !proveedor.tipoProveedor || proveedor.tipoProveedor === null;
+      } else {
+        matchesTipoProveedor = proveedor.tipoProveedor === parseInt(filterTipoProveedor);
+      }
+
+      let matchesActividadIva = false;
+      if (filterActividadIva === 'Todos') {
+        matchesActividadIva = true;
+      } else if (filterActividadIva === 'Vacio') {
+        matchesActividadIva = !proveedor.actividadIva || proveedor.actividadIva === null;
+      } else {
+        matchesActividadIva = proveedor.actividadIva === parseInt(filterActividadIva);
+      }
+
+      return matchesSearch && matchesTipoOperacion && matchesTipoProveedor && matchesActividadIva;
+    });
+  }, [proveedores, searchTerm, filterTipoOperacion, filterTipoProveedor, filterActividadIva]);
+
   // Handle retry
   const handleRetry = () => {
     setError(null);
     clearTokenError();
     fetchProveedores();
   };
+
+  // Load data on mount
+  useEffect(() => {
+    fetchProveedores();
+  }, [fetchProveedores]);
 
   if (isLoading && proveedores.length === 0) {
     return (
@@ -202,21 +305,32 @@ const DiotCatalogoProveedores = () => {
         </p>
       </div>
 
+      {/* Success Banner - Show when update is successful */}
+      {/* You can add this if you want to show success messages */}
+      
       {/* Error Banner */}
       {(error || tokenError) && (
         <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <AlertCircle className="h-5 w-5" />
-              <span>Error al cargar datos: {error || tokenError}</span>
+              <span>{error || tokenError}</span>
             </div>
-            <button
-              onClick={handleRetry}
-              disabled={isLoading || isProcessingTokens}
-              className="text-sm bg-red-200 dark:bg-red-800 hover:bg-red-300 dark:hover:bg-red-700 px-3 py-1 rounded transition-colors disabled:opacity-50"
-            >
-              {(isLoading || isProcessingTokens) ? 'Cargando...' : 'Reintentar'}
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setError(null)}
+                className="text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+              >
+                Cerrar
+              </button>
+              <button
+                onClick={handleRetry}
+                disabled={isLoading || isProcessingTokens}
+                className="text-sm bg-red-200 dark:bg-red-800 hover:bg-red-300 dark:hover:bg-red-700 px-3 py-1 rounded transition-colors disabled:opacity-50"
+              >
+                {(isLoading || isProcessingTokens) ? 'Cargando...' : 'Reintentar'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -245,11 +359,16 @@ const DiotCatalogoProveedores = () => {
             style={{ '--tw-ring-color': primaryColor }}
           >
             <option value="Todos">Tipo Operación - Todos</option>
-            {tiposOperacion.map(tipo => (
-              <option key={tipo.id} value={tipo.id}>
-                {tipo.clave} - {tipo.descripcion}
-              </option>
-            ))}
+            <option value="Vacio" className="text-orange-600 dark:text-orange-400">
+              📋 Sin configurar
+            </option>
+            <optgroup label="Configurados:">
+              {getAllTiposOperacion().map(tipo => (
+                <option key={tipo.id} value={tipo.id}>
+                  {tipo.clave} - {tipo.descripcion}
+                </option>
+              ))}
+            </optgroup>
           </select>
 
           {/* Tipo Proveedor Filter */}
@@ -260,11 +379,16 @@ const DiotCatalogoProveedores = () => {
             style={{ '--tw-ring-color': primaryColor }}
           >
             <option value="Todos">Tipo Proveedor - Todos</option>
-            {tiposProveedor.map(tipo => (
-              <option key={tipo.id} value={tipo.id}>
-                {tipo.clave} - {tipo.descripcion}
-              </option>
-            ))}
+            <option value="Vacio" className="text-orange-600 dark:text-orange-400">
+              👤 Sin configurar
+            </option>
+            <optgroup label="Configurados:">
+              {tiposProveedor.map(tipo => (
+                <option key={tipo.id} value={tipo.id}>
+                  {tipo.clave} - {tipo.descripcion}
+                </option>
+              ))}
+            </optgroup>
           </select>
 
           {/* Actividad IVA Filter */}
@@ -275,18 +399,45 @@ const DiotCatalogoProveedores = () => {
             style={{ '--tw-ring-color': primaryColor }}
           >
             <option value="Todos">Acto/Actividad IVA - Todos</option>
-            {actividadesIva.map(actividad => (
-              <option key={actividad.id} value={actividad.id}>
-                {actividad.descripcion}
-              </option>
-            ))}
+            <option value="Vacio" className="text-orange-600 dark:text-orange-400">
+              💼 Sin configurar
+            </option>
+            <optgroup label="Configurados:">
+              {actividadesIva.map(actividad => (
+                <option key={actividad.id} value={actividad.id}>
+                  {actividad.descripcion}
+                </option>
+              ))}
+            </optgroup>
           </select>
         </div>
 
         <div className="mt-4 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-          <span>
-            Mostrando {filteredData.length} de {proveedores.length} proveedores
-          </span>
+          <div className="flex items-center space-x-4">
+            <span>
+              Mostrando {filteredData.length} de {proveedores.length} proveedores
+            </span>
+            {(filterTipoOperacion !== 'Todos' || filterTipoProveedor !== 'Todos' || filterActividadIva !== 'Todos') && (
+              <div className="flex items-center space-x-2 text-xs">
+                <span className="text-gray-500">Filtros activos:</span>
+                {filterTipoOperacion === 'Vacio' && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+                    📋 Sin tipo operación
+                  </span>
+                )}
+                {filterTipoProveedor === 'Vacio' && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+                    👤 Sin tipo proveedor
+                  </span>
+                )}
+                {filterActividadIva === 'Vacio' && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+                    💼 Sin actividad IVA
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
           <button
             onClick={fetchProveedores}
             disabled={isLoading}
@@ -347,11 +498,14 @@ const DiotCatalogoProveedores = () => {
             </thead>
             <tbody className="bg-white dark:bg-[#1C1C24] divide-y divide-gray-200 dark:divide-[#2C2C38]">
               {filteredData.map((proveedor) => {
-                const isEditing = editingRows.has(proveedor.clave);
+                const rowHasChanges = hasRowChanges(proveedor.clave);
                 const isSaving = savingRows.has(proveedor.clave);
+                const availableOperations = getAvailableOperations(proveedor.rfc);
+                const providerType = getProviderType(proveedor.rfc);
+                const isValidSelection = availableOperations.some(op => op.id === proveedor.tipoOperacion);
 
                 return (
-                  <tr key={proveedor.clave} className={isEditing ? 'bg-blue-50 dark:bg-blue-900/20' : ''}>
+                  <tr key={proveedor.clave} className={rowHasChanges ? 'bg-blue-50 dark:bg-blue-900/20' : ''}>
                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">
                       {proveedor.clave}
                     </td>
@@ -377,19 +531,47 @@ const DiotCatalogoProveedores = () => {
                       {proveedor.localidad}
                     </td>
                     <td className="px-4 py-3">
-                      <select
-                        value={proveedor.tipoOperacion || ''}
-                        onChange={(e) => handleFieldChange(proveedor.clave, 'tipoOperacion', parseInt(e.target.value))}
-                        className="w-full text-xs px-2 py-1 border border-gray-300 dark:border-[#2C2C38] rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1"
-                        style={{ '--tw-ring-color': primaryColor }}
-                      >
-                        <option value="">Seleccionar...</option>
-                        {tiposOperacion.map(tipo => (
-                          <option key={tipo.id} value={tipo.id}>
-                            {tipo.clave} - {tipo.descripcion}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="space-y-1">
+                        <select
+                          value={proveedor.tipoOperacion || ''}
+                          onChange={(e) => handleFieldChange(proveedor.clave, 'tipoOperacion', parseInt(e.target.value))}
+                          className={`w-full text-xs px-2 py-1 border rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1 ${
+                            !isValidSelection && proveedor.tipoOperacion 
+                              ? 'border-red-300 dark:border-red-600' 
+                              : 'border-gray-300 dark:border-[#2C2C38]'
+                          }`}
+                          style={{ '--tw-ring-color': primaryColor }}
+                        >
+                          <option value="">Sin configurar</option>
+                          {availableOperations.map(tipo => (
+                            <option key={tipo.id} value={tipo.id}>
+                              {tipo.clave} - {tipo.descripcion}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {providerType === 'global' && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                              Global
+                            </span>
+                          )}
+                          {providerType === 'extranjero' && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+                              Extranjero
+                            </span>
+                          )}
+                          {providerType === 'nacional' && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                              Nacional
+                            </span>
+                          )}
+                        </div>
+                        {!isValidSelection && proveedor.tipoOperacion && (
+                          <div className="text-xs text-red-600 dark:text-red-400">
+                            Operación no válida para este RFC
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <select
@@ -398,7 +580,7 @@ const DiotCatalogoProveedores = () => {
                         className="w-full text-xs px-2 py-1 border border-gray-300 dark:border-[#2C2C38] rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1"
                         style={{ '--tw-ring-color': primaryColor }}
                       >
-                        <option value="">Seleccionar...</option>
+                        <option value="">Sin configurar</option>
                         {tiposProveedor.map(tipo => (
                           <option key={tipo.id} value={tipo.id}>
                             {tipo.clave} - {tipo.descripcion}
@@ -413,7 +595,7 @@ const DiotCatalogoProveedores = () => {
                         className="w-full text-xs px-2 py-1 border border-gray-300 dark:border-[#2C2C38] rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1"
                         style={{ '--tw-ring-color': primaryColor }}
                       >
-                        <option value="">Seleccionar...</option>
+                        <option value="">Sin configurar</option>
                         {actividadesIva.map(actividad => (
                           <option key={actividad.id} value={actividad.id}>
                             {actividad.descripcion}
@@ -431,7 +613,7 @@ const DiotCatalogoProveedores = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      {isEditing && (
+                      {rowHasChanges ? (
                         <button
                           onClick={() => handleSave(proveedor)}
                           disabled={isSaving}
@@ -444,6 +626,14 @@ const DiotCatalogoProveedores = () => {
                             <Save className="h-3 w-3" />
                           )}
                           <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
+                        </button>
+                      ) : (
+                        <button
+                          disabled
+                          className="flex items-center space-x-1 px-3 py-1 text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 dark:text-gray-500 rounded-lg cursor-not-allowed"
+                        >
+                          <Save className="h-3 w-3" />
+                          <span>Guardar</span>
                         </button>
                       )}
                     </td>
