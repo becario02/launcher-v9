@@ -3,7 +3,12 @@
 import React, { useEffect, useState } from "react";
 import AssignConnectionModal from "./AssignConnectionModal";
 
-export default function CompanySlider({ companies = [], users, handleAssign }) {
+export default function CompanySlider({
+  companies = [],
+  users,
+  handleAssign,
+  loading,
+}) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedConnection, setSelectedConnection] = useState(null);
   const [assigningConnection, setAssigningConnection] = useState(null);
@@ -57,6 +62,14 @@ export default function CompanySlider({ companies = [], users, handleAssign }) {
   const handleSelectConnection = (conn) => {
     setSelectedConnection(conn);
   };
+
+  if (loading) {
+    return (
+      <div className="py-10 flex justify-center items-center w-full">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (total === 0) {
     return (
@@ -123,7 +136,10 @@ export default function CompanySlider({ companies = [], users, handleAssign }) {
                       {company.name || "Nombre no disponible"}
                     </div>
                     <div className="text-sm text-[#696974] dark:text-[#A0A0AB]">
-                      {company.totalConnections ?? 0} conexiones
+                      <span className="text-[#A0A0AB] text-xs">
+                        {company.availableConnections.length} conexiones
+                        disponibles
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -171,7 +187,10 @@ export default function CompanySlider({ companies = [], users, handleAssign }) {
 
                 <button
                   onClick={() => {
-                    setAssigningConnection(conn);
+                    setAssigningConnection({
+                      ...conn,
+                      companyIdentifier: selectedCompany.companyIdentifier,
+                    });
                     setShowAssignModal(true);
                   }}
                   className="absolute bottom-2 right-2 text-primary text-xs font-medium flex items-center gap-1"
@@ -207,8 +226,8 @@ export default function CompanySlider({ companies = [], users, handleAssign }) {
           isOpen={showAssignModal}
           users={users}
           connection={assigningConnection}
-          onAssign={(userId) => {
-            handleAssign(userId, assigningConnection);
+          onAssign={async (userIds, connection) => {
+            await handleAssign(userIds, connection);
             setShowAssignModal(false);
           }}
           onClose={() => setShowAssignModal(false)}

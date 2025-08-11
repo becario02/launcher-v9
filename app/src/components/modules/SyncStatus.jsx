@@ -8,9 +8,19 @@ import { useCompany } from "@/context/CompanyContext";
 const SyncStatus = () => {
   const { syncingModules, selectedCompany, syncError } = useCompany();
   const [notifications, setNotifications] = useState([]);
-
-  // Estado previo para detectar cambios
   const [wasSyncing, setWasSyncing] = useState(false);
+
+  useEffect(() => {
+    if (!syncingModules && syncError && !wasSyncing) {
+      const notificationId = Date.now();
+      addNotification({
+        id: notificationId,
+        type: "error",
+        message: syncError,
+        duration: 20000,
+      });
+    }
+  }, [syncError, syncingModules, wasSyncing]);
 
   useEffect(() => {
     // Detectar cuando termina la sincronización
@@ -21,8 +31,8 @@ const SyncStatus = () => {
         addNotification({
           id: notificationId,
           type: "error",
-          message: `Error al sincronizar módulos: ${syncError}`,
-          duration: 30000,
+          message: syncError,
+          duration: 20000,
         });
       } else {
         addNotification({
@@ -38,16 +48,27 @@ const SyncStatus = () => {
   }, [syncingModules, syncError, selectedCompany, wasSyncing]);
 
   const addNotification = (notification) => {
-    setNotifications((prev) => [...prev, notification]);
+    setNotifications((prev) => {
+      const alreadyExists = prev.some(
+        (n) => n.message === notification.message
+      );
+      if (alreadyExists) return prev;
+      return [...prev, notification];
+    });
 
-    // Auto-remover después del duration
     setTimeout(() => {
-      removeNotification(notification.id);
+      removeNotification(notification.message);
     }, notification.duration);
   };
 
-  const removeNotification = (id) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  const removeNotification = (idOrMessage) => {
+    setNotifications((prev) =>
+      prev.filter((n) =>
+        typeof idOrMessage === "string"
+          ? n.message !== idOrMessage
+          : n.id !== idOrMessage
+      )
+    );
   };
 
   // Colores por tipo
@@ -213,7 +234,7 @@ const SyncStatus = () => {
                 fontWeight: 500,
                 whiteSpace: "pre-wrap",
                 wordBreak: "break-word",
-                maxWidth: "500px", 
+                maxWidth: "500px",
               }}
             >
               {notification.message}

@@ -1,15 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { Search, X, PlusCircle, Filter } from 'lucide-react';
-import { usePrimaryColor } from '@/context/primaryColor';
+import { useState, useEffect, useRef } from "react";
+import { Search, X, PlusCircle, Filter } from "lucide-react";
+import { usePrimaryColor } from "@/context/primaryColor";
 
 export default function ConexionesFilters({
   searchTerm,
   setSearchTerm,
   selectedCompany,
   setSelectedCompany,
-  companies,
+  companies = [],
+  showCompanyFilter = true,
+  placeholder = "Buscar empresa...",
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
@@ -22,8 +24,8 @@ export default function ConexionesFilters({
         setShowCompanyDropdown(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -36,7 +38,7 @@ export default function ConexionesFilters({
         <div className="relative flex-grow max-w-[300px] w-full">
           <input
             type="text"
-            placeholder="Buscar empresa..."
+            placeholder={placeholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-8 pr-8 py-2 border border-gray-200 rounded-full
@@ -49,7 +51,7 @@ export default function ConexionesFilters({
           />
           {searchTerm && (
             <button
-              onClick={() => setSearchTerm('')}
+              onClick={() => setSearchTerm("")}
               className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-primary dark:hover:text-white"
             >
               <X size={14} />
@@ -58,26 +60,33 @@ export default function ConexionesFilters({
         </div>
 
         {/* Botones */}
-        <div className="flex gap-2 mt-2 sm:mt-0">
-          <button
-            onClick={() => setShowFilters((prev) => !prev)}
-            style={{
-              borderColor: primaryColor,
-              color: primaryColor,
-              backgroundColor: showFilters ? `${primaryColor}33` : 'transparent',
-            }}
-            className="border py-2 px-4 rounded-full text-sm flex items-center gap-2 transition-all duration-300"
-          >
-            <Filter size={16} />
-            <span>Filtrar</span>
-          </button>
-        </div>
+        {showCompanyFilter && (
+          <div className="flex gap-2 mt-2 sm:mt-0">
+            <button
+              onClick={() => setShowFilters((prev) => !prev)}
+              style={{
+                borderColor: primaryColor,
+                color: primaryColor,
+                backgroundColor: showFilters
+                  ? `${primaryColor}33`
+                  : "transparent",
+              }}
+              className="border py-2 px-4 rounded-full text-sm flex items-center gap-2 transition-all duration-300"
+            >
+              <Filter size={16} />
+              <span>Filtrar</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Dropdown animado: filtro por empresa */}
-      {showFilters && (
+      {showFilters && showCompanyFilter && (
         <div className="mt-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4" ref={dropdownRef}>
+          <div
+            className="flex flex-col sm:flex-row sm:items-center gap-4"
+            ref={dropdownRef}
+          >
             <div className="flex flex-col gap-1 sm:gap-2 w-full sm:w-auto">
               <span
                 style={{ color: primaryColor }}
@@ -90,17 +99,31 @@ export default function ConexionesFilters({
                   onClick={() => setShowCompanyDropdown(!showCompanyDropdown)}
                   style={{
                     border: `1px solid ${primaryColor}`,
-                    color: primaryColor
+                    color: primaryColor,
                   }}
                   className="w-full sm:min-w-[220px] text-left pl-4 pr-4 py-2 rounded-full bg-gray-1 dark:bg-gray-6 text-sm flex items-center justify-between"
                 >
                   <span>
-                    {selectedCompany === 'all'
-                      ? 'Todas las empresas'
-                      : companies.find(c => c.id.toString() === selectedCompany)?.name || 'Empresa'}
+                    {selectedCompany === "all"
+                      ? "Todas las empresas"
+                      : companies.find(
+                          (c) => c.id.toString() === selectedCompany
+                        )?.name || "Empresa"}
                   </span>
-                  <svg width="12" height="8" viewBox="0 0 12 8" fill="currentColor">
-                    <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                  <svg
+                    width="12"
+                    height="8"
+                    viewBox="0 0 12 8"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M1 1L6 6L11 1"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                    />
                   </svg>
                 </button>
 
@@ -115,14 +138,14 @@ export default function ConexionesFilters({
                   >
                     <div
                       onClick={() => {
-                        setSelectedCompany('all');
+                        setSelectedCompany("all");
                         setShowCompanyDropdown(false);
                       }}
                       className="px-4 py-2 cursor-pointer text-sm hover:bg-gray-100 dark:hover:bg-gray-6"
                     >
                       Todas las empresas
                     </div>
-                    {companies.map(company => (
+                    {companies.map((company) => (
                       <div
                         key={company.id}
                         onClick={() => {

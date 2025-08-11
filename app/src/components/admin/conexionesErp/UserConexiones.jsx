@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import DeleteErpConnectionModal from "./DeleteErpConnectionModal";
 
-export default function UserSlider({ users, setUsers, handleDelete }) {
+export default function UserSlider({ users, setUsers, handleDelete, loading }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedConnection, setSelectedConnection] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -29,6 +29,14 @@ export default function UserSlider({ users, setUsers, handleDelete }) {
       setDeleteTarget(null);
     });
   };
+
+  if (loading) {
+    return (
+      <div className="py-10 flex justify-center items-center w-full">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (!users.length) {
     return (
