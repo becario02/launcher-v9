@@ -10,6 +10,7 @@ export async function middleware(request) {
     "/admin/menus",
     "/admin/users",
     "/admin/conexioneserp",
+    "/admin/create-company",
     "/admin/videos",
     "/admin/notifications",
     "/admin/integradores",

@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { decryptAES } from "@/utils/aesDecrypt";
+import { checkMserpServiceHealth } from "@/utils/validarMSERPService";
 
 export const useSyncModules = () => {
   const USERNAME = process.env.NEXT_PUBLIC_MSERPSERVICE_USERNAME;
@@ -13,17 +14,30 @@ export const useSyncModules = () => {
 
   // Funciones estables con useCallback
   const login = useCallback(async (urlErp) => {
+    setError(""); 
+
+    const check = await checkMserpServiceHealth(urlErp);
+    if (!check.ok) {
+      setError(check.message);
+      return null;
+    }
+
     try {
       const response = await fetch(`${urlErp}/mserpservice/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: USERNAME,
-          password: PASSWORD,
-        }),
+        body: JSON.stringify({ username: USERNAME, password: PASSWORD }),
       });
 
-      if (!response.ok) throw new Error("Login failed");
+      if (!response.ok) {
+        const errorText = await response.text();
+        setError(
+          `Error al autenticar con MSERPService: ${
+            errorText || response.statusText
+          }`
+        );
+        return null;
+      }
 
       const data = await response.json();
       localStorage.setItem("token", data.accessToken);
@@ -31,6 +45,9 @@ export const useSyncModules = () => {
 
       return data.accessToken;
     } catch (err) {
+      setError(
+        `Error inesperado durante login con MSERPService: ${err.message}`
+      );
       return null;
     }
   }, []);
@@ -76,7 +93,6 @@ export const useSyncModules = () => {
         let token = await login(company.urlErp);
 
         if (!token) {
-          setError("No se pudo obtener token de autenticación");
           return null;
         }
 

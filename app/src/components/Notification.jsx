@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Info, AlertTriangle } from 'lucide-react'; // solo importamos estos para info y warning
+import { Info, AlertTriangle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 export default function Notification({
-  type = 'success', // 'success', 'error', 'info', 'warning'
+  type = 'success', 
   message = '',
   visible = false,
-  duration = 3000,
-  style = 'inline', // 'inline' o 'toast'
+  duration = 5000,
+  style = 'inline',
   onClose = () => {},
 }) {
   const [isVisible, setIsVisible] = useState(false);

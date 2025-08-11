@@ -24,10 +24,12 @@ export default function ConexionesErp() {
   const [companies, setCompanies] = useState([]);
   const [vista, setVista] = useState("empresas");
   const [users, setUsers] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
     const fetchConnections = async () => {
       try {
+        setLoadingData(true);
         const res = await fetch("/api/conexionesErp");
         const json = await res.json();
 
@@ -48,12 +50,22 @@ export default function ConexionesErp() {
             };
           }
 
-          grouped[companyId].availableConnections.push({
-            id: conn.idUserCompanyConnection,
-            name: conn.nameErpDb,
-            server: conn.serverErpDb,
-            environment: conn.environment,
-          });
+          const key = `${conn.nameErpDb}-${conn.serverErpDb}-${conn.environment}`;
+          const exists = grouped[companyId].availableConnections.some(
+            (c) =>
+              c.name === conn.nameErpDb &&
+              c.server === conn.serverErpDb &&
+              c.environment === conn.environment
+          );
+
+          if (!exists) {
+            grouped[companyId].availableConnections.push({
+              id: conn.idUserCompanyConnection,
+              name: conn.nameErpDb,
+              server: conn.serverErpDb,
+              environment: conn.environment,
+            });
+          }
 
           grouped[companyId].totalConnections++;
         });
@@ -68,6 +80,8 @@ export default function ConexionesErp() {
           message: "No se pudieron cargar las conexiones ERP.",
           style: "toast",
         });
+      } finally {
+        setLoadingData(false);
       }
     };
 
@@ -77,6 +91,7 @@ export default function ConexionesErp() {
 
   const fetchUsers = async (setUsers) => {
     try {
+      setLoadingData(true);
       const res = await fetch("/api/conexionesErp/users");
       const json = await res.json();
       const grouped = json.data.reduce((acc, conn) => {
@@ -87,6 +102,7 @@ export default function ConexionesErp() {
           server: conn.serverErpDb,
           env: conn.environment,
           company: conn.name,
+          companyIdentifier: conn.companyIdentifier,
         };
 
         if (existing) {
@@ -103,6 +119,8 @@ export default function ConexionesErp() {
       }, []);
       setUsers(grouped);
     } catch (error) {
+    } finally {
+      setLoadingData(false);
     }
   };
 
@@ -115,7 +133,7 @@ export default function ConexionesErp() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id: connToDelete.id }),
+        body: JSON.stringify({ idUserCompanyConnection: connToDelete.id }),
       });
 
       const json = await res.json();
@@ -153,26 +171,52 @@ export default function ConexionesErp() {
     }
   };
 
-  const handleAssignConnection = async (userId, connection) => {
+  const handleAssignConnection = async (userIds, connection) => {
     try {
-      const response = await fetch("/api/conexionesErp/assign", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userId, connectionId: connection.id }),
-      });
+      for (const idUser of userIds) {
+        const user = users.find((u) => u.idUser === idUser);
+        if (!user) continue;
 
-      const result = await response.json();
+        const payload = {
+          idUser,
+          username: user.fullname,
+          idCompany:
+            companies.find((c) =>
+              c.availableConnections?.some((conn) => conn.id === connection.id)
+            )?.id || 0,
+          serverErpDb: connection.server,
+          nameErpDb: connection.name,
+          environment: connection.environment,
+        };
 
-      if (response.ok) {
-        toast.success(`Conexión asignada exitosamente`);
-      } else {
-        toast.error(result.message || "Error al asignar la conexión");
+        const response = await fetch("/api/conexionesErp/add", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Error al asignar conexión");
+        }
       }
+
+      setNotification({
+        visible: true,
+        type: "success",
+        message: `Conexión asignada exitosamente.`,
+        style: "toast",
+      });
     } catch (err) {
-      console.error("Error al asignar conexión:", err);
-      toast.error("Error del servidor al asignar conexión");
+      setNotification({
+        visible: true,
+        type: "error",
+        message: "Error del servidor al asignar conexión",
+        style: "toast",
+      });
     }
   };
 
@@ -266,12 +310,15 @@ export default function ConexionesErp() {
               {vista === "empresas" && (
                 <>
                   <SearchAndFilter
-                    companies={companies}
                     searchTerm={searchTerm}
-                    selectedCompany={selectedCompany}
                     setSearchTerm={setSearchTerm}
+                    selectedCompany={selectedCompany}
                     setSelectedCompany={setSelectedCompany}
+                    companies={companies}
+                    showCompanyFilter={true}
+                    placeholder="Buscar por empresa..."
                   />
+
                   <div className="flex-1 w-full min-w-0">
                     <CompanyCards
                       companies={filteredCompanies}
@@ -279,19 +326,40 @@ export default function ConexionesErp() {
                       setOpenCompanies={setOpenCompanies}
                       users={users}
                       handleAssign={handleAssignConnection}
+                      loading={loadingData}
                     />
                   </div>
                 </>
               )}
 
               {vista === "usuarios" && (
-                <div className="flex-1 w-full min-w-0">
-                  <UserSlider
-                    users={users}
-                    setUsers={setUsers}
-                    handleDelete={handleDeleteErpConnection}
+                <>
+                  <SearchAndFilter
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                    showCompanyFilter={false}
+                    placeholder="Buscar por usuario..."
                   />
-                </div>
+
+                  <div className="flex-1 w-full min-w-0">
+                    <UserSlider
+                      users={users.filter((user) => {
+                        const matchesSearch =
+                          user.fullname
+                            .toLowerCase()
+                            .includes(searchTerm.toLowerCase()) ||
+                          user.email
+                            .toLowerCase()
+                            .includes(searchTerm.toLowerCase());
+
+                        return matchesSearch;
+                      })}
+                      setUsers={setUsers}
+                      handleDelete={handleDeleteErpConnection}
+                      loading={loadingData}
+                    />
+                  </div>
+                </>
               )}
             </div>
           </div>
