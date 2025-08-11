@@ -23,7 +23,10 @@ import {
   Truck,
   Building2,
   UserCheck,
-  Activity
+  Activity,
+  Calculator,
+  Cog,
+  FileSpreadsheet
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -67,6 +70,16 @@ function getActiveItemFromPath(pathname, customOptions = []) {
     return 'AdvanPacPacs';
   } else if (pathname.includes('/advanpac/clientes')) {
     return 'AdvanPacClientes';
+  } else if (pathname.includes('/diot/catalogo-proveedores')) {
+    return 'DiotCatalogoProveedores';
+  } else if (pathname.includes('/diot/catalogo-impuestos')) {
+    return 'DiotCatalogoImpuestos';
+  } else if (pathname.includes('/diot/catalogo-cuentas-contables')) {
+    return 'DiotCatalogoCuentasContables';
+  } else if (pathname.includes('/diot/catalogo-empresas')) {
+    return 'DiotCatalogoEmpresas';
+  } else if (pathname.includes('/diot/generar-diot')) {
+    return 'DiotGenerar';
   } else if (pathname.includes('/nucleares')) {
     return 'NUCLEARES';
   } else if (pathname.includes('/financieros')) {
@@ -438,6 +451,11 @@ export default function Sidebar({ onClose }) {
   const isAdminActive = ['AdminUsers', 'conexioneserp', 'AdminVideos', 'AdminDocumentos', 'AdminMenus', 'AdminNotifications', 'AdminPromociones', 'AdminMenuTracking'].includes(activeItem) || (isAdmin && activeItem === 'Noticias');
   const isAdvanPacActive = ['AdvanPacPacs', 'AdvanPacClientes'].includes(activeItem);
 
+  // Check if DIOT items are active
+  const isDiotConfiguracionActive = ['DiotCatalogoProveedores', 'DiotCatalogoImpuestos', 'DiotCatalogoCuentasContables', 'DiotCatalogoEmpresas'].includes(activeItem);
+  const isDiotGenerarActive = activeItem === 'DiotGenerar';
+  const isDiotActive = isDiotConfiguracionActive || isDiotGenerarActive;
+
   // Check if any custom option is active
   const isCustomOptionActive = customOptions.some(option => 
     activeItem === `custom_${option.id}` || 
@@ -528,6 +546,61 @@ export default function Sidebar({ onClose }) {
             />
           </ExpandableItem>
         )}
+
+        {/* DIOT 2025 Section */}
+        <ExpandableItem
+          icon={Calculator}
+          text="DIOT 2025"
+          defaultOpen={false}
+          isChildActive={isDiotActive}
+        >
+          {/* Configuración sub-dropdown */}
+          <ExpandableItem
+            icon={Cog}
+            text="Configuración"
+            indent={true}
+            defaultOpen={false}
+            isChildActive={isDiotConfiguracionActive}
+          >
+            <SidebarItem
+              icon={Users}
+              text="Catálogo de Proveedores"
+              indent
+              active={activeItem === 'DiotCatalogoProveedores'}
+              onClick={() => navigateTo('/diot/catalogo-proveedores', 'DiotCatalogoProveedores')}
+            />
+            <SidebarItem
+              icon={DocumentIcon}
+              text="Catálogo de Impuestos"
+              indent
+              active={activeItem === 'DiotCatalogoImpuestos'}
+              onClick={() => navigateTo('/diot/catalogo-impuestos', 'DiotCatalogoImpuestos')}
+            />
+            <SidebarItem
+              icon={Building2}
+              text="Catálogo de Cuentas Contables"
+              indent
+              active={activeItem === 'DiotCatalogoCuentasContables'}
+              onClick={() => navigateTo('/diot/catalogo-cuentas-contables', 'DiotCatalogoCuentasContables')}
+            />
+            <SidebarItem
+              icon={Network}
+              text="Catálogo de Empresas"
+              indent
+              active={activeItem === 'DiotCatalogoEmpresas'}
+              onClick={() => navigateTo('/diot/catalogo-empresas', 'DiotCatalogoEmpresas')}
+            />
+          </ExpandableItem>
+
+          {/* Generar DIOT */}
+          <SidebarItem
+            icon={FileSpreadsheet}
+            text="Generar DIOT"
+            indent
+            active={activeItem === 'DiotGenerar'}
+            onClick={() => navigateTo('/diot/generar-diot', 'DiotGenerar')}
+          />
+        </ExpandableItem>
 
         {/* Show Noticias for regular users */}
         {(!isAdmin && !isAdvan) && (

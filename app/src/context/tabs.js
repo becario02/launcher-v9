@@ -80,6 +80,7 @@ export function TabsProvider({ children }) {
       "/divisiones/auxiliares",
       "/tableros",
       "/advanpac",
+      "/diot",
     ];
     const isExemptRoute = exemptRoutes.some(route => pathname.startsWith(route));
 
