@@ -77,7 +77,14 @@ const DiotCatalogoCuentasContables = () => {
         throw new Error(accountsResult.message || 'Error al obtener cuentas contables');
       }
 
-      setTaxAccounts(accountsResult.data || []);
+      // Convert numeric tipoAcreditamiento to string values for display
+      const processedAccounts = (accountsResult.data || []).map(account => ({
+        ...account,
+        tipoAcreditamiento: account.tipoAcreditamiento === "1" || account.tipoAcreditamiento === 1 ? 'Acreditable' :
+                           account.tipoAcreditamiento === "0" || account.tipoAcreditamiento === 0 ? 'No Acreditable' : null
+      }));
+
+      setTaxAccounts(processedAccounts);
     } catch (err) {
       console.error('Error fetching tax accounts:', err);
       setError(err.message);
@@ -100,21 +107,57 @@ const DiotCatalogoCuentasContables = () => {
 
     try {
       setIsSaving(true);
+      setError(null);
       
-      // Here you would implement the save logic
-      // For now, just update the local state
+      // Convert tipoAcreditamiento to number for API
+      let tipoAcreditamientoValue = null;
+      if (editingAccount.tipoAcreditamiento === 'Acreditable') {
+        tipoAcreditamientoValue = 1;
+      } else if (editingAccount.tipoAcreditamiento === 'No Acreditable') {
+        tipoAcreditamientoValue = 0;
+      }
+
+      // Only send the request if there's a valid value to update
+      if (tipoAcreditamientoValue === null) {
+        throw new Error('Debe seleccionar un tipo de acreditamiento válido');
+      }
+
+      // Call the update API
+      const result = await tokenizedRequest('/mserpservice/api/diot/v1/updateTaxAccount', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ctaContable: editingAccount.ctaContable,
+          tipoAcreditamiento: tipoAcreditamientoValue
+        })
+      });
+
+      if (result.statusCode !== '200') {
+        throw new Error(result.message || 'Error al actualizar la cuenta contable');
+      }
+
+      // Update local state on successful save
       setTaxAccounts(prev => 
         prev.map(account => 
           account.ctaContable === editingAccount.ctaContable 
-            ? { ...editingAccount }
+            ? { 
+                ...account,
+                tipoAcreditamiento: editingAccount.tipoAcreditamiento
+              }
             : account
         )
       );
       
       setEditingAccount(null);
+      
+      // Optional: Show success message
+      console.log('Cuenta contable actualizada exitosamente');
+      
     } catch (err) {
       console.error('Error saving account:', err);
-      setError('Error al guardar los cambios');
+      setError(`Error al guardar los cambios: ${err.message}`);
     } finally {
       setIsSaving(false);
     }
