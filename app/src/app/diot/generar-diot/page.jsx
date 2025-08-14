@@ -431,25 +431,64 @@ const DiotGenerarPage = () => {
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-[#2C2C38]">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   RFC
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Nombre
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Período
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Proceso
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Póliza
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Ref. Documento
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Conciliado
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Fecha Conciliado
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Base 1
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Base 2
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Base Exento
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Base 0
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Tasa IVA
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Monto IVA 1
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Monto IVA 2
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  IVA Retenido 1
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  IVA Retenido 2
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Importe
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Acto/Actividad
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Tipo Acreditamiento
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
@@ -457,7 +496,7 @@ const DiotGenerarPage = () => {
             <tbody className="bg-white dark:bg-[#1C1C24] divide-y divide-gray-200 dark:divide-[#2C2C38]">
               {isLoadingData ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-8 text-center">
+                  <td colSpan="20" className="px-6 py-8 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <RefreshCw className="h-5 w-5 text-gray-400 animate-spin" />
                       <span className="text-gray-500 dark:text-gray-400">Cargando datos...</span>
@@ -466,31 +505,76 @@ const DiotGenerarPage = () => {
                 </tr>
               ) : diotData.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan="20" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                     {selectedPeriod ? 'No hay registros para el período seleccionado' : 'Seleccione un período para ver los datos'}
                   </td>
                 </tr>
               ) : (
                 diotData.map((record, index) => (
                   <tr key={record.idDiot || index} className="hover:bg-gray-50 dark:hover:bg-[#2C2C38]/50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                    <td className="px-4 py-3 whitespace-nowrap text-xs font-medium text-gray-900 dark:text-white">
                       {record.rfc}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300 max-w-32 truncate" title={record.nombre}>
                       {record.nombre || '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                      {formatPeriodDisplay(record.periodo)}
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
+                      {record.proceso || '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right font-mono">
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
+                      {record.poliza || '-'}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
+                      {record.refDocumento1 || '-'}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-center">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        record.conciliado === 1 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' 
+                          : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                      }`}>
+                        {record.conciliado === 1 ? 'Sí' : 'No'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
+                      {record.fechaConciliado ? formatPeriodDisplay(record.fechaConciliado) : '-'}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 dark:text-white text-right font-mono">
+                      {formatCurrency(record.base1 || 0)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 dark:text-white text-right font-mono">
+                      {formatCurrency(record.base2 || 0)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 dark:text-white text-right font-mono">
+                      {formatCurrency(record.baseExento || 0)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 dark:text-white text-right font-mono">
+                      {formatCurrency(record.base0 || 0)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 dark:text-white text-right font-mono">
+                      {(record.tasaIva || 0).toFixed(2)}%
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 dark:text-white text-right font-mono">
+                      {formatCurrency(record.montoIva1 || 0)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 dark:text-white text-right font-mono">
+                      {formatCurrency(record.montoIva2 || 0)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 dark:text-white text-right font-mono">
+                      {formatCurrency(record.ivaRetenido1 || 0)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 dark:text-white text-right font-mono">
+                      {formatCurrency(record.ivaRetenido2 || 0)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 dark:text-white text-right font-mono">
                       {formatCurrency(record.importe)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
                       <select
                         value={record.actoActividad || ''}
                         onChange={(e) => handleActivityChange(index, e.target.value)}
                         disabled={savingRecordId === record.idDiot}
-                        className="text-xs px-2 py-1 border border-gray-300 dark:border-[#2C2C38] rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-xs px-2 py-1 border border-gray-300 dark:border-[#2C2C38] rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1 disabled:opacity-50 disabled:cursor-not-allowed w-full min-w-48"
                         style={{ '--tw-ring-color': primaryColor }}
                       >
                         <option value="">Seleccionar...</option>
@@ -501,12 +585,12 @@ const DiotGenerarPage = () => {
                         ))}
                       </select>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
                       <select
                         value={record.tipoAcreditamiento || ''}
                         onChange={(e) => handleAccreditationChange(index, e.target.value)}
                         disabled={savingRecordId === record.idDiot}
-                        className="text-xs px-2 py-1 border border-gray-300 dark:border-[#2C2C38] rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1 disabled:opacity-50 disabled:cursor-not-allowed w-full"
+                        className="text-xs px-2 py-1 border border-gray-300 dark:border-[#2C2C38] rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1 disabled:opacity-50 disabled:cursor-not-allowed w-full min-w-48"
                         style={{ '--tw-ring-color': primaryColor }}
                       >
                         <option value="">Seleccionar...</option>
@@ -518,7 +602,7 @@ const DiotGenerarPage = () => {
                       </select>
                     </td>
                     {/* Actions Column */}
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-4 py-3 whitespace-nowrap text-center">
                       <button
                         onClick={() => saveRecordChanges(record)}
                         disabled={!record.actoActividad || !record.tipoAcreditamiento || savingRecordId === record.idDiot || isSaving}
