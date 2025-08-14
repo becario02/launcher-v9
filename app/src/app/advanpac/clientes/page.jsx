@@ -80,6 +80,62 @@ export default function AdvanPacClientesPage() {
     }
   };
 
+  // Función para obtener el total de timbres de un cliente
+  const fetchCustomerStamps = async (customerId) => {
+    try {
+      const response = await fetch(`/api/advanpac/customer-stamps/get-stamps/${customerId}`);
+      if (response.ok) {
+        const result = await response.json();
+        
+        // Manejar diferentes tipos de respuesta
+        if (result.statusCode === "200" && typeof result.data === 'number') {
+          // Respuesta exitosa con número de timbres
+          return { stamps: result.data, error: null };
+        } else if (result.statusCode === "201") {
+          // Error de AdvanPAC (ej: no hay suficientes timbres)
+          console.warn(`Cliente ${customerId}: ${result.message}`);
+          return { stamps: 0, error: result.message }; // Retornar mensaje de error
+        } else if (typeof result === 'number') {
+          // Respuesta directa con número
+          return { stamps: result, error: null };
+        } else {
+          // Otros casos
+          console.error('Formato de respuesta inesperado:', result);
+          return { stamps: 0, error: 'Formato de respuesta inesperado' };
+        }
+      } else {
+        console.error('Error al obtener timbres del cliente:', response.status);
+        return { stamps: 0, error: 'Error de conexión con el servidor' };
+      }
+    } catch (error) {
+      console.error('Error al conectar para obtener timbres:', error);
+      return { stamps: 0, error: 'Error de conexión' };
+    }
+  };
+
+  // Función para obtener timbres de todos los clientes
+  const fetchAllCustomerStamps = async (clientes) => {
+    const stampsPromises = clientes.map(async (cliente) => {
+      if (cliente.idCustomerAdvanPac && cliente.hasAdvanPacData) {
+        const result = await fetchCustomerStamps(cliente.idCustomerAdvanPac);
+        return {
+          ...cliente,
+          totalStamps: result.stamps,
+          hasStampsError: result.stamps === 0 && result.error !== null,
+          stampsErrorMessage: result.error // Guardar el mensaje de error específico
+        };
+      }
+      return {
+        ...cliente,
+        totalStamps: 0,
+        hasStampsError: false,
+        stampsErrorMessage: null
+      };
+    });
+
+    return await Promise.all(stampsPromises);
+  };
+
   // Función para cargar clientes desde la API
   const fetchClientes = async () => {
     setIsLoading(true);
@@ -123,13 +179,16 @@ export default function AdvanPacClientesPage() {
           };
         });
 
+        // Obtener timbres para todos los clientes
+        const clientesWithStamps = await fetchAllCustomerStamps(clientesWithRealStatus);
+
         // Filtrar por estado si es necesario (ahora usando el estado real)
-        let filteredData = clientesWithRealStatus;
+        let filteredData = clientesWithStamps;
         if (statusFilter !== 'all') {
-          filteredData = clientesWithRealStatus.filter(cliente => cliente.status === statusFilter);
+          filteredData = clientesWithStamps.filter(cliente => cliente.status === statusFilter);
         }
 
-        setClientes(clientesWithRealStatus);
+        setClientes(clientesWithStamps);
         setFilteredClientes(filteredData);
         
         if (clientesResult.pagination) {
@@ -326,7 +385,8 @@ export default function AdvanPacClientesPage() {
         type: 'success'
       });
       
-      // No necesitamos recargar la lista, pero podríamos agregar lógica futura aquí
+      // Recargar los timbres de los clientes
+      fetchClientes();
     } else {
       setToast({
         visible: true,
@@ -363,17 +423,20 @@ export default function AdvanPacClientesPage() {
   // Componente de Skeleton para la tabla
   const TableRowSkeleton = () => (
     <tr className="animate-pulse">
-      <td className="px-6 py-4">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-      </td>
-      <td className="px-6 py-4">
+      <td className="px-6 py-4 w-36">
         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
       </td>
-      <td className="px-6 py-4">
-        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+      <td className="px-6 py-4 w-64">
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
       </td>
-      <td className="px-6 py-4">
-        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+      <td className="px-6 py-4 w-32">
+        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+      </td>
+      <td className="px-6 py-4 w-40">
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+      </td>
+      <td className="px-6 py-4 w-44">
+        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
       </td>
     </tr>
   );
@@ -468,12 +531,14 @@ export default function AdvanPacClientesPage() {
 
             {/* Tabla de clientes */}
             <div className="rounded-lg border border-gray-200 dark:border-[#2C2C38] shadow-sm bg-white dark:bg-[#1C1C24] overflow-x-auto">
-              <table className="w-full text-sm text-left">
+              <table className="w-full text-sm text-left table-fixed">
                 <thead className="bg-[#F9FAFB] dark:bg-[#2C2C38] text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">
                   <tr>
-                    {['Identificador Empresa', 'Nombre', 'Estado', 'Timbres'].map((label, i) => (
-                      <th key={i} className="px-6 py-4 whitespace-nowrap">{label}</th>
-                    ))}
+                    <th className="px-6 py-4 whitespace-nowrap w-36">ID Empresa</th>
+                    <th className="px-6 py-4 whitespace-nowrap w-64">Nombre</th>
+                    <th className="px-6 py-4 whitespace-nowrap w-32">Estado</th>
+                    <th className="px-6 py-4 whitespace-nowrap w-40">Total Timbres</th>
+                    <th className="px-6 py-4 whitespace-nowrap w-44">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-[#2C2C38] text-gray-800 dark:text-gray-200">
@@ -485,7 +550,7 @@ export default function AdvanPacClientesPage() {
                     </>
                   ) : currentClientes.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-6 py-4">
+                      <td colSpan={5} className="px-6 py-4">
                         <EmptyState />
                       </td>
                     </tr>
@@ -495,7 +560,7 @@ export default function AdvanPacClientesPage() {
                       
                       return (
                         <tr key={cliente.idCompany} className="hover:bg-gray-50 dark:hover:bg-[#262636] transition">
-                          <td className="px-6 py-4 font-medium">
+                          <td className="px-6 py-4 font-medium w-36">
                             <div className="flex items-center gap-2">
                               <Building className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
                               <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
@@ -509,8 +574,10 @@ export default function AdvanPacClientesPage() {
                               )}
                             </div>
                           </td>
-                          <td className="px-6 py-4 font-medium max-w-xs">
-                            <span className="truncate">{cliente.name}</span>
+                          <td className="px-6 py-4 font-medium w-64">
+                            <div className="truncate" title={cliente.name}>
+                              {cliente.name}
+                            </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center">
@@ -568,13 +635,43 @@ export default function AdvanPacClientesPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <Package className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                              <span className="font-medium">
+                                {cliente.hasAdvanPacData ? (
+                                  cliente.totalStamps !== undefined ? (
+                                    <>
+                                      {cliente.totalStamps > 0 ? (
+                                        <span className="text-sm">
+                                          {cliente.totalStamps.toLocaleString()} timbres
+                                        </span>
+                                      ) : cliente.hasStampsError ? (
+                                        <span className="text-sm text-amber-600 dark:text-amber-400" title={cliente.stampsErrorMessage || "Error al obtener timbres"}>
+                                          0 timbres
+                                        </span>
+                                      ) : (
+                                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                                          0 timbres
+                                        </span>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <span className="text-sm text-gray-400">Cargando...</span>
+                                  )
+                                ) : (
+                                  <span className="text-sm text-gray-400">N/A</span>
+                                )}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
                             <button
                               onClick={() => handleOpenAddStampsModal(cliente)}
                               disabled={isLoading || !cliente.hasAdvanPacData}
                               className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 hover:bg-gray-200 dark:bg-[#2C2C38] dark:hover:bg-[#3C3C48] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               title={!cliente.hasAdvanPacData ? "Cliente no sincronizado con AdvanPAC" : "Agregar timbres al cliente"}
                             >
-                              <Package className="w-4 h-4" />
+                              <Plus className="w-4 h-4" />
                               Agregar Timbres
                             </button>
                           </td>
