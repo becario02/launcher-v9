@@ -11,6 +11,7 @@ import Toast from '@/components/Toast';
 import StatusConfirmModal from '@/components/advanpac/clientes/StatusConfirmModal';
 import AddClientModal from '@/components/advanpac/clientes/AddClientModal';
 import AddCustomerStampsModal from '@/components/advanpac/clientes/AddCustomerStampsModal';
+import CustomerStampsPackagesModal from '@/components/advanpac/clientes/CustomerStampsPackagesModal';
 
 export default function AdvanPacClientesPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -53,6 +54,12 @@ export default function AdvanPacClientesPage() {
 
   // Estado para modal de agregar timbres
   const [addStampsModal, setAddStampsModal] = useState({
+    isOpen: false,
+    cliente: null
+  });
+
+  // Estado para modal de ver paquetes
+  const [viewPackagesModal, setViewPackagesModal] = useState({
     isOpen: false,
     cliente: null
   });
@@ -396,6 +403,22 @@ export default function AdvanPacClientesPage() {
     }
   };
 
+  // Función para abrir modal de ver paquetes
+  const handleOpenViewPackagesModal = (cliente) => {
+    setViewPackagesModal({
+      isOpen: true,
+      cliente: cliente
+    });
+  };
+
+  // Función para cerrar modal de ver paquetes
+  const handleCloseViewPackagesModal = () => {
+    setViewPackagesModal({
+      isOpen: false,
+      cliente: null
+    });
+  };
+
   // Paginación
   const startIndex = (pagination.page - 1) * pagination.pageSize;
   const endIndex = Math.min(startIndex + pagination.pageSize, pagination.totalItems);
@@ -435,7 +458,7 @@ export default function AdvanPacClientesPage() {
       <td className="px-6 py-4 w-40">
         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
       </td>
-      <td className="px-6 py-4 w-44">
+      <td className="px-6 py-4 w-60">
         <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
       </td>
     </tr>
@@ -538,7 +561,7 @@ export default function AdvanPacClientesPage() {
                     <th className="px-6 py-4 whitespace-nowrap w-64">Nombre</th>
                     <th className="px-6 py-4 whitespace-nowrap w-32">Estado</th>
                     <th className="px-6 py-4 whitespace-nowrap w-40">Total Timbres</th>
-                    <th className="px-6 py-4 whitespace-nowrap w-44">Acciones</th>
+                    <th className="px-6 py-4 whitespace-nowrap w-60">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-[#2C2C38] text-gray-800 dark:text-gray-200">
@@ -665,15 +688,27 @@ export default function AdvanPacClientesPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <button
-                              onClick={() => handleOpenAddStampsModal(cliente)}
-                              disabled={isLoading || !cliente.hasAdvanPacData}
-                              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 hover:bg-gray-200 dark:bg-[#2C2C38] dark:hover:bg-[#3C3C48] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                              title={!cliente.hasAdvanPacData ? "Cliente no sincronizado con AdvanPAC" : "Agregar timbres al cliente"}
-                            >
-                              <Plus className="w-4 h-4" />
-                              Agregar Timbres
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleOpenViewPackagesModal(cliente)}
+                                disabled={isLoading || !cliente.hasAdvanPacData}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 hover:bg-gray-200 dark:bg-[#2C2C38] dark:hover:bg-[#3C3C48] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                title={!cliente.hasAdvanPacData ? "Cliente no sincronizado con AdvanPAC" : "Ver paquetes de timbres"}
+                              >
+                                <Package className="w-4 h-4" />
+                                Ver
+                              </button>
+                              <button
+                                onClick={() => handleOpenAddStampsModal(cliente)}
+                                disabled={isLoading || !cliente.hasAdvanPacData}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ backgroundColor: primaryColor }}
+                                title={!cliente.hasAdvanPacData ? "Cliente no sincronizado con AdvanPAC" : "Agregar timbres al cliente"}
+                              >
+                                <Plus className="w-4 h-4" />
+                                Agregar
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -755,6 +790,13 @@ export default function AdvanPacClientesPage() {
           cliente={addStampsModal.cliente}
           onClose={handleCloseAddStampsModal}
           onSubmit={handleAddStampsSubmit}
+        />
+
+        {/* Modal de ver paquetes de timbres */}
+        <CustomerStampsPackagesModal
+          isOpen={viewPackagesModal.isOpen}
+          cliente={viewPackagesModal.cliente}
+          onClose={handleCloseViewPackagesModal}
         />
       </div>
     </div>
