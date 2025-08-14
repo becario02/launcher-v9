@@ -80,8 +80,11 @@ const DiotCatalogoCuentasContables = () => {
       // Convert numeric tipoAcreditamiento to string values for display
       const processedAccounts = (accountsResult.data || []).map(account => ({
         ...account,
-        tipoAcreditamiento: account.tipoAcreditamiento === "1" || account.tipoAcreditamiento === 1 ? 'Acreditable' :
-                           account.tipoAcreditamiento === "0" || account.tipoAcreditamiento === 0 ? 'No Acreditable' : null
+        tipoAcreditamiento: account.tipoAcreditamiento === "1" || account.tipoAcreditamiento === 1 ? 'Ingresos Acreditable al 100%' :
+                           account.tipoAcreditamiento === "2" || account.tipoAcreditamiento === 2 ? 'Ingresos Se aplica proporción' :
+                           account.tipoAcreditamiento === "3" || account.tipoAcreditamiento === 3 ? 'Ingresos No cumple con requisitos' :
+                           account.tipoAcreditamiento === "4" || account.tipoAcreditamiento === 4 ? 'Ingresos Exentos' :
+                           account.tipoAcreditamiento === "5" || account.tipoAcreditamiento === 5 ? 'Ingresos No objeto' : null
       }));
 
       setTaxAccounts(processedAccounts);
@@ -111,10 +114,16 @@ const DiotCatalogoCuentasContables = () => {
       
       // Convert tipoAcreditamiento to number for API
       let tipoAcreditamientoValue = null;
-      if (editingAccount.tipoAcreditamiento === 'Acreditable') {
+      if (editingAccount.tipoAcreditamiento === 'Ingresos Acreditable al 100%') {
         tipoAcreditamientoValue = 1;
-      } else if (editingAccount.tipoAcreditamiento === 'No Acreditable') {
-        tipoAcreditamientoValue = 0;
+      } else if (editingAccount.tipoAcreditamiento === 'Ingresos Se aplica proporción') {
+        tipoAcreditamientoValue = 2;
+      } else if (editingAccount.tipoAcreditamiento === 'Ingresos No cumple con requisitos') {
+        tipoAcreditamientoValue = 3;
+      } else if (editingAccount.tipoAcreditamiento === 'Ingresos Exentos') {
+        tipoAcreditamientoValue = 4;
+      } else if (editingAccount.tipoAcreditamiento === 'Ingresos No objeto') {
+        tipoAcreditamientoValue = 5;
       }
 
       // Only send the request if there's a valid value to update
@@ -342,8 +351,11 @@ const DiotCatalogoCuentasContables = () => {
                             style={{ '--tw-ring-color': primaryColor }}
                           >
                             <option value="">Seleccionar...</option>
-                            <option value="Acreditable">Acreditable</option>
-                            <option value="No Acreditable">No Acreditable</option>
+                            <option value="Ingresos Acreditable al 100%">Ingresos Acreditable al 100%</option>
+                            <option value="Ingresos Se aplica proporción">Ingresos Se aplica proporción</option>
+                            <option value="Ingresos No cumple con requisitos">Ingresos No cumple con requisitos</option>
+                            <option value="Ingresos Exentos">Ingresos Exentos</option>
+                            <option value="Ingresos No objeto">Ingresos No objeto</option>
                           </select>
                         ) : (
                           <span className="text-sm text-gray-600 dark:text-gray-300">
