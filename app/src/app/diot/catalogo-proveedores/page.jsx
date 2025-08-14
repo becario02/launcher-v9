@@ -171,9 +171,7 @@ const DiotCatalogoProveedores = () => {
         ClienteClave: proveedor.clave,
         PTipoProveedor: proveedor.tipoProveedor || null,
         PTipoOperacion: proveedor.tipoOperacion || null,
-        PActoActividadIva: proveedor.actividadIva ? 
-          `${proveedor.actividadIva} - ${actividadesIva.find(a => a.id === proveedor.actividadIva)?.descripcion || ''}` : 
-          null
+        PActoActividadIva: proveedor.actividadIva ? proveedor.actividadIva.toString() : null
       };
 
       console.log('Enviando datos para actualizar:', payload);
@@ -455,43 +453,43 @@ const DiotCatalogoProveedores = () => {
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-[#2C2C38]">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Clave
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Nombre
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   RFC
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Domicilio
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   CP
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Colonia
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Col.
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Localidad
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Tipo Operación
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Tipo Op.
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Tipo Proveedor
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Tipo Prov.
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Acto/Actividad IVA
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Act. IVA
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Activo
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Acción
                 </th>
               </tr>
@@ -506,105 +504,88 @@ const DiotCatalogoProveedores = () => {
 
                 return (
                   <tr key={proveedor.clave} className={rowHasChanges ? 'bg-blue-50 dark:bg-blue-900/20' : ''}>
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                    <td className="px-2 py-2 text-xs text-gray-900 dark:text-white font-medium">
                       {proveedor.clave}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-white max-w-xs truncate">
+                    <td className="px-2 py-2 text-xs text-gray-900 dark:text-white max-w-[120px] truncate" title={proveedor.nombre}>
                       {proveedor.nombre}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                    <td className="px-2 py-2 text-xs text-gray-900 dark:text-white font-mono">
                       {proveedor.rfc}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-white max-w-xs truncate">
+                    <td className="px-2 py-2 text-xs text-gray-900 dark:text-white max-w-[100px] truncate" title={proveedor.domicilio}>
                       {proveedor.domicilio}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                    <td className="px-2 py-2 text-xs text-gray-900 dark:text-white">
                       {proveedor.cp}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                    <td className="px-2 py-2 text-xs text-gray-900 dark:text-white max-w-[80px] truncate" title={proveedor.colonia}>
                       {proveedor.colonia}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                    <td className="px-2 py-2 text-xs text-gray-900 dark:text-white max-w-[80px] truncate" title={proveedor.estado}>
                       {proveedor.estado}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                    <td className="px-2 py-2 text-xs text-gray-900 dark:text-white max-w-[80px] truncate" title={proveedor.localidad}>
                       {proveedor.localidad}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="space-y-1">
+                    <td className="px-2 py-2">
+                      <div className="w-[140px]">
                         <select
                           value={proveedor.tipoOperacion || ''}
                           onChange={(e) => handleFieldChange(proveedor.clave, 'tipoOperacion', parseInt(e.target.value))}
-                          className={`w-full text-xs px-2 py-1 border rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1 ${
+                          className={`w-full text-xs px-1 py-1 border rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1 ${
                             !isValidSelection && proveedor.tipoOperacion 
                               ? 'border-red-300 dark:border-red-600' 
                               : 'border-gray-300 dark:border-[#2C2C38]'
                           }`}
                           style={{ '--tw-ring-color': primaryColor }}
                         >
-                          <option value="">Sin configurar</option>
+                          <option value="">Sin config.</option>
                           {availableOperations.map(tipo => (
                             <option key={tipo.id} value={tipo.id}>
-                              {tipo.clave} - {tipo.descripcion}
+                              {tipo.clave}-{tipo.descripcion.substring(0, 15)}...
                             </option>
                           ))}
                         </select>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {providerType === 'global' && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
-                              Global
-                            </span>
-                          )}
-                          {providerType === 'extranjero' && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
-                              Extranjero
-                            </span>
-                          )}
-                          {providerType === 'nacional' && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                              Nacional
-                            </span>
-                          )}
-                        </div>
                         {!isValidSelection && proveedor.tipoOperacion && (
                           <div className="text-xs text-red-600 dark:text-red-400">
-                            Operación no válida para este RFC
+                            No válida
                           </div>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-2 py-2">
                       <select
                         value={proveedor.tipoProveedor || ''}
                         onChange={(e) => handleFieldChange(proveedor.clave, 'tipoProveedor', parseInt(e.target.value))}
-                        className="w-full text-xs px-2 py-1 border border-gray-300 dark:border-[#2C2C38] rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1"
+                        className="w-[100px] text-xs px-1 py-1 border border-gray-300 dark:border-[#2C2C38] rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1"
                         style={{ '--tw-ring-color': primaryColor }}
                       >
-                        <option value="">Sin configurar</option>
+                        <option value="">Sin config.</option>
                         {tiposProveedor.map(tipo => (
                           <option key={tipo.id} value={tipo.id}>
-                            {tipo.clave} - {tipo.descripcion}
+                            {tipo.clave}-{tipo.descripcion.substring(0, 8)}
                           </option>
                         ))}
                       </select>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-2 py-2">
                       <select
                         value={proveedor.actividadIva || ''}
                         onChange={(e) => handleFieldChange(proveedor.clave, 'actividadIva', parseInt(e.target.value))}
-                        className="w-full text-xs px-2 py-1 border border-gray-300 dark:border-[#2C2C38] rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1"
+                        className="w-[110px] text-xs px-1 py-1 border border-gray-300 dark:border-[#2C2C38] rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1"
                         style={{ '--tw-ring-color': primaryColor }}
                       >
-                        <option value="">Sin configurar</option>
+                        <option value="">Sin config.</option>
                         {actividadesIva.map(actividad => (
                           <option key={actividad.id} value={actividad.id}>
-                            {actividad.descripcion}
+                            {actividad.descripcion.substring(0, 12)}...
                           </option>
                         ))}
                       </select>
                     </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                    <td className="px-2 py-2 text-center">
+                      <span className={`inline-flex px-1.5 py-0.5 text-xs font-medium rounded-full ${
                         proveedor.activo 
                           ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                           : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
@@ -612,12 +593,12 @@ const DiotCatalogoProveedores = () => {
                         {proveedor.activo ? 'Sí' : 'No'}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-2 py-2">
                       {rowHasChanges ? (
                         <button
                           onClick={() => handleSave(proveedor)}
                           disabled={isSaving}
-                          className="flex items-center space-x-1 px-3 py-1 text-xs text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
+                          className="flex items-center space-x-1 px-2 py-1 text-xs text-white rounded hover:opacity-90 transition-colors disabled:opacity-50"
                           style={{ backgroundColor: primaryColor }}
                         >
                           {isSaving ? (
@@ -625,15 +606,15 @@ const DiotCatalogoProveedores = () => {
                           ) : (
                             <Save className="h-3 w-3" />
                           )}
-                          <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
+                          <span className="hidden sm:inline">{isSaving ? 'Guard...' : 'Guardar'}</span>
                         </button>
                       ) : (
                         <button
                           disabled
-                          className="flex items-center space-x-1 px-3 py-1 text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 dark:text-gray-500 rounded-lg cursor-not-allowed"
+                          className="flex items-center space-x-1 px-2 py-1 text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 dark:text-gray-500 rounded cursor-not-allowed"
                         >
                           <Save className="h-3 w-3" />
-                          <span>Guardar</span>
+                          <span className="hidden sm:inline">Guardar</span>
                         </button>
                       )}
                     </td>
