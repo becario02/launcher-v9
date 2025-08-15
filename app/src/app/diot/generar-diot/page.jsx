@@ -6,6 +6,7 @@ import { usePrimaryColor } from '@/context/primaryColor';
 import { useTokenManager } from '@/hooks/useTokenManager';
 import Toast from '@/components/Toast';
 import { exportDiotToExcel } from '@/utils/diot/DiotExcelExport';
+import { exportDiotToTxt } from '@/utils/diot/DiotTxtExport';
 
 const DiotGenerarPage = () => {
   const { primaryColor } = usePrimaryColor();
@@ -24,6 +25,7 @@ const DiotGenerarPage = () => {
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingTxt, setIsExportingTxt] = useState(false);
 
   // Show toast notification
   const showToast = (message, type = 'success') => {
@@ -321,6 +323,28 @@ const DiotGenerarPage = () => {
     }
   };
 
+  // Handle TXT export
+  const handleTxtExport = async () => {
+    if (!selectedPeriod) {
+      showToast('Debe seleccionar un período para exportar', 'error');
+      return;
+    }
+
+    try {
+      setIsExportingTxt(true);
+      const result = await exportDiotToTxt(tokenizedRequest, selectedPeriod, showToast);
+      
+      if (result.success) {
+        console.log(`TXT exported successfully: ${result.recordsCount} records`);
+      }
+    } catch (err) {
+      console.error('TXT export failed:', err);
+      // Error toast is already handled in exportDiotToTxt
+    } finally {
+      setIsExportingTxt(false);
+    }
+  };
+
   // Initialize component
   useEffect(() => {
     fetchPeriods();
@@ -451,7 +475,7 @@ const DiotGenerarPage = () => {
         </div>
 
         {/* Table Content */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-[#2C2C38]">
               <tr>
@@ -683,11 +707,17 @@ const DiotGenerarPage = () => {
                 {isExporting ? 'Exportando...' : 'Exportar Excel'}
               </button>
               <button
-                disabled
-                className="flex items-center gap-2 px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 rounded-lg cursor-not-allowed"
+                onClick={handleTxtExport}
+                disabled={!selectedPeriod || isExportingTxt || isLoadingData}
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: primaryColor }}
               >
-                <FileText className="h-4 w-4" />
-                Exportar TXT
+                {isExportingTxt ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FileText className="h-4 w-4" />
+                )}
+                {isExportingTxt ? 'Exportando...' : 'Exportar TXT'}
               </button>
             </div>
           </div>
