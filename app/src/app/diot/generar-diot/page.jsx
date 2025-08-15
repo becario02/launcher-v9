@@ -5,6 +5,7 @@ import { Calendar, Calculator, FileText, Download, Save, RefreshCw, AlertCircle 
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useTokenManager } from '@/hooks/useTokenManager';
 import Toast from '@/components/Toast';
+import { exportDiotToExcel } from '@/utils/diot/DiotExcelExport';
 
 const DiotGenerarPage = () => {
   const { primaryColor } = usePrimaryColor();
@@ -22,6 +23,7 @@ const DiotGenerarPage = () => {
   const [savingRecordId, setSavingRecordId] = useState(null);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Show toast notification
   const showToast = (message, type = 'success') => {
@@ -294,6 +296,28 @@ const DiotGenerarPage = () => {
       showToast(errorMessage, 'error');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Handle Excel export
+  const handleExcelExport = async () => {
+    if (!selectedPeriod) {
+      showToast('Debe seleccionar un período para exportar', 'error');
+      return;
+    }
+
+    try {
+      setIsExporting(true);
+      const result = await exportDiotToExcel(tokenizedRequest, selectedPeriod, showToast);
+      
+      if (result.success) {
+        console.log(`Excel exported successfully: ${result.detalleRecords} detalle records, ${result.consolidadoRecords} consolidado records`);
+      }
+    } catch (err) {
+      console.error('Export failed:', err);
+      // Error toast is already handled in exportDiotToExcel
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -646,11 +670,17 @@ const DiotGenerarPage = () => {
             
             <div className="flex items-center gap-3">
               <button
-                disabled
-                className="flex items-center gap-2 px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 rounded-lg cursor-not-allowed"
+                onClick={handleExcelExport}
+                disabled={!selectedPeriod || isExporting || isLoadingData}
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: primaryColor }}
               >
-                <Download className="h-4 w-4" />
-                Exportar Excel
+                {isExporting ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                {isExporting ? 'Exportando...' : 'Exportar Excel'}
               </button>
               <button
                 disabled

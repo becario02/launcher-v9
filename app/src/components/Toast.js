@@ -66,7 +66,7 @@ const Toast = ({ message, type = 'success', onClose }) => {
         <p className="text-sm font-medium text-gray-900">
           {type === 'success' ? 'Éxito' : 'Error'}
         </p>
-        <p className="mt-1 text-sm text-gray-500 break-words">
+        <p className="mt-1 text-sm text-gray-500 break-words whitespace-pre-line">
           {message}
         </p>
       </div>
