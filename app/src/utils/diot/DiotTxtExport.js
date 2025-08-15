@@ -13,6 +13,31 @@ const formatPeriodDisplay = (periodo) => {
 };
 
 /**
+ * Format period for filename (MM_YYYY)
+ */
+const formatPeriodForFilename = (periodo) => {
+  const date = new Date(periodo);
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // 01-12
+  const year = date.getFullYear();
+  return `${month}_${year}`;
+};
+
+/**
+ * Fetch empresa RFC
+ */
+const fetchEmpresaRfc = async (tokenizedRequest) => {
+  const result = await tokenizedRequest('/mserpservice/api/diot/v1/getEmpresaRfc', {
+    method: 'GET'
+  });
+
+  if (result.statusCode === '200' && result.data) {
+    return result.data;
+  } else {
+    throw new Error(result.message || 'Error al obtener RFC de la empresa');
+  }
+};
+
+/**
  * Format numeric values for TXT (ensure proper decimal format)
  */
 const formatNumericValue = (value) => {
@@ -154,16 +179,18 @@ const downloadTxtFile = (content, filename) => {
  */
 export const exportDiotToTxt = async (tokenizedRequest, selectedPeriod, showToast) => {
   try {
-    // Fetch consolidado data
-    const consolidadoData = await fetchDiotConsolidado(tokenizedRequest);
+    // Fetch empresa RFC and consolidado data
+    const [empresaRfc, consolidadoData] = await Promise.all([
+      fetchEmpresaRfc(tokenizedRequest),
+      fetchDiotConsolidado(tokenizedRequest)
+    ]);
 
     // Convert to TXT format
     const txtContent = convertToTxtFormat(consolidadoData, selectedPeriod);
 
-    // Generate filename with current date and period
-    const currentDate = new Date().toISOString().split('T')[0];
-    const periodDisplay = formatPeriodDisplay(selectedPeriod);
-    const filename = `DIOT_Consolidado_${periodDisplay}_${currentDate}.txt`;
+    // Generate filename with new format: RFC_MM_YYYY_DIOT.txt
+    const periodFormatted = formatPeriodForFilename(selectedPeriod);
+    const filename = `${empresaRfc}_${periodFormatted}_DIOT.txt`;
 
     // Download file
     downloadTxtFile(txtContent, filename);

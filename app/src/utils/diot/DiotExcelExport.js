@@ -23,6 +23,31 @@ const formatPeriodDisplay = (periodo) => {
 };
 
 /**
+ * Format period for filename (MM_YYYY)
+ */
+const formatPeriodForFilename = (periodo) => {
+  const date = new Date(periodo);
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // 01-12
+  const year = date.getFullYear();
+  return `${month}_${year}`;
+};
+
+/**
+ * Fetch empresa RFC
+ */
+const fetchEmpresaRfc = async (tokenizedRequest) => {
+  const result = await tokenizedRequest('/mserpservice/api/diot/v1/getEmpresaRfc', {
+    method: 'GET'
+  });
+
+  if (result.statusCode === '200' && result.data) {
+    return result.data;
+  } else {
+    throw new Error(result.message || 'Error al obtener RFC de la empresa');
+  }
+};
+
+/**
  * Format currency values
  */
 const formatCurrencyValue = (amount) => {
@@ -398,8 +423,9 @@ const createConsolidadoWorksheet = (consolidadoData) => {
  */
 export const exportDiotToExcel = async (tokenizedRequest, selectedPeriod, showToast) => {
   try {
-    // Fetch both datasets
-    const [detalleData, consolidadoData] = await Promise.all([
+    // Fetch empresa RFC and both datasets
+    const [empresaRfc, detalleData, consolidadoData] = await Promise.all([
+      fetchEmpresaRfc(tokenizedRequest),
       fetchDiotDetalle(tokenizedRequest, selectedPeriod),
       fetchDiotConsolidado(tokenizedRequest)
     ]);
@@ -415,10 +441,9 @@ export const exportDiotToExcel = async (tokenizedRequest, selectedPeriod, showTo
     XLSX.utils.book_append_sheet(wb, wsDetalle, 'DIOT Detalle');
     XLSX.utils.book_append_sheet(wb, wsConsolidado, 'DIOT Consolidado');
 
-    // Generate filename with current date and period
-    const currentDate = new Date().toISOString().split('T')[0];
-    const periodDisplay = formatPeriodDisplay(selectedPeriod);
-    const filename = `DIOT_${periodDisplay}_${currentDate}.xlsx`;
+    // Generate filename with new format: RFC_EMPRESA_MM_YYYY_DIOT.xlsx
+    const periodFormatted = formatPeriodForFilename(selectedPeriod);
+    const filename = `${empresaRfc}_${periodFormatted}_DIOT.xlsx`;
 
     // Write and download file
     XLSX.writeFile(wb, filename);
