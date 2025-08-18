@@ -26,13 +26,13 @@ const DiotCatalogoProveedores = () => {
       { id: 1, clave: '03', descripcion: 'Prestador de servicios profesional' },
       { id: 2, clave: '06', descripcion: 'Arrendamiento' },
       { id: 3, clave: '85', descripcion: 'Otros' },
-      { id: 4, clave: '02', descripcion: 'Enajenación de bienes' },
-      { id: 6, clave: '08', descripcion: 'Importación por transferencia virtual' }
+      { id: 4, clave: '08', descripcion: 'Importación por transferencia virtual' },
+      { id: 5, clave: '02', descripcion: 'Enajenación de bienes' }
     ],
     extranjero: [
-      { id: 4, clave: '02', descripcion: 'Enajenación de bienes' },
+      { id: 5, clave: '02', descripcion: 'Enajenación de bienes' },
       { id: 1, clave: '03', descripcion: 'Prestador de servicios profesional' },
-      { id: 5, clave: '07', descripcion: 'Importación de bienes o servicios' }
+      { id: 6, clave: '07', descripcion: 'Importación de bienes o servicios' }
     ],
     global: [
       { id: 7, clave: '87', descripcion: 'Operaciones globales' }
@@ -77,7 +77,7 @@ const DiotCatalogoProveedores = () => {
     );
   };
 
-  // Check if a row has changes
+  // Check if a row has changes and is valid for saving
   const hasRowChanges = useCallback((clave) => {
     const currentRow = proveedores.find(p => p.clave === clave);
     const originalRow = originalProveedores.find(p => p.clave === clave);
@@ -90,6 +90,20 @@ const DiotCatalogoProveedores = () => {
       currentRow.actividadIva !== originalRow.actividadIva
     );
   }, [proveedores, originalProveedores]);
+
+  // Check if a row is valid for saving (all fields must be configured)
+  const isRowValidForSaving = useCallback((clave) => {
+    const currentRow = proveedores.find(p => p.clave === clave);
+    
+    if (!currentRow) return false;
+    
+    // All three fields must have values (not null, undefined, or empty)
+    return (
+      currentRow.tipoOperacion && 
+      currentRow.tipoProveedor && 
+      currentRow.actividadIva
+    );
+  }, [proveedores]);
 
   // Transform API data
   const transformApiData = (apiData) => {
@@ -449,7 +463,7 @@ const DiotCatalogoProveedores = () => {
 
       {/* Table */}
       <div className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-[#2C2C38]">
               <tr>
@@ -497,6 +511,7 @@ const DiotCatalogoProveedores = () => {
             <tbody className="bg-white dark:bg-[#1C1C24] divide-y divide-gray-200 dark:divide-[#2C2C38]">
               {filteredData.map((proveedor) => {
                 const rowHasChanges = hasRowChanges(proveedor.clave);
+                const isValidForSaving = isRowValidForSaving(proveedor.clave);
                 const isSaving = savingRows.has(proveedor.clave);
                 const availableOperations = getAvailableOperations(proveedor.rfc);
                 const providerType = getProviderType(proveedor.rfc);
@@ -534,7 +549,7 @@ const DiotCatalogoProveedores = () => {
                           value={proveedor.tipoOperacion || ''}
                           onChange={(e) => handleFieldChange(proveedor.clave, 'tipoOperacion', parseInt(e.target.value))}
                           className={`w-full text-xs px-1 py-1 border rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1 ${
-                            !isValidSelection && proveedor.tipoOperacion 
+                            (!isValidSelection && proveedor.tipoOperacion) || (!proveedor.tipoOperacion && rowHasChanges)
                               ? 'border-red-300 dark:border-red-600' 
                               : 'border-gray-300 dark:border-[#2C2C38]'
                           }`}
@@ -547,9 +562,9 @@ const DiotCatalogoProveedores = () => {
                             </option>
                           ))}
                         </select>
-                        {!isValidSelection && proveedor.tipoOperacion && (
+                        {((!isValidSelection && proveedor.tipoOperacion) || (!proveedor.tipoOperacion && rowHasChanges)) && (
                           <div className="text-xs text-red-600 dark:text-red-400">
-                            No válida
+                            {!proveedor.tipoOperacion ? 'Requerido' : 'No válida'}
                           </div>
                         )}
                       </div>
@@ -558,7 +573,11 @@ const DiotCatalogoProveedores = () => {
                       <select
                         value={proveedor.tipoProveedor || ''}
                         onChange={(e) => handleFieldChange(proveedor.clave, 'tipoProveedor', parseInt(e.target.value))}
-                        className="w-[100px] text-xs px-1 py-1 border border-gray-300 dark:border-[#2C2C38] rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1"
+                        className={`w-[100px] text-xs px-1 py-1 border rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1 ${
+                          !proveedor.tipoProveedor && rowHasChanges
+                            ? 'border-red-300 dark:border-red-600'
+                            : 'border-gray-300 dark:border-[#2C2C38]'
+                        }`}
                         style={{ '--tw-ring-color': primaryColor }}
                       >
                         <option value="">Sin config.</option>
@@ -568,12 +587,21 @@ const DiotCatalogoProveedores = () => {
                           </option>
                         ))}
                       </select>
+                      {!proveedor.tipoProveedor && rowHasChanges && (
+                        <div className="text-xs text-red-600 dark:text-red-400">
+                          Requerido
+                        </div>
+                      )}
                     </td>
                     <td className="px-2 py-2">
                       <select
                         value={proveedor.actividadIva || ''}
                         onChange={(e) => handleFieldChange(proveedor.clave, 'actividadIva', parseInt(e.target.value))}
-                        className="w-[110px] text-xs px-1 py-1 border border-gray-300 dark:border-[#2C2C38] rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1"
+                        className={`w-[110px] text-xs px-1 py-1 border rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1 ${
+                          !proveedor.actividadIva && rowHasChanges
+                            ? 'border-red-300 dark:border-red-600'
+                            : 'border-gray-300 dark:border-[#2C2C38]'
+                        }`}
                         style={{ '--tw-ring-color': primaryColor }}
                       >
                         <option value="">Sin config.</option>
@@ -583,6 +611,11 @@ const DiotCatalogoProveedores = () => {
                           </option>
                         ))}
                       </select>
+                      {!proveedor.actividadIva && rowHasChanges && (
+                        <div className="text-xs text-red-600 dark:text-red-400">
+                          Requerido
+                        </div>
+                      )}
                     </td>
                     <td className="px-2 py-2 text-center">
                       <span className={`inline-flex px-1.5 py-0.5 text-xs font-medium rounded-full ${
@@ -597,16 +630,25 @@ const DiotCatalogoProveedores = () => {
                       {rowHasChanges ? (
                         <button
                           onClick={() => handleSave(proveedor)}
-                          disabled={isSaving}
-                          className="flex items-center space-x-1 px-2 py-1 text-xs text-white rounded hover:opacity-90 transition-colors disabled:opacity-50"
-                          style={{ backgroundColor: primaryColor }}
+                          disabled={isSaving || !isValidForSaving}
+                          className={`flex items-center space-x-1 px-2 py-1 text-xs rounded transition-colors ${
+                            isValidForSaving && !isSaving
+                              ? 'text-white hover:opacity-90'
+                              : 'text-gray-400 bg-gray-100 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed'
+                          }`}
+                          style={{ 
+                            backgroundColor: isValidForSaving && !isSaving ? primaryColor : undefined 
+                          }}
+                          title={!isValidForSaving ? 'Complete todos los campos requeridos' : ''}
                         >
                           {isSaving ? (
                             <RefreshCw className="h-3 w-3 animate-spin" />
                           ) : (
                             <Save className="h-3 w-3" />
                           )}
-                          <span className="hidden sm:inline">{isSaving ? 'Guard...' : 'Guardar'}</span>
+                          <span className="hidden sm:inline">
+                            {isSaving ? 'Guard...' : !isValidForSaving ? 'Incompl.' : 'Guardar'}
+                          </span>
                         </button>
                       ) : (
                         <button
