@@ -1,4 +1,4 @@
-//api/integrador/assign-companies/route.js
+//api/integrator/unassign-companies/route.js
 import { NextResponse } from "next/server";
 import { callApiGateway } from "@/utils/serverApi";
 
@@ -7,7 +7,7 @@ export async function POST(req) {
   const accept = req.headers.get("accept") || "*/*";
 
   const data = await callApiGateway({
-    endpoint: "/mslauncher/api/v1/integrator/assign-companies",
+    endpoint: "/mslauncher/api/v1/integrator/unassign-companies",
     method: "POST",
     body,
     headers: {

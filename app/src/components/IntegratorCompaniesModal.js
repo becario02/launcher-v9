@@ -103,7 +103,7 @@ export default function IntegratorCompaniesModal({
       });
       
       if (response.data && response.data.statusCode === "200" && response.data.data) {
-        const orderedCompanies = getSortedCompanies(response.data.data, initialCompanyIds);
+        const orderedCompanies = getSortedCompanies(response.data.data, formData.companyIds);
         setFilteredCompanies(orderedCompanies);
       }
     } catch (error) {
@@ -132,22 +132,16 @@ export default function IntegratorCompaniesModal({
   
   // Seleccionar o deseleccionar todas las compañías
   const toggleSelectAllCompanies = (selectAll) => {
-    // Solo trabajar con compañías que no estaban inicialmente asignadas
-    const availableCompanies = filteredCompanies.filter(company => 
-      !initialCompanyIds.includes(company.idCompany)
-    );
-    
     if (selectAll) {
-      const availableIds = availableCompanies.map(company => company.idCompany);
+      const allIds = filteredCompanies.map(company => company.idCompany);
       setFormData(prev => ({
         ...prev,
-        companyIds: [...new Set([...prev.companyIds, ...availableIds])]
+        companyIds: allIds
       }));
     } else {
-      const availableIds = availableCompanies.map(company => company.idCompany);
       setFormData(prev => ({
         ...prev,
-        companyIds: prev.companyIds.filter(id => !availableIds.includes(id))
+        companyIds: []
       }));
     }
   };
@@ -155,7 +149,7 @@ export default function IntegratorCompaniesModal({
   // Efecto para buscar compañías cuando cambia el término de búsqueda
   useEffect(() => {
     if (!companySearch.trim()) {
-      const orderedCompanies = getSortedCompanies(allCompanies, initialCompanyIds);
+      const orderedCompanies = getSortedCompanies(allCompanies, formData.companyIds);
       setFilteredCompanies(orderedCompanies);
       return;
     }
@@ -165,16 +159,11 @@ export default function IntegratorCompaniesModal({
     }, 300);
     
     return () => clearTimeout(delayDebounce);
-  }, [companySearch, allCompanies, initialCompanyIds]);
+  }, [companySearch, allCompanies, formData.companyIds]);
 
   const handleCompanyChange = (e) => {
     const { value, checked } = e.target;
     const companyId = parseInt(value);
-    
-    // No permitir desmarcar compañías que estaban inicialmente asignadas
-    if (!checked && initialCompanyIds.includes(companyId)) {
-      return;
-    }
     
     setFormData(prev => {
       const updatedCompanyIds = checked
@@ -206,35 +195,72 @@ export default function IntegratorCompaniesModal({
     setIsSubmitting(true);
     
     try {
-      const response = await axios.post('/api/integrator/assign-companies', {
-        idIntegrator: integrator.idIntegrator,
-        companyIds: formData.companyIds
-      }, {
-        headers: {
-          'accept': '*/*',
-          'Content-Type': 'application/json'
-        }
-      });
+      // Determinar qué compañías agregar y cuáles eliminar
+      const currentIds = formData.companyIds;
+      const toAdd = currentIds.filter(id => !initialCompanyIds.includes(id));
+      const toRemove = initialCompanyIds.filter(id => !currentIds.includes(id));
 
-      if (response.data.statusCode === "200") {
-        if (onSuccess) {
-          onSuccess({
-            type: 'success',
-            message: `Compañías actualizadas para ${integrator.name}`
+      let results = [];
+
+      // Agregar nuevas compañías
+      if (toAdd.length > 0) {
+        try {
+          const addResponse = await axios.post('/api/integrator/assign-companies', {
+            idIntegrator: integrator.idIntegrator,
+            companyIds: toAdd
+          }, {
+            headers: {
+              'accept': '*/*',
+              'Content-Type': 'application/json'
+            }
           });
+
+          if (addResponse.data.statusCode === "200") {
+            results.push(`${toAdd.length} compañía(s) agregada(s)`);
+          }
+        } catch (error) {
+          console.error('Error al agregar compañías:', error);
+          throw new Error('Error al agregar compañías');
         }
-        
-        handleClose();
-      } else {
-        throw new Error('Error en la respuesta del servidor');
       }
+
+      // Eliminar compañías desasignadas
+      if (toRemove.length > 0) {
+        try {
+          const removeResponse = await axios.post('/api/integrator/unassign-companies', {
+            idIntegrator: integrator.idIntegrator,
+            companyIds: toRemove
+          }, {
+            headers: {
+              'accept': '*/*',
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (removeResponse.data.statusCode === "200") {
+            results.push(`${toRemove.length} compañía(s) eliminada(s)`);
+          }
+        } catch (error) {
+          console.error('Error al eliminar compañías:', error);
+          throw new Error('Error al eliminar compañías');
+        }
+      }
+
+      if (onSuccess) {
+        onSuccess({
+          type: 'success',
+          message: `Compañías actualizadas para ${integrator.name}`
+        });
+      }
+      
+      handleClose();
     } catch (error) {
-      console.error('Error al asignar compañías:', error);
+      console.error('Error al actualizar compañías:', error);
       
       if (onSuccess) {
         onSuccess({
           type: 'error',
-          message: 'Error al actualizar las compañías del integrador'
+          message: error.message || 'Error al actualizar las compañías del integrador'
         });
       }
     } finally {
@@ -369,12 +395,10 @@ export default function IntegratorCompaniesModal({
                           id="select-all-companies"
                           checked={
                             filteredCompanies.length > 0 && 
-                            filteredCompanies
-                              .filter(c => !initialCompanyIds.includes(c.idCompany))
-                              .every(c => formData.companyIds.includes(c.idCompany))
+                            filteredCompanies.every(c => formData.companyIds.includes(c.idCompany))
                           }
                           onChange={(e) => toggleSelectAllCompanies(e.target.checked)}
-                          disabled={isSubmitting || filteredCompanies.filter(c => !initialCompanyIds.includes(c.idCompany)).length === 0}
+                          disabled={isSubmitting || filteredCompanies.length === 0}
                           className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary dark:border-gray-600 dark:focus:ring-primary disabled:opacity-50"
                         />
                         <label
@@ -382,11 +406,9 @@ export default function IntegratorCompaniesModal({
                           className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer w-full"
                         >
                           {filteredCompanies.length > 0 && 
-                           filteredCompanies
-                             .filter(c => !initialCompanyIds.includes(c.idCompany))
-                             .every(c => formData.companyIds.includes(c.idCompany))
-                            ? 'Deseleccionar nuevas'
-                            : 'Seleccionar todas disponibles'}
+                           filteredCompanies.every(c => formData.companyIds.includes(c.idCompany))
+                            ? 'Deseleccionar todas'
+                            : 'Seleccionar todas'}
                         </label>
                       </div>
                     </div>
@@ -410,12 +432,12 @@ export default function IntegratorCompaniesModal({
                               value={company.idCompany}
                               checked={formData.companyIds.includes(company.idCompany)}
                               onChange={handleCompanyChange}
-                              disabled={isSubmitting || initialCompanyIds.includes(company.idCompany)}
+                              disabled={isSubmitting}
                               className="h-4 w-4 mt-0.5 text-primary border-gray-300 rounded focus:ring-primary dark:border-gray-600 dark:focus:ring-primary disabled:opacity-50"
                             />
                             <label
                               htmlFor={`company-${company.idCompany}`}
-                              className={`ml-2 w-full ${initialCompanyIds.includes(company.idCompany) ? 'cursor-default' : 'cursor-pointer'}`}
+                              className="ml-2 w-full cursor-pointer"
                             >
                               <div className="flex items-center gap-1">
                                 <Building className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
@@ -423,8 +445,7 @@ export default function IntegratorCompaniesModal({
                                   "text-sm",
                                   formData.companyIds.includes(company.idCompany) 
                                     ? "text-primary-600 dark:text-primary-400 font-medium" 
-                                    : "text-gray-800 dark:text-gray-200",
-                                  initialCompanyIds.includes(company.idCompany) && "opacity-75"
+                                    : "text-gray-800 dark:text-gray-200"
                                 )}>
                                   {company.name}
                                   {initialCompanyIds.includes(company.idCompany) && (
