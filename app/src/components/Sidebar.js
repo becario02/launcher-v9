@@ -627,14 +627,14 @@ export default function Sidebar({ onClose }) {
         )}
 
         {/* DIOT 2025 Section */}
-        {/*<ExpandableItem
+        <ExpandableItem
           icon={Calculator}
           text="DIOT 2025"
           defaultOpen={false}
           isChildActive={isDiotActive}
-        >*/}
+        >
           {/* Configuración sub-dropdown */}
-          {/*<ExpandableItem
+          <ExpandableItem
             icon={Cog}
             text="Configuración"
             indent={true}
@@ -669,17 +669,17 @@ export default function Sidebar({ onClose }) {
               active={activeItem === 'DiotCatalogoEmpresas'}
               onClick={() => navigateTo('/diot/catalogo-empresas', 'DiotCatalogoEmpresas')}
             />
-          </ExpandableItem>*/}
+          </ExpandableItem>
 
           {/* Generar DIOT */}
-          {/*<SidebarItem
+          <SidebarItem
             icon={FileSpreadsheet}
             text="Generar DIOT"
             indent
             active={activeItem === 'DiotGenerar'}
             onClick={() => navigateTo('/diot/generar-diot', 'DiotGenerar')}
           />
-        </ExpandableItem>*/}
+        </ExpandableItem>
 
         {/* Show Noticias for regular users */}
         {!isAdmin && !isAdvan && (

@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Filter, Save, RefreshCw, Users, AlertCircle } from 'lucide-react';
+import { Search, Filter, Save, RefreshCw, Users, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePrimaryColor } from '@/context/primaryColor';
 import { useTokenManager } from '@/hooks/useTokenManager';
+import Toast from '@/components/Toast';
 
 const DiotCatalogoProveedores = () => {
   const { primaryColor } = usePrimaryColor();
@@ -19,6 +20,13 @@ const DiotCatalogoProveedores = () => {
   const [filterTipoProveedor, setFilterTipoProveedor] = useState('Todos');
   const [filterActividadIva, setFilterActividadIva] = useState('Todos');
   const [savingRows, setSavingRows] = useState(new Set());
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  
+  // Toast states
+  const [toasts, setToasts] = useState([]);
 
   // Hardcoded data for selects
   const tiposOperacion = {
@@ -77,7 +85,16 @@ const DiotCatalogoProveedores = () => {
     );
   };
 
-  // Check if a row has changes and is valid for saving
+  // Toast functions
+  const addToast = (message, type = 'success') => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+  };
+
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
+  // Check if a row has changes and all required fields are filled
   const hasRowChanges = useCallback((clave) => {
     const currentRow = proveedores.find(p => p.clave === clave);
     const originalRow = originalProveedores.find(p => p.clave === clave);
@@ -91,19 +108,22 @@ const DiotCatalogoProveedores = () => {
     );
   }, [proveedores, originalProveedores]);
 
-  // Check if a row is valid for saving (all fields must be configured)
-  const isRowValidForSaving = useCallback((clave) => {
-    const currentRow = proveedores.find(p => p.clave === clave);
-    
-    if (!currentRow) return false;
-    
-    // All three fields must have values (not null, undefined, or empty)
+  // Check if all required fields are filled for a row
+  const isRowValid = useCallback((proveedor) => {
     return (
-      currentRow.tipoOperacion && 
-      currentRow.tipoProveedor && 
-      currentRow.actividadIva
+      proveedor.tipoOperacion && 
+      proveedor.tipoProveedor && 
+      proveedor.actividadIva
     );
-  }, [proveedores]);
+  }, []);
+
+  // Check if row can be saved (has changes AND all fields are filled)
+  const canSaveRow = useCallback((clave) => {
+    const proveedor = proveedores.find(p => p.clave === clave);
+    if (!proveedor) return false;
+    
+    return hasRowChanges(clave) && isRowValid(proveedor);
+  }, [proveedores, hasRowChanges, isRowValid]);
 
   // Transform API data
   const transformApiData = (apiData) => {
@@ -157,13 +177,27 @@ const DiotCatalogoProveedores = () => {
     setProveedores(prev => 
       prev.map(p => {
         if (p.clave === clave) {
-          let updatedProveedor = { ...p, [field]: value };
+          let updatedProveedor = { ...p };
           
-          if (field === 'tipoOperacion') {
+          // Prevent changing from valid value to empty ("Sin config.")
+          if (!value || value === '') {
+            // If the field already has a valid value, don't change it
+            if (p[field]) {
+              console.log(`Prevented clearing ${field} for provider ${clave} - keeping existing value: ${p[field]}`);
+              return p; // Return unchanged
+            }
+          }
+          
+          // Update the field with the new value
+          updatedProveedor[field] = value;
+          
+          // Special validation for tipoOperacion
+          if (field === 'tipoOperacion' && value) {
             const availableOps = getAvailableOperations(p.rfc);
             const isValidOperation = availableOps.some(op => op.id === parseInt(value));
             
             if (!isValidOperation) {
+              // Reset to first available operation if current selection is invalid
               updatedProveedor.tipoOperacion = availableOps[0]?.id || null;
             }
           }
@@ -215,8 +249,8 @@ const DiotCatalogoProveedores = () => {
         
         console.log('Proveedor actualizado exitosamente:', result.message);
         
-        // Show success message (optional - you can add a toast notification here)
-        // toast.success('Proveedor actualizado correctamente');
+        // Show success toast
+        addToast(`Proveedor "${proveedor.nombre}" actualizado correctamente`, 'success');
         
       } else {
         throw new Error(result.message || 'Error al actualizar el proveedor');
@@ -225,8 +259,8 @@ const DiotCatalogoProveedores = () => {
     } catch (err) {
       console.error('Error saving proveedor:', err);
       
-      // Show error message (optional - you can add a toast notification here)
-      // toast.error(`Error al guardar: ${err.message}`);
+      // Show error toast
+      addToast(`Error al actualizar "${proveedor.nombre}": ${err.message}`, 'error');
       
       // You could also set a local error state here to show in the UI
       setError(`Error al actualizar proveedor ${proveedor.clave}: ${err.message}`);
@@ -278,6 +312,39 @@ const DiotCatalogoProveedores = () => {
       return matchesSearch && matchesTipoOperacion && matchesTipoProveedor && matchesActividadIva;
     });
   }, [proveedores, searchTerm, filterTipoOperacion, filterTipoProveedor, filterActividadIva]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterTipoOperacion, filterTipoProveedor, filterActividadIva]);
+
+  // Pagination handlers
+  const goToPage = (page) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
 
   // Handle retry
   const handleRetry = () => {
@@ -427,7 +494,7 @@ const DiotCatalogoProveedores = () => {
         <div className="mt-4 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
           <div className="flex items-center space-x-4">
             <span>
-              Mostrando {filteredData.length} de {proveedores.length} proveedores
+              Mostrando {startIndex + 1}-{Math.min(endIndex, filteredData.length)} de {filteredData.length} proveedores
             </span>
             {(filterTipoOperacion !== 'Todos' || filterTipoProveedor !== 'Todos' || filterActividadIva !== 'Todos') && (
               <div className="flex items-center space-x-2 text-xs">
@@ -450,14 +517,32 @@ const DiotCatalogoProveedores = () => {
               </div>
             )}
           </div>
-          <button
-            onClick={fetchProveedores}
-            disabled={isLoading}
-            className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 disabled:opacity-50"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>Actualizar</span>
-          </button>
+          <div className="flex items-center space-x-4">
+            {/* Items per page selector */}
+            <div className="flex items-center space-x-2">
+              <span className="text-xs">Mostrar:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => handleItemsPerPageChange(parseInt(e.target.value))}
+                className="px-2 py-1 text-xs border border-gray-300 dark:border-[#2C2C38] rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1"
+                style={{ '--tw-ring-color': primaryColor }}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+            <button
+              onClick={fetchProveedores}
+              disabled={isLoading}
+              className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 disabled:opacity-50"
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <span>Actualizar</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -509,9 +594,10 @@ const DiotCatalogoProveedores = () => {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-[#1C1C24] divide-y divide-gray-200 dark:divide-[#2C2C38]">
-              {filteredData.map((proveedor) => {
+              {paginatedData.map((proveedor) => {
                 const rowHasChanges = hasRowChanges(proveedor.clave);
-                const isValidForSaving = isRowValidForSaving(proveedor.clave);
+                const rowIsValid = isRowValid(proveedor);
+                const canSave = canSaveRow(proveedor.clave);
                 const isSaving = savingRows.has(proveedor.clave);
                 const availableOperations = getAvailableOperations(proveedor.rfc);
                 const providerType = getProviderType(proveedor.rfc);
@@ -549,8 +635,10 @@ const DiotCatalogoProveedores = () => {
                           value={proveedor.tipoOperacion || ''}
                           onChange={(e) => handleFieldChange(proveedor.clave, 'tipoOperacion', parseInt(e.target.value))}
                           className={`w-full text-xs px-1 py-1 border rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1 ${
-                            (!isValidSelection && proveedor.tipoOperacion) || (!proveedor.tipoOperacion && rowHasChanges)
+                            !proveedor.tipoOperacion
                               ? 'border-red-300 dark:border-red-600' 
+                              : !isValidSelection && proveedor.tipoOperacion
+                              ? 'border-red-300 dark:border-red-600'
                               : 'border-gray-300 dark:border-[#2C2C38]'
                           }`}
                           style={{ '--tw-ring-color': primaryColor }}
@@ -562,9 +650,14 @@ const DiotCatalogoProveedores = () => {
                             </option>
                           ))}
                         </select>
-                        {((!isValidSelection && proveedor.tipoOperacion) || (!proveedor.tipoOperacion && rowHasChanges)) && (
+                        {!proveedor.tipoOperacion && rowHasChanges && (
                           <div className="text-xs text-red-600 dark:text-red-400">
-                            {!proveedor.tipoOperacion ? 'Requerido' : 'No válida'}
+                            Requerido
+                          </div>
+                        )}
+                        {!isValidSelection && proveedor.tipoOperacion && (
+                          <div className="text-xs text-red-600 dark:text-red-400">
+                            No válida
                           </div>
                         )}
                       </div>
@@ -574,8 +667,8 @@ const DiotCatalogoProveedores = () => {
                         value={proveedor.tipoProveedor || ''}
                         onChange={(e) => handleFieldChange(proveedor.clave, 'tipoProveedor', parseInt(e.target.value))}
                         className={`w-[100px] text-xs px-1 py-1 border rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1 ${
-                          !proveedor.tipoProveedor && rowHasChanges
-                            ? 'border-red-300 dark:border-red-600'
+                          !proveedor.tipoProveedor
+                            ? 'border-red-300 dark:border-red-600' 
                             : 'border-gray-300 dark:border-[#2C2C38]'
                         }`}
                         style={{ '--tw-ring-color': primaryColor }}
@@ -598,8 +691,8 @@ const DiotCatalogoProveedores = () => {
                         value={proveedor.actividadIva || ''}
                         onChange={(e) => handleFieldChange(proveedor.clave, 'actividadIva', parseInt(e.target.value))}
                         className={`w-[110px] text-xs px-1 py-1 border rounded bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white focus:outline-none focus:ring-1 ${
-                          !proveedor.actividadIva && rowHasChanges
-                            ? 'border-red-300 dark:border-red-600'
+                          !proveedor.actividadIva
+                            ? 'border-red-300 dark:border-red-600' 
                             : 'border-gray-300 dark:border-[#2C2C38]'
                         }`}
                         style={{ '--tw-ring-color': primaryColor }}
@@ -627,33 +720,31 @@ const DiotCatalogoProveedores = () => {
                       </span>
                     </td>
                     <td className="px-2 py-2">
-                      {rowHasChanges ? (
+                      {canSave ? (
                         <button
                           onClick={() => handleSave(proveedor)}
-                          disabled={isSaving || !isValidForSaving}
-                          className={`flex items-center space-x-1 px-2 py-1 text-xs rounded transition-colors ${
-                            isValidForSaving && !isSaving
-                              ? 'text-white hover:opacity-90'
-                              : 'text-gray-400 bg-gray-100 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed'
-                          }`}
-                          style={{ 
-                            backgroundColor: isValidForSaving && !isSaving ? primaryColor : undefined 
-                          }}
-                          title={!isValidForSaving ? 'Complete todos los campos requeridos' : ''}
+                          disabled={isSaving}
+                          className="flex items-center space-x-1 px-2 py-1 text-xs text-white rounded hover:opacity-90 transition-colors disabled:opacity-50"
+                          style={{ backgroundColor: primaryColor }}
                         >
                           {isSaving ? (
                             <RefreshCw className="h-3 w-3 animate-spin" />
                           ) : (
                             <Save className="h-3 w-3" />
                           )}
-                          <span className="hidden sm:inline">
-                            {isSaving ? 'Guard...' : !isValidForSaving ? 'Incompl.' : 'Guardar'}
-                          </span>
+                          <span className="hidden sm:inline">{isSaving ? 'Guard...' : 'Guardar'}</span>
                         </button>
                       ) : (
                         <button
                           disabled
                           className="flex items-center space-x-1 px-2 py-1 text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 dark:text-gray-500 rounded cursor-not-allowed"
+                          title={
+                            !rowHasChanges 
+                              ? "No hay cambios para guardar" 
+                              : !rowIsValid 
+                              ? "Complete todos los campos requeridos" 
+                              : "Botón deshabilitado"
+                          }
                         >
                           <Save className="h-3 w-3" />
                           <span className="hidden sm:inline">Guardar</span>
@@ -666,13 +757,135 @@ const DiotCatalogoProveedores = () => {
             </tbody>
           </table>
 
-          {filteredData.length === 0 && !isLoading && (
+          {paginatedData.length === 0 && !isLoading && (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               No se encontraron proveedores con los filtros aplicados
             </div>
           )}
         </div>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="bg-white dark:bg-[#1C1C24] border border-gray-200 dark:border-[#2C2C38] rounded-lg px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Página {currentPage} de {totalPages}
+              </span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                ({filteredData.length} total)
+              </span>
+            </div>
+            
+            <div className="flex items-center space-x-1">
+              {/* Previous button */}
+              <button
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+                className="flex items-center px-3 py-1 text-sm border border-gray-300 dark:border-[#2C2C38] rounded-lg bg-white dark:bg-[#1C1C24] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Anterior
+              </button>
+
+              {/* Page numbers */}
+              <div className="flex items-center space-x-1">
+                {(() => {
+                  const pages = [];
+                  const maxVisible = 5;
+                  let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+                  let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+                  
+                  if (endPage - startPage + 1 < maxVisible) {
+                    startPage = Math.max(1, endPage - maxVisible + 1);
+                  }
+
+                  // First page + ellipsis
+                  if (startPage > 1) {
+                    pages.push(
+                      <button
+                        key={1}
+                        onClick={() => goToPage(1)}
+                        className="px-3 py-1 text-sm border border-gray-300 dark:border-[#2C2C38] rounded bg-white dark:bg-[#1C1C24] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        1
+                      </button>
+                    );
+                    if (startPage > 2) {
+                      pages.push(
+                        <span key="ellipsis-start" className="px-2 text-gray-500">
+                          ...
+                        </span>
+                      );
+                    }
+                  }
+
+                  // Visible page range
+                  for (let i = startPage; i <= endPage; i++) {
+                    pages.push(
+                      <button
+                        key={i}
+                        onClick={() => goToPage(i)}
+                        className={`px-3 py-1 text-sm border rounded transition-colors ${
+                          i === currentPage
+                            ? 'text-white border-transparent'
+                            : 'border-gray-300 dark:border-[#2C2C38] bg-white dark:bg-[#1C1C24] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                        }`}
+                        style={i === currentPage ? { backgroundColor: primaryColor } : {}}
+                      >
+                        {i}
+                      </button>
+                    );
+                  }
+
+                  // Ellipsis + last page
+                  if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                      pages.push(
+                        <span key="ellipsis-end" className="px-2 text-gray-500">
+                          ...
+                        </span>
+                      );
+                    }
+                    pages.push(
+                      <button
+                        key={totalPages}
+                        onClick={() => goToPage(totalPages)}
+                        className="px-3 py-1 text-sm border border-gray-300 dark:border-[#2C2C38] rounded bg-white dark:bg-[#1C1C24] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        {totalPages}
+                      </button>
+                    );
+                  }
+
+                  return pages;
+                })()}
+              </div>
+
+              {/* Next button */}
+              <button
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+                className="flex items-center px-3 py-1 text-sm border border-gray-300 dark:border-[#2C2C38] rounded-lg bg-white dark:bg-[#1C1C24] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Siguiente
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Toast notifications */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   );
 };
