@@ -191,9 +191,12 @@ export default function AdminIntegradoresPage() {
             )
           );
 
+          // Mensaje personalizado en español
+          const statusMessage = newStatus === 'ACTIVE' ? 'activado' : 'inactivado';
+          
           setToast({
             visible: true,
-            message: result.message || `Estado actualizado a ${newStatus === 'ACTIVE' ? 'Activo' : 'Inactivo'}`,
+            message: `Integrador ${statusMessage} correctamente`,
             type: 'success'
           });
         } else {

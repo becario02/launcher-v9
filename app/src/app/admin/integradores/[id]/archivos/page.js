@@ -397,7 +397,7 @@ export default function IntegratorFilesPage() {
                     </div>
                     <input
                       type="text"
-                      placeholder="Buscar archivo..."
+                      placeholder="Buscar archivo o descripción..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       className="w-full pl-9 pr-8 py-2 rounded-md text-sm border border-gray-300 dark:border-[#2C2C38] bg-gray-50 dark:bg-[#262636] text-gray-800 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 focus:bg-white dark:focus:bg-[#1C1C24] transition-all"
