@@ -198,7 +198,7 @@ const createDetalleWorksheet = (detalleData) => {
     record.formaAfecta || '',
     record.refDocumento1 || '',
     record.refDocumento2 || '',
-    record.conciliado === 1 ? 'Sí' : 'No',
+    record.conciliado || '',
     formatDateForExcel(record.fechaConciliado),
     record.consecMultiple || '',
     record.folioCaja || '',

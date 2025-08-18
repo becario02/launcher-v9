@@ -489,6 +489,9 @@ const DiotGenerarPage = () => {
                   Proceso
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Período
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Póliza
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -513,22 +516,10 @@ const DiotGenerarPage = () => {
                   Base 0
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Tasa IVA
+                  IVA
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Monto IVA 1
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Monto IVA 2
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  IVA Retenido 1
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  IVA Retenido 2
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Importe
+                  Retención
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Acto/Actividad
@@ -544,7 +535,7 @@ const DiotGenerarPage = () => {
             <tbody className="bg-white dark:bg-[#1C1C24] divide-y divide-gray-200 dark:divide-[#2C2C38]">
               {isLoadingData ? (
                 <tr>
-                  <td colSpan="20" className="px-6 py-8 text-center">
+                  <td colSpan="17" className="px-6 py-8 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <RefreshCw className="h-5 w-5 text-gray-400 animate-spin" />
                       <span className="text-gray-500 dark:text-gray-400">Cargando datos...</span>
@@ -553,7 +544,7 @@ const DiotGenerarPage = () => {
                 </tr>
               ) : diotData.length === 0 ? (
                 <tr>
-                  <td colSpan="20" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan="17" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                     {selectedPeriod ? 'No hay registros para el período seleccionado' : 'Seleccione un período para ver los datos'}
                   </td>
                 </tr>
@@ -570,19 +561,16 @@ const DiotGenerarPage = () => {
                       {record.proceso || '-'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
+                      {formatPeriodDisplay(record.periodo)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
                       {record.poliza || '-'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
                       {record.refDocumento1 || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-center">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        record.conciliado === 1 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' 
-                          : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                      }`}>
-                        {record.conciliado === 1 ? 'Sí' : 'No'}
-                      </span>
+                    <td className="px-4 py-3 whitespace-nowrap text-center text-xs text-gray-700 dark:text-gray-300">
+                      {record.conciliado}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
                       {record.fechaConciliado ? formatPeriodDisplay(record.fechaConciliado) : '-'}
@@ -600,22 +588,10 @@ const DiotGenerarPage = () => {
                       {formatCurrency(record.base0 || 0)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 dark:text-white text-right font-mono">
-                      {(record.tasaIva || 0).toFixed(2)}%
+                      {formatCurrency(record.iva || 0)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 dark:text-white text-right font-mono">
-                      {formatCurrency(record.montoIva1 || 0)}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 dark:text-white text-right font-mono">
-                      {formatCurrency(record.montoIva2 || 0)}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 dark:text-white text-right font-mono">
-                      {formatCurrency(record.ivaRetenido1 || 0)}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 dark:text-white text-right font-mono">
-                      {formatCurrency(record.ivaRetenido2 || 0)}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-900 dark:text-white text-right font-mono">
-                      {formatCurrency(record.importe)}
+                      {formatCurrency(record.retencion || 0)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-700 dark:text-gray-300">
                       <select
