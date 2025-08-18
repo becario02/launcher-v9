@@ -12,15 +12,14 @@ export const useSyncModules = () => {
 
   const activeRequestRef = useRef(null);
 
-  // Funciones estables con useCallback
   const login = useCallback(async (urlErp) => {
     setError(""); 
 
-    const check = await checkMserpServiceHealth(urlErp);
+    /*const check = await checkMserpServiceHealth(urlErp);
     if (!check.ok) {
       setError(check.message);
       return null;
-    }
+    }*/
 
     try {
       const response = await fetch(`${urlErp}/mserpservice/api/auth/login`, {

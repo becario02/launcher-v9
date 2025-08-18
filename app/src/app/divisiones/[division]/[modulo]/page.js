@@ -60,7 +60,12 @@ export default function ModulePage() {
   } = useModulePage();
 
   const formatModuleName = (moduleName) => {
-    return moduleName ? moduleName.replace(/-/g, " ") : "";
+    if (!moduleName) return "";
+    try {
+      return decodeURIComponent(moduleName).replace(/-/g, " ");
+    } catch (e) {
+      return moduleName.replace(/-/g, " ");
+    }
   };
 
   const breadcrumbItems = [
@@ -86,77 +91,72 @@ export default function ModulePage() {
   // Function to get user's IP address
   const getUserIP = useCallback(async () => {
     try {
-      const response = await fetch('https://api.ipify.org?format=json');
+      const response = await fetch("https://api.ipify.org?format=json");
       const data = await response.json();
       return data.ip;
     } catch (error) {
-      console.error('Error getting IP:', error);
-      return 'unknown';
+      console.error("Error getting IP:", error);
+      return "unknown";
     }
   }, []);
 
-  // Ref para controlar las llamadas duplicadas
   const trackingInProgress = useRef(new Set());
 
-  // Function to send menu tracking to endpoint
-  const sendMenuTracking = useCallback(async (idMenu) => {
-    try {
-      const userId = Cookies.get('idUser');
-      
-      if (!userId) {
-        console.error('User ID not found in cookies');
-        return;
-      }
+  const sendMenuTracking = useCallback(
+    async (idMenu) => {
+      try {
+        const userId = Cookies.get("idUser");
 
-      // Crear una clave única para este tracking
-      const trackingKey = `${userId}-${idMenu}`;
-      
-      // Si ya está en progreso, ignorar
-      if (trackingInProgress.current.has(trackingKey)) {
-        return;
-      }
+        if (!userId) {
+          console.error("User ID not found in cookies");
+          return;
+        }
 
-      // Marcar como en progreso
-      trackingInProgress.current.add(trackingKey);
+        const trackingKey = `${userId}-${idMenu}`;
 
-      const userIP = await getUserIP();
+        if (trackingInProgress.current.has(trackingKey)) {
+          return;
+        }
 
-      const response = await fetch('/api/menu-tracking', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          idUser: parseInt(userId),
-          idMenu: idMenu,
-          idCustomOption: 0,
-          ipName: userIP
-        })
-      });
+        trackingInProgress.current.add(trackingKey);
 
-      if (!response.ok) {
-        console.error('Error sending menu tracking:', response.statusText);
-      }
+        const userIP = await getUserIP();
 
-      // Remover de la lista después de un breve delay
-      setTimeout(() => {
+        const response = await fetch("/api/menu-tracking", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            idUser: parseInt(userId),
+            idMenu: idMenu,
+            idCustomOption: 0,
+            ipName: userIP,
+          }),
+        });
+
+        if (!response.ok) {
+          console.error("Error sending menu tracking:", response.statusText);
+        }
+
+        setTimeout(() => {
+          trackingInProgress.current.delete(trackingKey);
+        }, 1000);
+      } catch (error) {
+        const userId = Cookies.get("idUser");
+        const trackingKey = `${userId}-${idMenu}`;
         trackingInProgress.current.delete(trackingKey);
-      }, 1000); // 1 segundo de cooldown
+      }
+    },
+    [getUserIP]
+  );
 
-    } catch (error) {
-      console.error('Error sending menu tracking:', error);
-      // En caso de error, también remover de la lista
-      const userId = Cookies.get('idUser');
-      const trackingKey = `${userId}-${idMenu}`;
-      trackingInProgress.current.delete(trackingKey);
-    }
-  }, [getUserIP]);
-
-  // NUEVA FUNCIÓN PARA MANEJAR CLICS EN ITEMS
-  const handleItemClick = useCallback((item) => {
-    // Send tracking data silently to endpoint
-    sendMenuTracking(item.idMenu);
-  }, [sendMenuTracking]);
+  const handleItemClick = useCallback(
+    (item) => {
+      sendMenuTracking(item.idMenu);
+    },
+    [sendMenuTracking]
+  );
 
   const handleShortcutIntent = async () => {
     const intentRaw = localStorage.getItem("shortcutIntent");
@@ -186,7 +186,6 @@ export default function ModulePage() {
     try {
       parsed = await waitForModuleLoad();
     } catch (e) {
-      console.error("❌ No se pudo cargar el módulo:", e);
       return;
     }
 
@@ -566,9 +565,19 @@ export default function ModulePage() {
               {/* Menú lateral */}
               <div className="min-w-56 border-r border-gray-300 dark:border-gray-700 border-t-0 overflow-y-auto py-4 overflow-x-hidden">
                 {menuOrdenado.map((menuName) => {
-                  const existingItem = menuData.find(
-                    (item) => item.name === menuName
-                  );
+                  const norm = (s) =>
+                    (s || "")
+                      .toLowerCase()
+                      .normalize("NFD")
+                      .replace(/[\u0300-\u036f]/g, "");
+
+                  const singular = (s) => s.replace(/(es|s)$/i, "");
+
+                  const existingItem = menuData.find((item) => {
+                    const a = singular(norm(item.name));
+                    const b = singular(norm(menuName));
+                    return a === b || a.includes(b) || b.includes(a);
+                  });
 
                   const iconComponent =
                     existingItem?.icon || getIconForMenu(menuName);
@@ -642,16 +651,13 @@ export default function ModulePage() {
                         isItemInShortcuts={isItemInShortcuts}
                         primaryColor={primaryColor || "#FF4081"}
                         onCopyToClipboard={handleCopyToClipboard}
-                        // Props para privilegios
                         hasPrivilege={hasPrivilege}
                         hasMenuPermission={hasMenuPermission}
                         hasAnyChildPermission={hasAnyChildPermission}
-                        // Prop para búsqueda
                         searchTerm={searchTerm}
                         acronym={acronym}
                         currentSession={getCurrentSession()}
                         shortcuts={shortcuts}
-                        // Prop para manejar los clics en los items
                         onItemClick={handleItemClick}
                       />
                     )

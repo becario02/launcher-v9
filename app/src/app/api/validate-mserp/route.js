@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
-export async function POST(req) {
+export async function POST(req) { 
   const { url } = await req.json();
-  const full = `${url.trim().replace(/\/+$/, "")}/swagger/index.html`;
+  const base = (url || "").trim().replace(/\/+$/, "");
+  const full = `${base}/mserpservice/api/v1/version`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
@@ -10,6 +11,7 @@ export async function POST(req) {
   try {
     const res = await fetch(full, {
       method: "GET",
+      headers: { Accept: "application/json" },
       redirect: "manual",
       cache: "no-store",
       signal: controller.signal,
@@ -27,7 +29,7 @@ export async function POST(req) {
     return NextResponse.json({
       ok: false,
       status: 0,
-      statusText: e.message || "Failed to fetch",
+      statusText: e?.message || "Failed to fetch",
       finalUrl: full,
     });
   }

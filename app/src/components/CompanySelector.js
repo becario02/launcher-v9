@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
-import { useCompany } from '@/context/CompanyContext';
+import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
+import { useCompany } from "@/context/CompanyContext";
 
 export default function CompanySelector() {
   const [open, setOpen] = useState(false);
@@ -14,7 +14,7 @@ export default function CompanySelector() {
     selectedCompany,
     openCompanySelector,
     setPreselectedCompany,
-    loading
+    loading,
   } = useCompany();
 
   useEffect(() => {
@@ -24,14 +24,13 @@ export default function CompanySelector() {
         setShowSingleMessage(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const generateKey = (c) => `${c.name}-${c.serverErpDb}-${c.nameErpDb}`;
   const selectedKey = selectedCompany ? generateKey(selectedCompany) : null;
 
-  // Función para obtener el logo en base64
   const getCompanyLogo = (company) => {
     if (company?.logo) {
       return `data:image/png;base64,${company.logo}`;
@@ -39,30 +38,29 @@ export default function CompanySelector() {
     return null;
   };
 
-  // Componente para mostrar el logo o inicial
   const CompanyLogo = ({ company, size = 36 }) => {
     const logoSrc = getCompanyLogo(company);
-    
+
     if (logoSrc) {
       return (
-        <Image 
-          src={logoSrc} 
-          alt={`${company.name} logo`} 
-          width={size} 
+        <Image
+          src={logoSrc}
+          alt={`${company.name} logo`}
+          width={size}
           height={size}
           className="object-contain rounded-full"
           onError={(e) => {
-            // Si falla la carga del logo, mostrar la inicial
-            e.target.style.display = 'none';
+            e.target.style.display = "none";
             if (e.currentTarget && e.currentTarget.parentElement) {
-              e.currentTarget.parentElement.innerHTML = `<span class="text-[13px] font-medium text-[#0080FF] dark:text-white">${company.name.charAt(0)}</span>`;
+              e.currentTarget.parentElement.innerHTML = `<span class="text-[13px] font-medium text-[#0080FF] dark:text-white">${company.name.charAt(
+                0
+              )}</span>`;
             }
           }}
         />
       );
     }
-    
-    // Fallback: mostrar inicial si no hay logo
+
     return (
       <span className="text-[13px] font-medium text-[#0080FF] dark:text-white">
         {company.name.charAt(0)}
@@ -73,7 +71,6 @@ export default function CompanySelector() {
   if (loading) {
     return (
       <div className="font-[Poppins] relative w-[567px] text-sm font-medium text-gray-700 dark:text-gray-200">
-        {/* Loading skeleton placeholder */}
       </div>
     );
   }
@@ -109,42 +106,54 @@ export default function CompanySelector() {
   };
 
   function formatServer(server) {
-    if (!server) return '';
+    if (!server) return "";
     let hostPart = server;
-    let portOrInstance = '';
-    if (server.includes(':')) {
-      [hostPart, portOrInstance] = server.split(':');
-      portOrInstance = ':' + portOrInstance;
-    } else if (server.includes('\\')) {
-      [hostPart, portOrInstance] = server.split('\\');
-      portOrInstance = '\\' + portOrInstance;
+    let portOrInstance = "";
+    if (server.includes(":")) {
+      [hostPart, portOrInstance] = server.split(":");
+      portOrInstance = ":" + portOrInstance;
+    } else if (server.includes("\\")) {
+      [hostPart, portOrInstance] = server.split("\\");
+      portOrInstance = "\\" + portOrInstance;
     }
-    const parts = hostPart.split('.');
+    const parts = hostPart.split(".");
     const last = parts.pop();
-    const maskedParts = parts.map(part => '*'.repeat(part.length));
-    return maskedParts.concat(last).join('.') + portOrInstance;
+    const maskedParts = parts.map((part) => "*".repeat(part.length));
+    return maskedParts.concat(last).join(".") + portOrInstance;
   }
 
+  const filteredCompanies = (companies || [])
+    .filter(
+      (c, i, arr) =>
+        arr.findIndex((x) => generateKey(x) === generateKey(c)) === i
+    )
+    .filter((c) => generateKey(c) !== selectedKey);
+
+  const MAX_DISPLAYED = 5;
+  const shownCompanies = filteredCompanies.slice(0, MAX_DISPLAYED);
+  const extraCount = filteredCompanies.length > MAX_DISPLAYED ? filteredCompanies.length - MAX_DISPLAYED : 0;
+
   return (
-    <div ref={dropdownRef} className="font-[Poppins] relative w-[567px] text-sm font-medium text-gray-700 dark:text-gray-200">
+    <div
+      ref={dropdownRef}
+      className="font-[Poppins] relative w-[567px] text-sm font-medium text-gray-700 dark:text-gray-200"
+    >
       <button
         onClick={handleSelectorClick}
         className={`w-full flex items-center justify-between ${
           open || showSingleMessage
-            ? 'border border-[var(--primary-color)] border-b-transparent rounded-t-lg'
-            : 'border border-gray-300 dark:border-gray-600 rounded-lg'
+            ? "border border-[var(--primary-color)] border-b-transparent rounded-t-lg"
+            : "border border-gray-300 dark:border-gray-600 rounded-lg"
         } px-3 py-2 bg-white dark:bg-[#1c1c24] hover:bg-gray-50 dark:hover:bg-[#2c2c38] transition-all`}
         aria-label={`Selected company: ${selectedCompany.name}`}
       >
         <div className="flex items-center gap-3 w-full">
-          {/* Company logo/icon */}
           <div className="flex-shrink-0">
             <div className="w-9 h-9 flex items-center justify-center rounded-[50px] bg-white dark:bg-primary border border-gray-200 dark:border-gray-600 overflow-hidden">
               <CompanyLogo company={selectedCompany} size={36} />
             </div>
           </div>
-          
-          {/* Company information - left aligned */}
+
           <div className="flex flex-col items-start flex-grow overflow-hidden">
             <div className="flex items-center w-full">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
@@ -152,33 +161,41 @@ export default function CompanySelector() {
               </span>
             </div>
             <div className="flex items-center w-full text-[10px] text-gray-500 dark:text-gray-400">
-              {/* IP y BD */}
               <div className="flex items-center gap-2 truncate">
-                <span className="truncate">{formatServer(selectedCompany.serverErpDb)}</span>
+                <span className="truncate">
+                  {formatServer(selectedCompany.serverErpDb)}
+                </span>
                 <span className="whitespace-nowrap">•</span>
-                <span className="whitespace-nowrap">{selectedCompany.nameErpDb}</span>
+                <span className="whitespace-nowrap">
+                  {selectedCompany.nameErpDb}
+                </span>
               </div>
-              
-              {/* Espacio flexible */}
+
               <div className="flex-grow"></div>
-              
-              {/* PRUEBAS o PRODUCCIÓN */}
+
               <div className="flex-shrink-0">
-                <span className={`inline-flex px-2 py-0.5 text-white text-[10px] rounded-[25px] whitespace-nowrap font-medium ${
-                  selectedCompany.environment === 'TEST' 
-                    ? 'bg-gray-500 dark:bg-gray-600' 
-                    : 'bg-primary'
-                }`}>
-                  {selectedCompany.environment === 'TEST' ? 'PRUEBAS' : 'PRODUCCIÓN'}
+                <span
+                  className={`inline-flex px-2 py-0.5 text-white text-[10px] rounded-[25px] whitespace-nowrap font-medium ${
+                    selectedCompany.environment === "TEST"
+                      ? "bg-gray-500 dark:bg-gray-600"
+                      : "bg-primary"
+                  }`}
+                >
+                  {selectedCompany.environment === "TEST"
+                    ? "PRUEBAS"
+                    : "PRODUCCIÓN"}
                 </span>
               </div>
             </div>
           </div>
-          
-          {/* Toggle button - right aligned */}
+
           <div className="flex items-center gap-2 flex-shrink-0">
             <Image
-              src={open || showSingleMessage ? '/assets/company-selector/icon-contrae-2.svg' : '/assets/company-selector/icon-expand.svg'}
+              src={
+                open || showSingleMessage
+                  ? "/assets/company-selector/icon-contrae-2.svg"
+                  : "/assets/company-selector/icon-expand.svg"
+              }
               alt="Toggle"
               width={16}
               height={16}
@@ -190,51 +207,68 @@ export default function CompanySelector() {
 
       {showSingleMessage && (
         <div className="absolute top-full w-full bg-white dark:bg-[#1c1c24] border border-[var(--primary-color)] border-t-0 rounded-b-lg shadow z-10 p-3 text-center">
-          <p className="text-[14px] text-gray-700 dark:text-gray-200">Solo tienes acceso a esta empresa</p>
+          <p className="text-[14px] text-gray-700 dark:text-gray-200">
+            Solo tienes acceso a esta empresa
+          </p>
         </div>
       )}
 
       {open && companies.length > 1 && (
         <ul className="absolute top-full w-full bg-white dark:bg-[#1c1c24] border border-[var(--primary-color)] border-t-0 rounded-b-lg shadow z-10">
-          {companies
-            .filter((c, i, arr) => arr.findIndex(x => generateKey(x) === generateKey(c)) === i)
-            .filter(c => generateKey(c) !== selectedKey)
-            .map(company => {
-              const key = generateKey(company);
-              return (
-                <li
-                  key={key}
-                  onClick={() => {
-                    setPreselectedCompany(company);
-                    openCompanySelector();
-                    setOpen(false);
-                  }}
-                  className="cursor-pointer px-3 py-2 hover:bg-gray-100 dark:hover:bg-[#2c2c38] flex items-center gap-2"
-                >
-                  <div className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0080FF]/10 dark:bg-primary text-[#0080FF] dark:text-white border overflow-hidden">
-                    <CompanyLogo company={company} size={36} />
-                  </div>
-                  <div className="flex flex-col items-start overflow-hidden">
-                    <span className="text-[14px] font-medium text-gray-700 dark:text-gray-200">
-                      {company.name}
+          {shownCompanies.map((company) => {
+            return (
+              <li
+                key={generateKey(company)}
+                onClick={() => {
+                  setPreselectedCompany(company);
+                  openCompanySelector();
+                  setOpen(false);
+                }}
+                className="cursor-pointer px-3 py-2 hover:bg-gray-100 dark:hover:bg-[#2c2c38] flex items-center gap-2"
+              >
+                <div className="w-9 h-9 flex items-center justify-center rounded-full bg-[#0080FF]/10 dark:bg-primary text-[#0080FF] dark:text-white border overflow-hidden">
+                  <CompanyLogo company={company} size={36} />
+                </div>
+                <div className="flex flex-col items-start overflow-hidden">
+                  <span className="text-[14px] font-medium text-gray-700 dark:text-gray-200">
+                    {company.name}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                      {formatServer(company.serverErpDb)} • {company.nameErpDb}
                     </span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
-                        {formatServer(company.serverErpDb)} • {company.nameErpDb}
-                      </span>
-                      {/* Añadido tipo de BD (environment) */}
-                      <span className={`inline-flex px-2 py-0.5 text-white text-[10px] rounded-[25px] flex-shrink-0 font-medium ${
-                        company.environment === 'TEST' 
-                          ? 'bg-gray-500 dark:bg-gray-600' 
-                          : 'bg-primary'
-                      }`}>
-                        {company.environment === 'TEST' ? 'PRUEBAS' : 'PRODUCCIÓN'}
-                      </span>
-                    </div>
+                    <span
+                      className={`inline-flex px-2 py-0.5 text-white text-[10px] rounded-[25px] flex-shrink-0 font-medium ${
+                        company.environment === "TEST"
+                          ? "bg-gray-500 dark:bg-gray-600"
+                          : "bg-primary"
+                      }`}
+                    >
+                      {company.environment === "TEST"
+                        ? "PRUEBAS"
+                        : "PRODUCCIÓN"}
+                    </span>
                   </div>
-                </li>
-              );
-            })}
+                </div>
+              </li>
+            );
+          })}
+
+          {extraCount > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setPreselectedCompany(null);
+                openCompanySelector();
+                setOpen(false);
+              }}
+              className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-primary text-white text-[12px] font-semibold flex items-center justify-center shadow-sm hover:scale-[1.04] transition"
+              aria-label={`Ver ${extraCount} empresas más`}
+              title={`Ver ${extraCount} empresas más`}
+            >
+              +{extraCount}
+            </button>
+          )}
         </ul>
       )}
     </div>

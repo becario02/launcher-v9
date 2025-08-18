@@ -587,7 +587,6 @@ export function useModulePage() {
       return;
     }
 
-    // 🚫 Validar si ya hay 5
     if (shortcuts.length >= 5) {
       showNotification(
         "warning",
@@ -733,12 +732,10 @@ export function useModulePage() {
 
       setSubMenuItems(subMenus);
 
-      // Seleccionar el primer menú si no hay uno seleccionado
       if (!selectedMenuItem) {
         if (topLevelMenus.length > 0) {
           setSelectedMenuItem(topLevelMenus[0].id);
         } else {
-          // Si no hay datos, seleccionar el primer menú por defecto
           const defaultMenuId = `default-${menuOrdenado[0]}`;
           setSelectedMenuItem(defaultMenuId);
         }
@@ -797,16 +794,24 @@ export function useModulePage() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  const formatModuleName = (moduleName) => {
+    if (!moduleName) return "";
+    try {
+      return decodeURIComponent(moduleName).replace(/-/g, " ");
+    } catch (e) {
+      return moduleName.replace(/-/g, " ");
+    }
+  };
+
+
   const addNewInstance = async () => {
     try {
       const allGlobal = getGlobalInstances();
 
-      // Filtrar solo las instancias de este módulo y división
       const moduleInstances = allGlobal.filter(
         (i) => i.division === division && i.module === moduleParam
       );
 
-      // Obtener el siguiente ID por módulo/división
       const nextId = moduleInstances.length
         ? Math.max(...moduleInstances.map((i) => i.id)) + 1
         : 1;
@@ -822,7 +827,6 @@ export function useModulePage() {
 
       const parsedData = JSON.parse(localStorage.getItem("currentModuleData"));
 
-      // 🔐 Crear sesión
       const res = await fetch("/api/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -844,7 +848,6 @@ export function useModulePage() {
         serverErpDb: selectedCompany.serverErpDb,
       };
 
-      // Verificar duplicado antes de guardar
       const existing = allGlobal.some(
         (inst) =>
           inst.id === instanceWithSession.id &&
@@ -874,11 +877,9 @@ export function useModulePage() {
 
       showNotification(
         "success",
-        `Nueva instancia de ${moduleParam} creada exitosamente`,
+        `Nueva instancia de ${formatModuleName(moduleParam)} creada exitosamente`,
         "toast"
       );
-
-      //document.cookie = `menuPermisos=0; path=/; SameSite=Lax`;
 
       const encryptedPassword = selectedCompany.passwordErpDb;
       const decodedPassword = decryptAES(encryptedPassword);
@@ -950,7 +951,7 @@ export function useModulePage() {
         window.location.href = `advanerpconnect://close/${exeName}?session=${idSession}`;
         showNotification(
           "success",
-          `Instancia de ${moduleParam} cerrada exitosamente`,
+          `Instancia de ${formatModuleName(moduleParam)} cerrada exitosamente`,
           "toast"
         );
       }, 500);

@@ -1,24 +1,33 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import clsx from 'clsx';
-import { ChevronDown, ChevronRight, ChevronLeft, Database, Pencil, X } from 'lucide-react';
+import { useState, useMemo, useEffect } from "react";
+import clsx from "clsx";
+import {
+  ChevronDown,
+  ChevronRight,
+  ChevronLeft,
+  Database,
+  Pencil,
+  X,
+} from "lucide-react";
+import Cookies from "js-cookie";
 
 export default function UserTable({
   users,
   isLoading,
   page,
   pageSize,
-  totalUsers,
+  totalUsers, // mantenido por compatibilidad, pero NO se usa para pintar
   search,
   onPageChange,
-  onEditUser
+  onEditUser,
 }) {
   const [showConnectionsModal, setShowConnectionsModal] = useState(false);
   const [connectionsForUser, setConnectionsForUser] = useState([]);
+  const profileName = Cookies.get("profileName");
 
   const openConnectionsModal = (connections) => {
-    setConnectionsForUser(connections);
+    setConnectionsForUser(connections || []);
     setShowConnectionsModal(true);
   };
 
@@ -27,10 +36,7 @@ export default function UserTable({
     setConnectionsForUser([]);
   };
 
-  // ✅ Aplica paginación local a los usuarios mostrados en la tabla
-  const paginatedUsers = users.slice((page - 1) * pageSize, page * pageSize);
-
-
+  // --- Mantengo el skeleton original ---
   const TableRowSkeleton = () => (
     <tr className="animate-pulse">
       <td className="px-6 py-4">
@@ -55,21 +61,54 @@ export default function UserTable({
   );
 
   function formatServer(server) {
-    if (!server) return '';
+    if (!server) return "";
     let hostPart = server;
-    let portOrInstance = '';
-    if (server.includes(':')) {
-      [hostPart, portOrInstance] = server.split(':');
-      portOrInstance = ':' + portOrInstance;
-    } else if (server.includes('\\')) {
-      [hostPart, portOrInstance] = server.split('\\');
-      portOrInstance = '\\' + portOrInstance;
+    let portOrInstance = "";
+    if (server.includes(":")) {
+      [hostPart, portOrInstance] = server.split(":");
+      portOrInstance = ":" + portOrInstance;
+    } else if (server.includes("\\")) {
+      [hostPart, portOrInstance] = server.split("\\");
+      portOrInstance = "\\" + portOrInstance;
     }
-    const parts = hostPart.split('.');
+    const parts = hostPart.split(".");
     const last = parts.pop();
-    const maskedParts = parts.map(part => '*'.repeat(part.length));
-    return maskedParts.concat(last).join('.') + portOrInstance;
+    const maskedParts = parts.map((part) => "*".repeat(part.length));
+    return maskedParts.concat(last).join(".") + portOrInstance;
   }
+
+  // ------------------------------
+  //   NUEVO: Filtrado + paginado
+  // ------------------------------
+  const normalize = (s) => (s || "").toString().toLowerCase().trim();
+  const term = normalize(search);
+
+  // 1) Filtrar por search (nombre, correo, usuario)
+  const filteredUsers = useMemo(() => {
+    if (!term) return users || [];
+    return (users || []).filter((u) => {
+      const name = normalize(u.fullname);
+      const email = normalize(u.email);
+      const username = normalize(u.username);
+      return name.includes(term) || email.includes(term) || username.includes(term);
+    });
+  }, [users, term]);
+
+  // 2) Total real a partir del filtrado
+  const total = filteredUsers.length;
+
+  // 3) Si el total cambia y la página se quedó fuera de rango, clámpeala
+  useEffect(() => {
+    const lastPage = Math.max(1, Math.ceil(total / pageSize));
+    if (page > lastPage) onPageChange(lastPage);
+  }, [total, page, pageSize, onPageChange]);
+
+  // 4) Slice sobre el arreglo filtrado
+  const paginatedUsers = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    const end = page * pageSize;
+    return filteredUsers.slice(start, end);
+  }, [filteredUsers, page, pageSize]);
 
   return (
     <>
@@ -77,7 +116,7 @@ export default function UserTable({
         <table className="w-full text-sm text-left">
           <thead className="bg-[#F9FAFB] dark:bg-[#2C2C38] text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">
             <tr>
-              {['Nombre', 'Correo', 'Usuario', 'Perfil', 'Conexiones', 'Acciones'].map((label, i) => (
+              {["Nombre", "Correo", "Usuario", "Perfil", "Conexiones", "Acciones"].map((label, i) => (
                 <th key={i} className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-1">
                     {label}
@@ -87,31 +126,40 @@ export default function UserTable({
               ))}
             </tr>
           </thead>
+
           <tbody className="divide-y divide-gray-100 dark:divide-[#2C2C38] text-gray-800 dark:text-gray-200">
             {isLoading ? (
               [...Array(pageSize)].map((_, index) => <TableRowSkeleton key={index} />)
-            ) : users.length === 0 ? (
+            ) : total === 0 ? (
               <tr>
                 <td colSpan={6} className="text-center py-8 text-gray-500">
-                  {search ? `No se encontraron usuarios que coincidan con "${search}"` : 'No hay usuarios registrados'}
+                  {term
+                    ? `No se encontraron usuarios que coincidan con "${search}"`
+                    : "No hay usuarios registrados"}
                 </td>
               </tr>
             ) : (
-              paginatedUsers.map((user) => (
-                <tr key={user.idUser} className="hover:bg-gray-50 dark:hover:bg-[#262636] transition">
+              paginatedUsers.map((user, idx) => (
+                <tr
+                  // key único/estable para evitar glitches en paginación
+                  key={`${user.idUser}-${user.username ?? idx}`}
+                  className="hover:bg-gray-50 dark:hover:bg-[#262636] transition"
+                >
                   <td className="px-6 py-4">{user.fullname}</td>
                   <td className="px-6 py-4">{user.email}</td>
                   <td className="px-6 py-4">{user.username}</td>
                   <td className="px-6 py-4">
                     <span
                       className={clsx(
-                        'px-2 py-1 rounded-full text-p',
-                        user.profileName.includes('ADMIN')
-                          ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-white'
-                          : 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white'
+                        "px-2 py-1 rounded-full text-p",
+                        (user.profileName || "").includes("ADMIN")
+                          ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-white"
+                          : "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white"
                       )}
                     >
-                      {user.profileName.includes('ADMIN') ? 'ADMIN' : user.profileName.replace('USER', '')}
+                      {(user.profileName || "").includes("ADMIN")
+                        ? "ADMIN"
+                        : (user.profileName || "").replace("USER", "")}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -128,13 +176,19 @@ export default function UserTable({
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <button
-                      onClick={() => onEditUser(user)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-                    >
-                      <Pencil className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-xs font-medium">Editar</span>
-                    </button>
+                    {(profileName || "") === "USERADVAN" ? (
+                      <span className="text-xs text-gray-500 italic">
+                        No tienes permisos para editar
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => onEditUser(user)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                      >
+                        <Pencil className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-xs font-medium">Editar</span>
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))
@@ -145,22 +199,23 @@ export default function UserTable({
         {/* Paginación */}
         <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200 dark:border-[#2C2C38] text-sm">
           <span className="text-gray-600 dark:text-gray-400">
-            {totalUsers > 0 ? (
+            {total > 0 ? (
               <>
-                Mostrando {Math.min((page - 1) * pageSize + 1, totalUsers)} - {Math.min(page * pageSize, totalUsers)} de {totalUsers}
+                Mostrando {Math.min((page - 1) * pageSize + 1, total)} -{" "}
+                {Math.min(page * pageSize, total)} de {total}
               </>
             ) : (
-              'No hay resultados'
+              "No hay resultados"
             )}
           </span>
           <div className="flex gap-2">
             <button
-              disabled={page === 1 || isLoading || totalUsers === 0}
-              onClick={() => onPageChange(page - 1)}
+              disabled={page === 1 || isLoading || total === 0}
+              onClick={() => onPageChange(Math.max(1, page - 1))}
               className={clsx(
                 "inline-flex items-center px-3 py-1.5 rounded text-gray-700 dark:text-gray-200",
                 "transition focus:outline-none",
-                page === 1 || isLoading || totalUsers === 0
+                page === 1 || isLoading || total === 0
                   ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-[#2C2C38]"
                   : "bg-gray-100 hover:bg-gray-200 dark:bg-[#2C2C38] dark:hover:bg-[#3C3C48]"
               )}
@@ -169,12 +224,12 @@ export default function UserTable({
               Anterior
             </button>
             <button
-              disabled={page * pageSize >= totalUsers || isLoading || totalUsers === 0}
+              disabled={page * pageSize >= total || isLoading || total === 0}
               onClick={() => onPageChange(page + 1)}
               className={clsx(
                 "inline-flex items-center px-3 py-1.5 rounded text-gray-700 dark:text-gray-200",
                 "transition focus:outline-none",
-                page * pageSize >= totalUsers || isLoading || totalUsers === 0
+                page * pageSize >= total || isLoading || total === 0
                   ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-[#2C2C38]"
                   : "bg-gray-100 hover:bg-gray-200 dark:bg-[#2C2C38] dark:hover:bg-[#3C3C48]"
               )}
@@ -196,25 +251,35 @@ export default function UserTable({
             >
               <X className="w-5 h-5" />
             </button>
-            <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Conexiones</h2>
+            <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+              Conexiones
+            </h2>
             {connectionsForUser.length > 0 ? (
               <ul className="space-y-3">
                 {connectionsForUser.map((conn, idx) => (
-                  <li key={idx} className="flex items-start gap-2 bg-gray-100 dark:bg-[#2C2C38] rounded-md p-3">
+                  <li
+                    key={`${conn?.nameErpDb || "db"}-${conn?.environment || "env"}-${idx}`}
+                    className="flex items-start gap-2 bg-gray-100 dark:bg-[#2C2C38] rounded-md p-3"
+                  >
                     <Database className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                     <div className="flex flex-col text-sm w-full">
                       <div className="flex items-center justify-between w-full">
-                        <span className="font-semibold text-gray-900 dark:text-white">{conn.nameErpDb}</span>
-                        {/* Etiqueta de tipo de base de datos */}
-                        <span className={`inline-flex items-center justify-center px-2 py-0.5 text-white text-[10px] rounded-[25px] flex-shrink-0 font-medium ${
-                          conn.environment === 'TEST' 
-                            ? 'bg-gray-500 dark:bg-gray-600' 
-                            : 'bg-primary'
-                        }`}>
-                          {conn.environment === 'TEST' ? 'PRUEBAS' : 'PRODUCCIÓN'}
+                        <span className="font-semibold text-gray-900 dark:text-white">
+                          {conn?.nameErpDb}
+                        </span>
+                        <span
+                          className={`inline-flex items-center justify-center px-2 py-0.5 text-white text-[10px] rounded-[25px] flex-shrink-0 font-medium ${
+                            conn?.environment === "TEST"
+                              ? "bg-gray-500 dark:bg-gray-600"
+                              : "bg-primary"
+                          }`}
+                        >
+                          {conn?.environment === "TEST" ? "PRUEBAS" : "PRODUCCIÓN"}
                         </span>
                       </div>
-                      <span className="text-gray-500 dark:text-gray-400 text-xs">{formatServer(conn.serverErpDb)}</span>
+                      <span className="text-gray-500 dark:text-gray-400 text-xs">
+                        {formatServer(conn?.serverErpDb)}
+                      </span>
                     </div>
                   </li>
                 ))}

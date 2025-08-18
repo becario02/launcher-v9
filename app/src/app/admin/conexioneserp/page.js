@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import Notification from "@/components/Notification";
@@ -27,67 +27,67 @@ export default function ConexionesErp() {
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
-    const fetchConnections = async () => {
-      try {
-        setLoadingData(true);
-        const res = await fetch("/api/conexionesErp");
-        const json = await res.json();
-
-        if (json.statusCode !== "200")
-          throw new Error(json.message || "Error al obtener datos");
-
-        const grouped = {};
-        json.data.forEach((conn) => {
-          const companyId = conn.idCompany;
-          if (!grouped[companyId]) {
-            grouped[companyId] = {
-              id: companyId,
-              name: conn.name,
-              companyIdentifier: conn.companyIdentifier,
-              totalConnections: 0,
-              availableConnections: [],
-              assignedConnections: [],
-            };
-          }
-
-          const key = `${conn.nameErpDb}-${conn.serverErpDb}-${conn.environment}`;
-          const exists = grouped[companyId].availableConnections.some(
-            (c) =>
-              c.name === conn.nameErpDb &&
-              c.server === conn.serverErpDb &&
-              c.environment === conn.environment
-          );
-
-          if (!exists) {
-            grouped[companyId].availableConnections.push({
-              id: conn.idUserCompanyConnection,
-              name: conn.nameErpDb,
-              server: conn.serverErpDb,
-              environment: conn.environment,
-            });
-          }
-
-          grouped[companyId].totalConnections++;
-        });
-
-        setCompanies(Object.values(grouped));
-        setOpenCompanies([]);
-      } catch (error) {
-        console.error("Error:", error);
-        setNotification({
-          visible: true,
-          type: "error",
-          message: "No se pudieron cargar las conexiones ERP.",
-          style: "toast",
-        });
-      } finally {
-        setLoadingData(false);
-      }
-    };
-
     fetchConnections();
     fetchUsers(setUsers);
   }, []);
+
+  const fetchConnections = async () => {
+    try {
+      setLoadingData(true);
+      const res = await fetch("/api/conexionesErp");
+      const json = await res.json();
+
+      if (json.statusCode !== "200")
+        throw new Error(json.message || "Error al obtener datos");
+
+      const grouped = {};
+      json.data.forEach((conn) => {
+        const companyId = conn.idCompany;
+        if (!grouped[companyId]) {
+          grouped[companyId] = {
+            id: companyId,
+            name: conn.name,
+            companyIdentifier: conn.companyIdentifier,
+            totalConnections: 0,
+            availableConnections: [],
+            assignedConnections: [],
+          };
+        }
+
+        const key = `${conn.nameErpDb}-${conn.serverErpDb}-${conn.environment}`;
+        const exists = grouped[companyId].availableConnections.some(
+          (c) =>
+            c.name === conn.nameErpDb &&
+            c.server === conn.serverErpDb &&
+            c.environment === conn.environment
+        );
+
+        if (!exists) {
+          grouped[companyId].availableConnections.push({
+            id: conn.idUserCompanyConnection,
+            name: conn.nameErpDb,
+            server: conn.serverErpDb,
+            environment: conn.environment,
+          });
+        }
+
+        grouped[companyId].totalConnections++;
+      });
+
+      setCompanies(Object.values(grouped));
+      setOpenCompanies([]);
+    } catch (error) {
+      console.error("Error:", error);
+      setNotification({
+        visible: true,
+        type: "error",
+        message: "No se pudieron cargar las conexiones ERP.",
+        style: "toast",
+      });
+    } finally {
+      setLoadingData(false);
+    }
+  };
 
   const fetchUsers = async (setUsers) => {
     try {
@@ -203,6 +203,9 @@ export default function ConexionesErp() {
           throw new Error(result.message || "Error al asignar conexión");
         }
       }
+
+      await fetchConnections();
+      await fetchUsers(setUsers);
 
       setNotification({
         visible: true,

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { User, PlusCircle, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { usePrimaryColor } from "@/context/primaryColor";
@@ -16,101 +16,150 @@ import UserHeader from "@/components/admin/users/UserHeader";
 export default function AdminUsersPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { primaryColor } = usePrimaryColor();
+
   const [advanUsers, setAdvanUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
+
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [users, setUsers] = useState([]);
+
   const [isLoading, setIsLoading] = useState(true);
+  const [hasResolvedCompany, setHasResolvedCompany] = useState(false);
+
   const [expandedCompanies, setExpandedCompanies] = useState({});
   const [page, setPage] = useState(1);
   const [pageSize] = useState(5);
   const [totalUsers, setTotalUsers] = useState(0);
   const [search, setSearch] = useState("");
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+
   const [notification, setNotification] = useState({
     visible: false,
     type: "success",
     message: "",
     style: "toast",
   });
+
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [profileName, setProfileName] = useState("");
+
   const [customOptionsData, setCustomOptionsData] = useState({
     custom: [],
     dashboards: [],
   });
 
+  // === Fetchers (sin apagar isLoading aquí) ===
   const fetchCustomAndDashboard = async () => {
+    const res = await axios.get("/api/custom-and-dashboard");
+    const data = res.data?.data || { custom: [], dashboards: [] };
+    setCustomOptionsData(data);
+  };
+
+  const fetchCompanies = async () => {
+    const res = await axios.get("/api/users");
+    setCompanies(res.data?.data || []);
+  };
+
+  const fetchAdvanUsers = async () => {
+    const res = await axios.get("/api/users/advan");
+    setAdvanUsers(res.data?.data || []);
+  };
+
+  const reloadUsersAfterSave = async () => {
     try {
-      const response = await axios.get("/api/custom-and-dashboard");
-      const data = response.data?.data || { custom: [], dashboards: [] };
-      setCustomOptionsData(data);
-    } catch (error) {
-      console.error(
-        "Error al obtener opciones personalizadas y dashboards:",
-        error
-      );
+      setIsLoading(true);
+
+      const [advanRes, companiesRes] = await Promise.all([
+        axios.get("/api/users/advan"),
+        axios.get("/api/users"),
+      ]);
+
+      const newAdvanUsers = advanRes.data?.data || [];
+      const newCompanies = companiesRes.data?.data || [];
+
+      setAdvanUsers(newAdvanUsers);
+      setCompanies(newCompanies);
+
+      if (selectedCompany?.isAdvan) {
+        handleSelectCompany({ isAdvan: true });
+      } else if (selectedCompany?.companyName) {
+        const found = newCompanies.find(
+          (c) => c.companyName === selectedCompany.companyName
+        );
+        if (found) {
+          handleSelectCompany(found);
+        } else {
+          const companyName = Cookies.get("companyName");
+          const fromCookie = newCompanies.find(
+            (c) => c.companyName === companyName
+          );
+          if (fromCookie) handleSelectCompany(fromCookie);
+        }
+      } else {
+        const companyName = Cookies.get("companyName");
+        const fromCookie = newCompanies.find(
+          (c) => c.companyName === companyName
+        );
+        if (fromCookie) handleSelectCompany(fromCookie);
+      }
+
+      setPage(1);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      // No apagamos aquí: se apaga en el useEffect de resolución
     }
   };
 
-  const fetchCompanies = () => {
-    setIsLoading(true);
-    axios
-      .get("/api/users")
-      .then((res) => {
-        setCompanies(res.data.data || []);
-      })
-      .catch(console.error)
-      .finally(() => setIsLoading(false));
-  };
-
-  const fetchAdvanUsers = () => {
-    setIsLoading(true);
-    axios
-      .get("/api/users/advan")
-      .then((res) => {
-        setAdvanUsers(res.data.data || []);
-      })
-      .catch(console.error)
-      .finally(() => setIsLoading(false));
-  };
-
+  // === Montaje: cargar todo y mantener isLoading hasta resolver empresa ===
   useEffect(() => {
-    fetchAdvanUsers();
-    fetchCompanies();
-    fetchCustomAndDashboard();
+    setIsLoading(true);
+    Promise.all([fetchAdvanUsers(), fetchCompanies(), fetchCustomAndDashboard()])
+      .catch(console.error)
+      .finally(() => {
+        // isLoading se apaga después, cuando resolvemos empresa
+      });
   }, []);
 
+  // === Resolver empresa (cookie / ADMINADVAN / modal) y luego apagar loading ===
   useEffect(() => {
+    // Aún no hay companies cargadas
+    if (!companies || companies.length === 0) return;
+
     const profile = Cookies.get("profileName");
     const companyName = Cookies.get("companyName");
     setProfileName(profile);
 
     if (profile === "ADMINADVAN") {
+      // Mostrar modal para elección
       setShowCompanyModal(true);
-    } else {
-      if (companyName) {
-        const companyFound = companies.find(
-          (c) => c.companyName === companyName
-        );
-        if (companyFound) {
-          let filteredUsers = companyFound.users || [];
-          if (profile === "ADMINADVAN") {
-            filteredUsers = filteredUsers.filter((u) =>
-              u.profileName.includes("ADMIN")
-            );
-          }
-          setSelectedCompany(companyFound);
-          setUsers(filteredUsers);
-          setTotalUsers(filteredUsers.length);
-        } else {
-          console.warn(`Empresa no encontrada: ${companyName}`);
-        }
-      } else {
-        console.warn("No se encontró la cookie companyName");
-      }
+      setHasResolvedCompany(true);
+      setIsLoading(false);
+      return;
     }
+
+    // Perfil normal: intentar por cookie
+    if (companyName) {
+      const companyFound = companies.find(
+        (c) => c.companyName === companyName
+      );
+      if (companyFound) {
+        let filteredUsers = companyFound.users || [];
+        // (Si en algún flujo filtras ADMIN aquí, mantenlo)
+        setSelectedCompany(companyFound);
+        setUsers(filteredUsers);
+        setTotalUsers(filteredUsers.length);
+      } else {
+        console.warn(`Empresa no encontrada: ${companyName}`);
+      }
+    } else {
+      console.warn("No se encontró la cookie companyName");
+    }
+
+    setHasResolvedCompany(true);
+    setIsLoading(false);
   }, [companies]);
 
   const handleSelectCompany = (company) => {
@@ -191,11 +240,7 @@ export default function AdminUsersPage() {
       setModalOpen(false);
       setEditingUser(null);
 
-      const updatedResponse = await axios.get("/api/users/advan");
-      const updatedUsers = updatedResponse.data?.data || [];
-      setAdvanUsers(updatedUsers);
-      setUsers(updatedUsers);
-      setTotalUsers(updatedUsers.length);
+      await reloadUsersAfterSave();
     } catch (err) {
       console.error("Error al guardar usuario:", err);
       showNotification("error", "Error al guardar el usuario.", "toast");
@@ -306,20 +351,27 @@ export default function AdminUsersPage() {
                     }}
                   />
                 </>
+              ) : !hasResolvedCompany || isLoading ? (
+                // === Skeleton de tabla mientras carga/resuelve ===
+                <UserTable
+                  users={[]}
+                  selectedCompany={{ companyName: "" }}
+                  isLoading={true}
+                  page={1}
+                  pageSize={pageSize}
+                  totalUsers={0}
+                  search=""
+                  onPageChange={() => {}}
+                  expandedCompanies={{}}
+                  toggleConnectionsVisibility={() => {}}
+                  isCompanyExpanded={() => false}
+                  onEditUser={() => {}}
+                />
               ) : (
                 <div className="flex flex-col items-center justify-center py-24 text-center">
                   <p className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-4">
                     No se ha seleccionado una empresa
                   </p>
-                  {profileName === "ADMINADVAN" && (
-                    <button
-                      onClick={() => setShowCompanyModal(true)}
-                      className="px-6 py-2 rounded-md text-sm font-medium text-white"
-                      style={{ backgroundColor: primaryColor }}
-                    >
-                      Seleccionar empresa
-                    </button>
-                  )}
                 </div>
               )}
             </div>

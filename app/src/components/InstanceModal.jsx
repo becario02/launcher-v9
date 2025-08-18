@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Layers, X, ChevronDown, ChevronUp } from 'lucide-react';
-import { useState } from 'react';
+import { Layers, X, ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from "react";
 
 export default function InstanceModal({
   isOpen,
@@ -12,6 +12,15 @@ export default function InstanceModal({
   primaryColor,
 }) {
   const [expandedGroups, setExpandedGroups] = useState({});
+  // ↑ debajo de los imports, dentro del archivo del modal
+  const humanize = (s) => {
+    if (!s) return "";
+    try {
+      s = decodeURIComponent(s);
+    } catch (_) {}
+    return s.replace(/-/g, " ").trim();
+  };
+  const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
   if (!isOpen) return null;
 
@@ -79,7 +88,7 @@ export default function InstanceModal({
 
         <div className="p-4 max-h-96 overflow-y-auto space-y-3">
           {Object.entries(groupedInstances).map(([key, group]) => {
-            const ip = group.instances[0]?.serverErpDb || 'IP desconocida';
+            const ip = group.instances[0]?.serverErpDb || "IP desconocida";
             const isExpanded = expandedGroups[key];
 
             return (
@@ -94,14 +103,17 @@ export default function InstanceModal({
                   <div>
                     <div className="flex items-center flex-wrap gap-x-2">
                       <span className="text-sm text-gray-500 dark:text-gray-400">
-                        {group.division.charAt(0).toUpperCase() + group.division.slice(1)}
+                        {cap(humanize(group.division))}
                       </span>
-                      <span className="text-gray-400 dark:text-gray-600">›</span>
+                      <span className="text-gray-400 dark:text-gray-600">
+                        ›
+                      </span>
                       <span className="text-sm text-gray-800 dark:text-white">
-                        {group.module.charAt(0).toUpperCase() + group.module.slice(1)}
+                        {cap(humanize(group.module))}
                       </span>
                       <span className="text-sm text-gray-400 dark:text-gray-500 ml-2 italic">
-                        conexión: <span className="text-primary">{formatServer(ip)}</span>
+                        conexión:{" "}
+                        <span className="text-primary">{formatServer(ip)}</span>
                       </span>
                     </div>
                     <div className="flex items-center mt-1">
