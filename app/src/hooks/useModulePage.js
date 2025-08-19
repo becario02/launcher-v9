@@ -43,7 +43,6 @@ export function useModulePage() {
     style: "toast",
   });
 
-  // Nuevos estados para privilegios
   const [hasPrivilege, setHasPrivilege] = useState(true);
   const [menuPermissions, setMenuPermissions] = useState([]);
   const [idCompanyModule, setIdCompanyModule] = useState(null);
