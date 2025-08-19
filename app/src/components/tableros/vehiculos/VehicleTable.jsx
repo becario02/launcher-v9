@@ -2,48 +2,6 @@ import React, { useState } from 'react';
 import { Radio, Zap, RefreshCw, ChevronLeft, ChevronRight, MapPin, Clock, User, Building } from 'lucide-react';
 import { usePrimaryColor } from '@/context/primaryColor';
 
-// Custom SVG Components
-const TractorIcon = ({ className = "h-8 w-8", color = "#3B82F6" }) => (
-  <svg 
-    className={className} 
-    viewBox="0 0 48 32" 
-    fill="none" 
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    {/* Tractor cab */}
-    <rect x="2" y="8" width="20" height="16" rx="2" fill={color} stroke="#1E40AF" strokeWidth="1"/>
-    {/* Windshield */}
-    <rect x="4" y="10" width="16" height="8" rx="1" fill="#E5E7EB"/>
-    {/* Front wheel */}
-    <circle cx="8" cy="26" r="4" fill="#374151" stroke="#1F2937" strokeWidth="1"/>
-    <circle cx="8" cy="26" r="2" fill="#6B7280"/>
-    {/* Rear wheel */}
-    <circle cx="16" cy="26" r="4" fill="#374151" stroke="#1F2937" strokeWidth="1"/>
-    <circle cx="16" cy="26" r="2" fill="#6B7280"/>
-    {/* Fifth wheel coupling */}
-    <rect x="20" y="14" width="4" height="4" rx="1" fill="#6B7280"/>
-  </svg>
-);
-
-const TrailerIcon = ({ className = "h-6 w-8", color = "#6B7280" }) => (
-  <svg 
-    className={className} 
-    viewBox="0 0 32 20" 
-    fill="none" 
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    {/* Trailer body */}
-    <rect x="2" y="4" width="24" height="12" rx="1" fill={color} stroke="#4B5563" strokeWidth="1"/>
-    {/* Trailer details */}
-    <rect x="4" y="6" width="20" height="8" rx="0.5" fill="#9CA3AF"/>
-    {/* Wheel */}
-    <circle cx="22" cy="18" r="3" fill="#374151" stroke="#1F2937" strokeWidth="1"/>
-    <circle cx="22" cy="18" r="1.5" fill="#6B7280"/>
-    {/* Connection point */}
-    <rect x="1" y="8" width="3" height="4" rx="0.5" fill="#4B5563"/>
-  </svg>
-);
-
 const VehicleTable = ({ vehiclesData, itemsPerPage, isLoading = false, resetPageTrigger }) => {
   const { primaryColor } = usePrimaryColor();
   const [currentPage, setCurrentPage] = useState(1);
@@ -172,51 +130,52 @@ const VehicleTable = ({ vehiclesData, itemsPerPage, isLoading = false, resetPage
               
               {/* Left Section - Unit Info */}
               <div className="lg:col-span-3">
-                <div className="flex items-center space-x-3">
-                  {/* Tractor with Number */}
-                  <div className="flex items-center space-x-2">
-                    <div className="relative">
-                      <TractorIcon className="h-10 w-12" color="#3B82F6" />
+                <div className="space-y-3">
+                  {/* Tractor Section */}
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-1 rounded font-medium">
+                        TRACTO
+                      </span>
+                      <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-1 rounded font-bold">
+                        {vehicle.tractoNumEco}
+                      </span>
                     </div>
-                    <div className="bg-blue-600 text-white px-2 py-1 rounded font-bold text-sm">
-                      {vehicle.tractoNumEco}
+                    
+                    {/* Status Indicators */}
+                    <div className="flex items-center space-x-2">
+                      <div title={`GPS: ${vehicle.semaforoAntena === 1 ? 'Activo' : vehicle.semaforoAntena === 0 ? 'Sin señal' : 'Sin información'}`}>
+                        {getGpsStatusIcon(vehicle.semaforoAntena)}
+                      </div>
+                      <div title={`Motor: ${vehicle.ignicion === 1 ? 'Encendido' : vehicle.ignicion === 0 ? 'Apagado' : 'Sin información'}`}>
+                        {getEngineStatusIcon(vehicle.ignicion)}
+                      </div>
                     </div>
                   </div>
-                  
-                  {/* Status Indicators */}
-                  <div className="flex items-center space-x-2">
-                    <div title={`GPS: ${vehicle.semaforoAntena === 1 ? 'Activo' : vehicle.semaforoAntena === 0 ? 'Sin señal' : 'Sin información'}`}>
-                      {getGpsStatusIcon(vehicle.semaforoAntena)}
-                    </div>
-                    <div title={`Motor: ${vehicle.ignicion === 1 ? 'Encendido' : vehicle.ignicion === 0 ? 'Apagado' : 'Sin información'}`}>
-                      {getEngineStatusIcon(vehicle.ignicion)}
-                    </div>
-                  </div>
-                </div>
                 
-                {/* Remolques Row */}
-                <div className="flex items-center space-x-2 mt-2">
-                  {vehicle.remNe1 && (
-                    <div className="flex items-center space-x-1">
-                      <TrailerIcon className="h-6 w-8" color="#10B981" />
-                      <div className="bg-green-600 text-white px-2 py-0.5 rounded text-xs font-bold">
-                        {vehicle.remNe1}
-                      </div>
+                  {/* Remolques Section */}
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 px-2 py-1 rounded font-medium">
+                      REMOLQUES
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      {vehicle.remNe1 && (
+                        <span className="text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 px-2 py-1 rounded font-bold">
+                          {vehicle.remNe1}
+                        </span>
+                      )}
+                      {vehicle.remNe2 && (
+                        <span className="text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 px-2 py-1 rounded font-bold">
+                          {vehicle.remNe2}
+                        </span>
+                      )}
+                      {!vehicle.remNe1 && !vehicle.remNe2 && (
+                        <span className="text-xs bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 px-2 py-1 rounded">
+                          Sin remolques
+                        </span>
+                      )}
                     </div>
-                  )}
-                  {vehicle.remNe2 && (
-                    <div className="flex items-center space-x-1">
-                      <TrailerIcon className="h-6 w-8" color="#10B981" />
-                      <div className="bg-green-600 text-white px-2 py-0.5 rounded text-xs font-bold">
-                        {vehicle.remNe2}
-                      </div>
-                    </div>
-                  )}
-                  {!vehicle.remNe1 && !vehicle.remNe2 && (
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Sin remolques
-                    </div>
-                  )}
+                  </div>
                 </div>
               </div>
 

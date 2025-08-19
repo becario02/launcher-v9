@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plane } from 'lucide-react';
+import { Truck } from 'lucide-react';
 import { usePrimaryColor } from '@/context/primaryColor';
 
 const VehicleHeader = () => {
@@ -9,7 +9,7 @@ const VehicleHeader = () => {
     <div className="flex flex-col gap-4">
       <div>
         <div className="flex items-center gap-2">
-          <Plane className="w-6 h-6" style={{ color: primaryColor }} />
+          <Truck className="w-6 h-6" style={{ color: primaryColor }} />
           <h1 className="text-[26px] leading-[39px] font-semibold text-[#44444f] dark:text-[#e2e2ea]">
             Tablero de Vehículos
           </h1>
