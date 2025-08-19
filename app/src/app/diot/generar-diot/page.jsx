@@ -16,7 +16,7 @@ const DiotGenerarPage = () => {
   const [periods, setPeriods] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [diotData, setDiotData] = useState([]);
-  const [proporcion, setProporcion] = useState(100);
+  const [proporcion, setProporcion] = useState(100.0000);
   const [isLoadingPeriods, setIsLoadingPeriods] = useState(true);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -196,8 +196,19 @@ const DiotGenerarPage = () => {
 
   // Handle proportion change
   const handleProporcionChange = (e) => {
-    const value = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
-    setProporcion(value);
+    const value = parseFloat(e.target.value);
+    
+    // Validate range and decimal places
+    if (isNaN(value)) {
+      setProporcion('');
+      return;
+    }
+    
+    // Limit to 4 decimal places and range 0-100
+    const limitedValue = Math.max(0, Math.min(100, value));
+    const roundedValue = Math.round(limitedValue * 10000) / 10000; // 4 decimal places
+    
+    setProporcion(roundedValue);
   };
 
   // Handle activity type change for a record
@@ -444,10 +455,12 @@ const DiotGenerarPage = () => {
                 type="number"
                 min="0"
                 max="100"
+                step="1"
                 value={proporcion}
                 onChange={handleProporcionChange}
-                className="w-16 px-2 py-1 border border-gray-300 dark:border-[#2C2C38] rounded-md bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white text-sm text-center focus:outline-none focus:ring-1"
+                className="w-20 px-2 py-1 border border-gray-300 dark:border-[#2C2C38] rounded-md bg-white dark:bg-[#1C1C24] text-gray-900 dark:text-white text-sm text-center focus:outline-none focus:ring-1"
                 style={{ '--tw-ring-color': primaryColor }}
+                placeholder="0.0000"
               />
               <span className="text-sm text-gray-500">%</span>
             </div>
