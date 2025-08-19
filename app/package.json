@@ -18,6 +18,7 @@
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.9.2",
+    "gender-detection": "^0.1.0",
     "highcharts": "^12.3.0",
     "highcharts-react-official": "^3.2.2",
     "js-cookie": "^3.0.5",
