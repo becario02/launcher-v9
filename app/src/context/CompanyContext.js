@@ -13,10 +13,9 @@ export function CompanyProvider({ children }) {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasInitialized, setHasInitialized] = useState(false);
-
+  const [syncSuccessMessage, setSyncSuccessMessage] = useState(null);
   const syncingRef = useRef(false);
   const lastSyncedCompanyRef = useRef(null);
-
   const { syncModules, isLoading: syncingModules, error: syncError } = useSyncModules();
 
   const handleSyncModules = useCallback(async (company) => {
@@ -37,28 +36,34 @@ export function CompanyProvider({ children }) {
       syncingRef.current = true;
       lastSyncedCompanyRef.current = companyKey;
       
-      await syncModules(company);
+      const result = await syncModules(company);
+      
+      if (result && result.success && result.message) {
+        setSyncSuccessMessage(result.message);
+      }
     } catch (error) {
+      setSyncSuccessMessage(null);
     } finally {
       syncingRef.current = false;
       setTimeout(() => {
         lastSyncedCompanyRef.current = null;
+        setSyncSuccessMessage(null);
       }, 5000);
     }
   }, [syncModules]);
 
-  // Helper function to save company data to both localStorage and cookies
+  useEffect(() => {
+    setSyncSuccessMessage(null);
+  }, [selectedCompany]);
+
   const saveCompanyData = useCallback((company) => {
-    // Save to localStorage (existing functionality)
     localStorage.setItem('selectedCompany', JSON.stringify(company));
     
-    // Save idCompany to cookies for middleware access
     if (company?.idCompany) {
       Cookies.set('idCompany', company.idCompany.toString());
     }
   }, []);
 
-  // Helper function to clear company data
   const clearCompanyData = useCallback(() => {
     localStorage.removeItem('selectedCompany');
     Cookies.remove('idCompany');
@@ -83,7 +88,6 @@ export function CompanyProvider({ children }) {
             const company = JSON.parse(savedCompany);
             setSelectedCompany(company);
             
-            // Ensure cookie is set for existing selected company
             if (company?.idCompany) {
               Cookies.set('idCompany', company.idCompany.toString());
             }
@@ -139,11 +143,11 @@ export function CompanyProvider({ children }) {
     }
   }, [selectedCompany, handleSyncModules]);
 
-  // Clear company data when logging out (can be called from auth context)
   const clearCompany = useCallback(() => {
     setSelectedCompany(null);
     setPreselectedCompany(null);
     setShowCompanyModal(false);
+    setSyncSuccessMessage(null);
     clearCompanyData();
   }, [clearCompanyData]);
 
@@ -162,11 +166,12 @@ export function CompanyProvider({ children }) {
         connectAndSync,    
         openCompanySelector,
         manualSync,
-        clearCompany, // New function to clear company data
+        clearCompany,
         
         loading,
         syncingModules,
         syncError,
+        syncSuccessMessage,
         isSyncing: syncingRef.current
       }}
     >

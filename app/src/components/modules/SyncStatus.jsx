@@ -6,7 +6,7 @@ import { Info, AlertTriangle } from "lucide-react";
 import { useCompany } from "@/context/CompanyContext";
 
 const SyncStatus = () => {
-  const { syncingModules, selectedCompany, syncError } = useCompany();
+  const { syncingModules, selectedCompany, syncError, syncSuccessMessage } = useCompany(); // ✅ AGREGAR syncSuccessMessage
   const [notifications, setNotifications] = useState([]);
   const [wasSyncing, setWasSyncing] = useState(false);
 
@@ -23,7 +23,6 @@ const SyncStatus = () => {
   }, [syncError, syncingModules, wasSyncing]);
 
   useEffect(() => {
-    // Detectar cuando termina la sincronización
     if (wasSyncing && !syncingModules) {
       const notificationId = Date.now();
 
@@ -35,17 +34,27 @@ const SyncStatus = () => {
           duration: 20000,
         });
       } else {
+        let successMessage;
+        
+        if (syncSuccessMessage === "Módulos y menús sincronizados correctamente.") {
+          successMessage = `Módulos de ${selectedCompany?.name} sincronizados correctamente`;
+        } else if (syncSuccessMessage) {
+          successMessage = syncSuccessMessage;
+        } else {
+          successMessage = `Módulos de ${selectedCompany?.name} sincronizados correctamente`;
+        }
+
         addNotification({
           id: notificationId,
           type: "success",
-          message: `Módulos de ${selectedCompany?.name} sincronizados correctamente`,
+          message: successMessage,
           duration: 4000,
         });
       }
     }
 
     setWasSyncing(syncingModules);
-  }, [syncingModules, syncError, selectedCompany, wasSyncing]);
+  }, [syncingModules, syncError, selectedCompany, wasSyncing, syncSuccessMessage]);
 
   const addNotification = (notification) => {
     setNotifications((prev) => {
@@ -71,7 +80,6 @@ const SyncStatus = () => {
     );
   };
 
-  // Colores por tipo
   const getColors = (type) => {
     const colorMap = {
       success: {
@@ -93,7 +101,6 @@ const SyncStatus = () => {
     return colorMap[type] || colorMap.info;
   };
 
-  // Iconos por tipo
   const getIcon = (type) => {
     const colors = getColors(type);
 

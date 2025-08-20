@@ -157,7 +157,12 @@ export const useSyncModules = () => {
           return null;
         }
 
-        return data;
+        // ✅ RETORNAR EL RESULTADO CON EL MENSAJE DEL API
+        return {
+          success: true,
+          message: data.message,
+          data: data
+        };
       } catch (err) {
         setError(err.message || "Error inesperado");
         return null;
@@ -171,7 +176,6 @@ export const useSyncModules = () => {
     [login, refreshToken, isLoading]
   );
 
-  // ✅ FUNCIÓN PARA CANCELAR REQUESTS PENDIENTES
   const cancelPendingRequests = useCallback(() => {
     if (activeRequestRef.current) {
       activeRequestRef.current = null;
