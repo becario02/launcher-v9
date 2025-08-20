@@ -1,7 +1,6 @@
 'use client';
 
 import Cookies from 'js-cookie';
-import gender from 'gender-detection';
 
 const WelcomeSection = () => {
   // Leer fullname desde la cookie y obtener solo el primer nombre
@@ -13,12 +12,6 @@ const WelcomeSection = () => {
   };
 
   const userName = getFirstName();
-  const genero = gender.detect(userName); // 'male' | 'female' | 'unknown'
-
-  const saludo =
-    genero === 'female'
-      ? 'Bienvenida de nuevo'
-      : 'Bienvenido de nuevo';
 
   return (
     <section className="pb-4 font-poppins">
@@ -32,7 +25,7 @@ const WelcomeSection = () => {
         </span>
       </h1>
       <p className="text-[26px] leading-[39px] font-semibold text-[#44444F] dark:text-gray-200 mt-1">
-        {saludo}
+        Bienvenido de nuevo
       </p>
     </section>
   );
